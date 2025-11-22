@@ -1,7 +1,7 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="openup_manager.App"
-             xmlns:local="using:openup_manager"
+             x:Class="OpenUpMan.UI.App"
+             xmlns:local="using:OpenUpMan.UI"
              RequestedThemeVariant="Default">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 

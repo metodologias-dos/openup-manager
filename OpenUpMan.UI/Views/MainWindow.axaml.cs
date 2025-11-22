@@ -1,6 +1,6 @@
 using Avalonia.Controls;
 
-namespace openup_manager.Views;
+namespace OpenUpMan.UI.Views;
 
 public partial class MainWindow : Window
 {

@@ -4,10 +4,11 @@ using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
 using System.Linq;
 using Avalonia.Markup.Xaml;
-using openup_manager.ViewModels;
-using openup_manager.Views;
+using OpenUpMan.UI.ViewModels;
+using OpenUpMan.UI.Views;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace openup_manager;
+namespace OpenUpMan.UI;
 
 public partial class App : Application
 {
@@ -23,9 +24,13 @@ public partial class App : Application
             // Avoid duplicate validations from both Avalonia and the CommunityToolkit. 
             // More info: https://docs.avaloniaui.net/docs/guides/development-guides/data-validation#manage-validationplugins
             DisableAvaloniaDataAnnotationValidation();
+
+            // Resolve MainWindowViewModel from DI
+            var vm = Program.ServiceProvider.GetService<MainWindowViewModel>() ?? new MainWindowViewModel();
+
             desktop.MainWindow = new MainWindow
             {
-                DataContext = new MainWindowViewModel(),
+                DataContext = vm
             };
         }
 
