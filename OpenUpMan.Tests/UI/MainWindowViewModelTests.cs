@@ -159,7 +159,7 @@ namespace OpenUpMan.Tests.UI
         }
 
         [Fact]
-        public async Task MainWindowViewModel_AuthViewModel_CanToggleMode()
+        public void MainWindowViewModel_AuthViewModel_CanToggleMode()
         {
             var mockService = new Mock<IUserService>();
             var vm = new MainWindowViewModel(mockService.Object);
