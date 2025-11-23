@@ -3,7 +3,7 @@ using OpenUpMan.Domain;
 
 namespace OpenUpMan.Data
 {
-    public class UserRepository : IUserRepository, IDisposable
+    public class UserRepository : IUserRepository
     {
         private readonly AppDbContext _ctx;
 
@@ -25,11 +25,6 @@ namespace OpenUpMan.Data
         public async Task SaveChangesAsync(CancellationToken ct = default)
         {
             await _ctx.SaveChangesAsync(ct);
-        }
-
-        public void Dispose()
-        {
-            _ctx.Dispose();
         }
     }
 }

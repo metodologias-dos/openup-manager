@@ -24,7 +24,7 @@ namespace OpenUpMan.Tests.Data
             using (var ctx = new AppDbContext(options1))
             {
                 await ctx.Database.EnsureCreatedAsync();
-                using var repo = new UserRepository(ctx);
+                var repo = new UserRepository(ctx);
                 var user = new User("persistUser", "hash123");
                 await repo.AddAsync(user);
                 await repo.SaveChangesAsync();
@@ -36,7 +36,7 @@ namespace OpenUpMan.Tests.Data
 
             using (var ctx2 = new AppDbContext(options2))
             {
-                using var repo2 = new UserRepository(ctx2);
+                var repo2 = new UserRepository(ctx2);
                 var fromDb = await repo2.GetByUsernameAsync("persistUser");
                 Assert.NotNull(fromDb);
                 Assert.Equal("persistUser", fromDb!.Username);

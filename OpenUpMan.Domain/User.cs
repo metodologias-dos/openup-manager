@@ -21,6 +21,10 @@ namespace OpenUpMan.Domain
 
         public void SetPasswordHash(string passwordHash)
         {
+            if (string.IsNullOrWhiteSpace(passwordHash))
+            {
+                throw new ArgumentException("Password hash cannot be null or empty.", nameof(passwordHash));
+            }
             PasswordHash = passwordHash;
         }
     }

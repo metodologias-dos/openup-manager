@@ -30,27 +30,6 @@ sealed class Program
         // Use shared cache to allow multiple connections and enable WAL below for better concurrency
         var connString = $"Data Source={dbPath};Cache=Shared;Pooling=True;";
 
-        // --- Print connection URIs for external tools (JDBC / Rider DB explorer) ---
-        try
-        {
-            // JDBC prefers forward slashes; create a couple of common URI formats
-            var dbPathForward = dbPath.Replace('\\', '/');
-            var jdbcSimple = $"jdbc:sqlite:{dbPathForward}"; // e.g. jdbc:sqlite:C:/Users/you/.../openup.db
-            var jdbcFileUri = $"jdbc:sqlite:file:{dbPathForward}?cache=shared&mode=rwc&journal_mode=WAL"; // with options
-
-            Console.WriteLine("--- SQLite connection info ---");
-            Console.WriteLine($".NET / EF Core connection string: {connString}");
-            Console.WriteLine($"JDBC simple URI (try this in Rider): {jdbcSimple}");
-            Console.WriteLine($"JDBC file URI with params: {jdbcFileUri}");
-            Console.WriteLine("(DB file path: " + dbPath + ")");
-            Console.WriteLine("-------------------------------");
-        }
-        catch (Exception ex)
-        {
-            // Don't fail startup for logging, but log the error to console for visibility.
-            Console.Error.WriteLine($"Warning: failed to print SQLite connection info: {ex.Message}");
-        }
-
         services.AddDbContext<AppDbContext>(options => options.UseSqlite(connString));
 
         // Repositories and services

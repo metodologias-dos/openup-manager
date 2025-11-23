@@ -95,32 +95,15 @@ public partial class UserAuthViewModel : ViewModelBase
 
     private async Task SubmitAsync(CancellationToken ct = default)
     {
-        ServiceResult result;
+        var result = IsCreateMode
+            ? await _userService.CreateUserAsync(Username, Password, ct)
+            : await _userService.AuthenticateAsync(Username, Password, ct);
         
-        if (IsCreateMode)
-        {
-            result = await _userService.CreateUserAsync(Username, Password, ct);
-        }
-        else
-        {
-            result = await _userService.AuthenticateAsync(Username, Password, ct);
-        }
+        Feedback = result.Message;
         
-        if (result != null)
-        {
-            Feedback = result.Message;
-        
-            // Set the feedback visibility flags based on result type
-            IsSuccessFeedback = result.ResultType == ServiceResultType.Success;
-            IsErrorFeedback = result.ResultType == ServiceResultType.Error;
-            IsNeutralFeedback = false; // We always have success or error
-        }
-        else
-        {
-            Feedback = "Error inesperado";
-            IsErrorFeedback = true;
-            IsSuccessFeedback = false;
-            IsNeutralFeedback = false;
-        }
+        // Set the feedback visibility flags based on result type
+        IsSuccessFeedback = result.ResultType == ServiceResultType.Success;
+        IsErrorFeedback = result.ResultType == ServiceResultType.Error;
+        IsNeutralFeedback = false; // We always have success or error
     }
 }

@@ -8,7 +8,7 @@ namespace OpenUpMan.Tests.Data
 {
     public class UserRepositoryTests
     {
-        private static async Task<(AppDbContext, UserRepository)> CreateInMemoryDatabase()
+        private static async Task<(SqliteConnection, AppDbContext, UserRepository)> CreateInMemoryDatabase()
         {
             var connection = new SqliteConnection("DataSource=:memory:");
             connection.Open();
@@ -21,15 +21,16 @@ namespace OpenUpMan.Tests.Data
             await context.Database.EnsureCreatedAsync();
 
             var repo = new UserRepository(context);
-            return (context, repo);
+            return (connection, context, repo);
         }
 
         [Fact]
         public async Task AddAndGetUser_Succeeds()
         {
             var tuple = await CreateInMemoryDatabase();
-            using var context = tuple.Item1;
-            using var repo = tuple.Item2;
+            using var connection = tuple.Item1;
+            using var context = tuple.Item2;
+            var repo = tuple.Item3;
 
             var user = new User("repoUser", "hash123");
             await repo.AddAsync(user);
@@ -44,8 +45,9 @@ namespace OpenUpMan.Tests.Data
         public async Task DuplicateUsername_ThrowsOnSave()
         {
             var tuple = await CreateInMemoryDatabase();
-            using var context = tuple.Item1;
-            using var repo = tuple.Item2;
+            using var connection = tuple.Item1;
+            using var context = tuple.Item2;
+            var repo = tuple.Item3;
 
             var u1 = new User("dupUser", "h1");
             await repo.AddAsync(u1);

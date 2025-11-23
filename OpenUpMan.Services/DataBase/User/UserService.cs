@@ -53,9 +53,10 @@ namespace OpenUpMan.Services
                     User: user
                 );
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // Log exception here if you have logging
+                // Log exception for debugging purposes
+                Console.Error.WriteLine($"Error creating user: {ex.Message}");
                 return new ServiceResult(
                     Success: false,
                     ResultType: ServiceResultType.Error,
@@ -108,9 +109,10 @@ namespace OpenUpMan.Services
                     User: user
                 );
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // Log exception here if you have logging
+                // Log exception for debugging purposes
+                Console.Error.WriteLine($"Error authenticating user: {ex.Message}");
                 return new ServiceResult(
                     Success: false,
                     ResultType: ServiceResultType.Error,
