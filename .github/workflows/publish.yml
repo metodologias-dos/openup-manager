@@ -177,11 +177,11 @@ jobs:
         with:
           tag: ${{ steps.release_version.outputs.version }}
           name: ${{ env.PROJECT_NAME }}-${{ steps.release_version.outputs.version }}
-          files: ./release_files/*
+          artifacts: "./release_files/*"
+          artifactContentType: application/octet-stream
           draft: false
           prerelease: false
           allowUpdates: true
           generateReleaseNotes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
