@@ -150,16 +150,18 @@ jobs:
 
       - name: List downloaded artifacts
         run: |
-          echo "Downloaded files:"
-          ls -la ./downloaded_artifacts || true
-          find ./downloaded_artifacts -type f || true
+          echo "📦 Downloaded artifacts structure:"
+          ls -laR ./downloaded_artifacts || true
 
       - name: Prepare release files
         run: |
           mkdir -p ./release_files
-          find ./downloaded_artifacts -type f -name "*.zip" -exec mv {} ./release_files/ \;
-          find ./downloaded_artifacts -type f -name "*.tar.gz" -exec mv {} ./release_files/ \;
-          ls -la ./release_files
+          echo "🔍 Finding and moving artifact files..."
+          # En v4, cada artifact está en su propia carpeta: downloaded_artifacts/ARTIFACT_NAME/archivo
+          # Mover todos los archivos .zip y .tar.gz a release_files/
+          find ./downloaded_artifacts -type f \( -name "*.zip" -o -name "*.tar.gz" \) -exec cp {} ./release_files/ \;
+          echo "📋 Files prepared for release:"
+          ls -lah ./release_files/
 
       - name: Set release version
         id: release_version
