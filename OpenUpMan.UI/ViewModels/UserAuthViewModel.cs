@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -9,6 +10,9 @@ namespace OpenUpMan.UI.ViewModels;
 public partial class UserAuthViewModel : ViewModelBase
 {
     private readonly IUserService _userService;
+
+    // New event: raised when authentication/create succeeds
+    public event Action<OpenUpMan.Domain.User?>? AuthenticationSucceeded;
 
     public UserAuthViewModel(IUserService userService)
     {
@@ -98,12 +102,18 @@ public partial class UserAuthViewModel : ViewModelBase
         var result = IsCreateMode
             ? await _userService.CreateUserAsync(Username, Password, ct)
             : await _userService.AuthenticateAsync(Username, Password, ct);
-        
+
         Feedback = result.Message;
-        
+
         // Set the feedback visibility flags based on result type
         IsSuccessFeedback = result.ResultType == ServiceResultType.Success;
         IsErrorFeedback = result.ResultType == ServiceResultType.Error;
         IsNeutralFeedback = false; // We always have success or error
+
+        if (result.ResultType == ServiceResultType.Success)
+        {
+            // Notify listeners (UI) that authentication succeeded
+            AuthenticationSucceeded?.Invoke(result.User);
+        }
     }
 }
