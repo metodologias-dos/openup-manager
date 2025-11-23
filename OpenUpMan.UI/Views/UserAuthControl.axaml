@@ -1,0 +1,120 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:OpenUpMan.UI.ViewModels"
+             mc:Ignorable="d"
+             x:Class="OpenUpMan.UI.Views.UserAuthControl"
+             x:DataType="vm:UserAuthViewModel">
+
+  <!-- Ensure Enter key triggers the SubmitCommand -->
+  <UserControl.KeyBindings>
+    <KeyBinding Gesture="Enter" Command="{Binding SubmitCommand}" />
+  </UserControl.KeyBindings>
+
+  <Border Width="420" Classes="card">
+    <StackPanel Spacing="20">
+      <!-- Header Section -->
+      <StackPanel Spacing="8">
+        <TextBlock Text="{Binding HeaderText}" Classes="heading" />
+        <TextBlock Classes="subtitle"
+                   IsVisible="{Binding IsLoginMode}"
+                   Text="Ingresa tus credenciales para continuar" />
+        <TextBlock Classes="subtitle"
+                   IsVisible="{Binding !IsLoginMode}"
+                   Text="Completa el formulario para registrarte" />
+      </StackPanel>
+
+      <!-- Input Fields Section -->
+      <StackPanel Spacing="16">
+        <StackPanel Spacing="6">
+          <TextBlock Text="Usuario" Classes="label" />
+          <TextBox Watermark="Ingresa tu usuario" 
+                   Text="{Binding Username, Mode=TwoWay}" 
+                   Classes="input" 
+                   TabIndex="0" />
+        </StackPanel>
+
+        <StackPanel Spacing="6">
+          <TextBlock Text="Contraseña" Classes="label" />
+          <TextBox PasswordChar="●" 
+                   Watermark="Ingresa tu contraseña" 
+                   Text="{Binding Password, Mode=TwoWay}" 
+                   Classes="input"
+                   TabIndex="1" />
+        </StackPanel>
+      </StackPanel>
+
+      <!-- Feedback Message - Reserved space for up to 2 lines -->
+      <Border Height="44" Margin="0,4,0,0">
+        <Grid>
+          <!-- Default feedback (neutral) -->
+          <TextBlock Text="{Binding Feedback}" 
+                     Classes="feedback"
+                     TextWrapping="Wrap"
+                     MaxLines="2"
+                     TextAlignment="Center"
+                     VerticalAlignment="Center"
+                     IsVisible="{Binding IsNeutralFeedback}" />
+          
+          <!-- Success feedback (green) -->
+          <TextBlock Text="{Binding Feedback}" 
+                     Classes="feedback success"
+                     TextWrapping="Wrap"
+                     MaxLines="2"
+                     TextAlignment="Center"
+                     VerticalAlignment="Center"
+                     IsVisible="{Binding IsSuccessFeedback}" />
+          
+          <!-- Error feedback (red) -->
+          <TextBlock Text="{Binding Feedback}" 
+                     Classes="feedback error"
+                     TextWrapping="Wrap"
+                     MaxLines="2"
+                     TextAlignment="Center"
+                     VerticalAlignment="Center"
+                     IsVisible="{Binding IsErrorFeedback}" />
+        </Grid>
+      </Border>
+
+      <!-- Primary Action Button - Login (Blue) -->
+      <Button Command="{Binding SubmitCommand}" 
+              Content="{Binding SubmitButtonText}" 
+              Classes="primary"
+              IsDefault="True"
+              TabIndex="2"
+              IsVisible="{Binding IsLoginMode}" />
+
+      <!-- Primary Action Button - Register (Green) -->
+      <Button Command="{Binding SubmitCommand}" 
+              Content="{Binding SubmitButtonText}" 
+              Classes="success"
+              IsDefault="True"
+              TabIndex="2"
+              IsVisible="{Binding !IsLoginMode}" />
+
+      <!-- Toggle Mode Section -->
+      <StackPanel Spacing="8" HorizontalAlignment="Center" Margin="0,4,0,0">
+        <TextBlock HorizontalAlignment="Center"
+                   FontSize="13"
+                   Foreground="{DynamicResource TextControlForeground}"
+                   Opacity="0.7"
+                   IsVisible="{Binding IsLoginMode}"
+                   Text="¿No tienes cuenta?" />
+        <TextBlock HorizontalAlignment="Center"
+                   FontSize="13"
+                   Foreground="{DynamicResource TextControlForeground}"
+                   Opacity="0.7"
+                   IsVisible="{Binding !IsLoginMode}"
+                   Text="¿Ya tienes cuenta?" />
+        
+        <Button Command="{Binding ToggleModeCommand}" 
+                Content="{Binding ToggleButtonText}" 
+                Classes="link" 
+                HorizontalAlignment="Center"
+                TabIndex="3" />
+      </StackPanel>
+    </StackPanel>
+  </Border>
+
+</UserControl>

@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:OpenUpMan.UI.ViewModels"
+        xmlns:views="using:OpenUpMan.UI.Views"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="200"
@@ -15,18 +16,8 @@
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*" Margin="12">
-        <TextBlock Grid.Row="0" Grid.ColumnSpan="2" Text="Crear usuario" FontSize="16" />
-
-        <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Text="Usuario:" />
-        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Username, Mode=TwoWay}" />
-
-        <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Text="Contraseña:" />
-        <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Password, Mode=TwoWay}" />
-
-        <Button Grid.Row="3" Grid.ColumnSpan="2" Command="{Binding CreateUserCommand}" Content="Crear" HorizontalAlignment="Right" />
-
-        <TextBlock Grid.Row="4" Grid.ColumnSpan="2" Text="{Binding Feedback}" Foreground="Gray" />
+    <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+        <views:UserAuthControl DataContext="{Binding AuthViewModel}"/>
     </Grid>
 
 </Window>
