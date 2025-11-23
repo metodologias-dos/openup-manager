@@ -90,8 +90,16 @@ jobs:
 
       - name: Keep only single-file (Windows)
         if: startsWith(matrix.rid, 'win-')
+        shell: pwsh
         run: |
-          pwsh -NoProfile -Command "Set-Location ./publish/${{ matrix.rid }}; $files = Get-ChildItem -File; $exe = $files | Where-Object Extension -eq '.exe' | Select-Object -First 1; if ($null -eq $exe) { Write-Error 'No .exe found in publish output'; exit 1 }; $files | Where-Object { $_.FullName -ne $exe.FullName } | Remove-Item -Force -ErrorAction SilentlyContinue;"
+          Set-Location ./publish/${{ matrix.rid }}
+          $files = Get-ChildItem -File
+          $exe = $files | Where-Object Extension -eq '.exe' | Select-Object -First 1
+          if ($null -eq $exe) {
+            Write-Error 'No .exe found in publish output'
+            exit 1
+          }
+          $files | Where-Object { $_.FullName -ne $exe.FullName } | Remove-Item -Force -ErrorAction SilentlyContinue
 
       - name: Keep only single-file (Linux)
         if: startsWith(matrix.rid, 'linux-')
@@ -106,8 +114,9 @@ jobs:
 
       - name: Package (Windows)
         if: startsWith(matrix.rid, 'win-')
+        shell: pwsh
         run: |
-          pwsh -NoProfile -Command "Compress-Archive -Path ./publish/${{ matrix.rid }}/* -DestinationPath ./artifacts/${{ env.ARTIFACT_NAME }} -Force"
+          Compress-Archive -Path ./publish/${{ matrix.rid }}/* -DestinationPath ./artifacts/${{ env.ARTIFACT_NAME }} -Force
 
       - name: Package (Linux)
         if: startsWith(matrix.rid, 'linux-')
@@ -122,6 +131,7 @@ jobs:
 
       - name: Cleanup publish folder
         if: always()
+        shell: bash
         run: |
           rm -rf ./publish || true
           # do not remove artifacts so they can be uploaded
