@@ -45,9 +45,10 @@ sealed class Program
             Console.WriteLine("(DB file path: " + dbPath + ")");
             Console.WriteLine("-------------------------------");
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // don't fail startup for logging
+            // Don't fail startup for logging, but log the error to console for visibility.
+            Console.Error.WriteLine($"Warning: failed to print SQLite connection info: {ex.Message}");
         }
 
         services.AddDbContext<AppDbContext>(options => options.UseSqlite(connString));
