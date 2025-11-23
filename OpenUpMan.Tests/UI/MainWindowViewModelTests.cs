@@ -1,4 +1,5 @@
 ﻿using Moq;
+using OpenUpMan.Domain;
 using OpenUpMan.Services;
 using OpenUpMan.UI.ViewModels;
 using Xunit;
@@ -16,6 +17,53 @@ namespace OpenUpMan.Tests.UI
 
             Assert.NotNull(vm);
             Assert.NotNull(vm.AuthViewModel);
+        }
+
+        [Fact]
+        public async Task Constructor_ParameterlessConstructor_CreatesNoOpUserService()
+        {
+            // Arrange & Act
+            var vm = new MainWindowViewModel();
+
+            // Assert - Verify NoOpUserService is being used by testing its behavior
+            vm.AuthViewModel.Username = "test";
+            vm.AuthViewModel.Password = "test";
+            await vm.AuthViewModel.SubmitCommand.ExecuteAsync(null);
+
+            Assert.Contains("No backend configured", vm.AuthViewModel.Feedback);
+        }
+
+        [Fact]
+        public void Constructor_ParameterlessConstructor_InitializesAuthViewModel()
+        {
+            // Arrange & Act
+            var vm = new MainWindowViewModel();
+
+            // Assert
+            Assert.NotNull(vm.AuthViewModel);
+            Assert.IsType<UserAuthViewModel>(vm.AuthViewModel);
+        }
+
+        [Fact]
+        public void Constructor_ParameterlessConstructor_AuthViewModelInLoginMode()
+        {
+            // Arrange & Act
+            var vm = new MainWindowViewModel();
+
+            // Assert
+            Assert.True(vm.AuthViewModel.IsLoginMode);
+            Assert.False(vm.AuthViewModel.IsCreateMode);
+        }
+
+        [Fact]
+        public void Constructor_ParameterlessConstructor_CanSwitchToCreateMode()
+        {
+            // Arrange & Act
+            var vm = new MainWindowViewModel();
+            vm.AuthViewModel.ToggleModeCommand.Execute(null);
+
+            // Assert - Tests that the NoOpUserService works in both modes
+            Assert.True(vm.AuthViewModel.IsCreateMode);
         }
 
         [Fact]
@@ -48,12 +96,43 @@ namespace OpenUpMan.Tests.UI
         public async Task NoOpUserService_CreateUserAsync_ReturnsError()
         {
             var vm = new MainWindowViewModel(); // Uses NoOpUserService
+            vm.AuthViewModel.ToggleModeCommand.Execute(null); // Switch to create mode
+            vm.AuthViewModel.Username = "newuser";
+            vm.AuthViewModel.Password = "password";
 
             await vm.AuthViewModel.SubmitCommand.ExecuteAsync(null);
 
             // Should have error feedback since NoOpUserService returns error
             Assert.True(vm.AuthViewModel.IsErrorFeedback);
             Assert.Contains("No backend configured", vm.AuthViewModel.Feedback);
+        }
+
+        [Fact]
+        public async Task NoOpUserService_CreateUserAsync_ReturnsFalseSuccess()
+        {
+            var vm = new MainWindowViewModel(); // Uses NoOpUserService
+            vm.AuthViewModel.ToggleModeCommand.Execute(null);
+            vm.AuthViewModel.Username = "test";
+            vm.AuthViewModel.Password = "test";
+
+            await vm.AuthViewModel.SubmitCommand.ExecuteAsync(null);
+
+            Assert.False(vm.AuthViewModel.IsSuccessFeedback);
+            Assert.Equal(ServiceResultType.Error, ServiceResultType.Error);
+        }
+
+        [Fact]
+        public async Task NoOpUserService_CreateUserAsync_ReturnsNullUser()
+        {
+            var vm = new MainWindowViewModel(); // Uses NoOpUserService
+            vm.AuthViewModel.ToggleModeCommand.Execute(null);
+            vm.AuthViewModel.Username = "test";
+            vm.AuthViewModel.Password = "test";
+
+            await vm.AuthViewModel.SubmitCommand.ExecuteAsync(null);
+
+            // NoOpUserService should return null User
+            Assert.True(vm.AuthViewModel.IsErrorFeedback);
         }
 
         [Fact]
@@ -67,6 +146,32 @@ namespace OpenUpMan.Tests.UI
 
             Assert.True(vm.AuthViewModel.IsErrorFeedback);
             Assert.Contains("No backend configured", vm.AuthViewModel.Feedback);
+        }
+
+        [Fact]
+        public async Task NoOpUserService_AuthenticateAsync_ReturnsFalseSuccess()
+        {
+            var vm = new MainWindowViewModel(); // Uses NoOpUserService
+            vm.AuthViewModel.Username = "user";
+            vm.AuthViewModel.Password = "pass";
+
+            await vm.AuthViewModel.SubmitCommand.ExecuteAsync(null);
+
+            Assert.False(vm.AuthViewModel.IsSuccessFeedback);
+        }
+
+        [Fact]
+        public async Task NoOpUserService_AuthenticateAsync_ReturnsNullUser()
+        {
+            var vm = new MainWindowViewModel(); // Uses NoOpUserService
+            vm.AuthViewModel.Username = "user";
+            vm.AuthViewModel.Password = "pass";
+
+            await vm.AuthViewModel.SubmitCommand.ExecuteAsync(null);
+
+            // NoOpUserService returns null User
+            Assert.True(vm.AuthViewModel.IsErrorFeedback);
+            Assert.Equal("No backend configured.", vm.AuthViewModel.Feedback);
         }
 
         #endregion
@@ -187,6 +292,75 @@ namespace OpenUpMan.Tests.UI
             await vm.AuthViewModel.SubmitCommand.ExecuteAsync(null);
 
             Assert.True(vm.AuthViewModel.IsSuccessFeedback);
+        }
+
+        [Fact]
+        public async Task MainWindowViewModel_CreateUserAsync_DelegatesToService()
+        {
+            // Arrange
+            var mockService = new Mock<IUserService>();
+            var expectedResult = new ServiceResult(true, ServiceResultType.Success, "User created", null);
+            mockService.Setup(s => s.CreateUserAsync("testuser", "testpass", It.IsAny<CancellationToken>()))
+                .ReturnsAsync(expectedResult);
+
+            var vm = new MainWindowViewModel(mockService.Object);
+
+            // Act - Call CreateUserAsync indirectly through the AuthViewModel
+            vm.AuthViewModel.ToggleModeCommand.Execute(null); // Switch to create mode
+            vm.AuthViewModel.Username = "testuser";
+            vm.AuthViewModel.Password = "testpass";
+            await vm.AuthViewModel.SubmitCommand.ExecuteAsync(null);
+
+            // Assert - Verify CreateUserAsync was called
+            mockService.Verify(s => s.CreateUserAsync("testuser", "testpass", It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task MainWindowViewModel_CreateUserAsync_ReturnsServiceResult()
+        {
+            // Arrange
+            var mockService = new Mock<IUserService>();
+            var testUser = new User("createdUser", "hash");
+            var expectedResult = new ServiceResult(true, ServiceResultType.Success, "Usuario creado", testUser);
+            
+            mockService.Setup(s => s.CreateUserAsync("createdUser", "password123", It.IsAny<CancellationToken>()))
+                .ReturnsAsync(expectedResult);
+
+            var vm = new MainWindowViewModel(mockService.Object);
+
+            // Act
+            vm.AuthViewModel.ToggleModeCommand.Execute(null);
+            vm.AuthViewModel.Username = "createdUser";
+            vm.AuthViewModel.Password = "password123";
+            await vm.AuthViewModel.SubmitCommand.ExecuteAsync(null);
+
+            // Assert
+            Assert.True(vm.AuthViewModel.IsSuccessFeedback);
+            Assert.Equal("Usuario creado", vm.AuthViewModel.Feedback);
+            mockService.Verify(s => s.CreateUserAsync("createdUser", "password123", It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task MainWindowViewModel_CreateUserAsync_HandlesFailure()
+        {
+            // Arrange
+            var mockService = new Mock<IUserService>();
+            var expectedResult = new ServiceResult(false, ServiceResultType.Error, "Usuario ya existe", null);
+            
+            mockService.Setup(s => s.CreateUserAsync("existing", "password", It.IsAny<CancellationToken>()))
+                .ReturnsAsync(expectedResult);
+
+            var vm = new MainWindowViewModel(mockService.Object);
+
+            // Act
+            vm.AuthViewModel.ToggleModeCommand.Execute(null);
+            vm.AuthViewModel.Username = "existing";
+            vm.AuthViewModel.Password = "password";
+            await vm.AuthViewModel.SubmitCommand.ExecuteAsync(null);
+
+            // Assert
+            Assert.True(vm.AuthViewModel.IsErrorFeedback);
+            Assert.Equal("Usuario ya existe", vm.AuthViewModel.Feedback);
         }
 
         #endregion

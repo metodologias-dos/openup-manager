@@ -1,5 +1,6 @@
 ﻿using Avalonia;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System;
 using OpenUpMan.Data;
 using OpenUpMan.Services;
@@ -50,6 +51,14 @@ sealed class Program
             // don't fail startup for logging
         }
 
+        // Configure logging
+        services.AddLogging(builder =>
+        {
+            builder.AddConsole();
+            builder.AddDebug();
+            builder.SetMinimumLevel(LogLevel.Information);
+        });
+
         services.AddDbContext<AppDbContext>(options => options.UseSqlite(connString));
 
         // Repositories and services
@@ -66,8 +75,12 @@ sealed class Program
         {
             using var scope = ServiceProvider.CreateScope();
             var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            // For simple embedded scenarios: create DB schema if it doesn't exist.
-            ctx.Database.EnsureCreated();
+            var logger = scope.ServiceProvider.GetRequiredService<ILogger<OpenUpMan.Data.Migrations.DatabaseMigrator>>();
+            
+            // Use DatabaseMigrator to handle schema updates automatically
+            // autoRemoveObsoleteColumns=true will automatically remove columns that no longer exist in entities
+            var migrator = new OpenUpMan.Data.Migrations.DatabaseMigrator(ctx, logger, autoRemoveObsoleteColumns: true);
+            migrator.MigrateAsync().Wait();
 
             // Enable Write-Ahead Logging (WAL) for better concurrency (readers won't block writers)
             var conn = ctx.Database.GetDbConnection();
@@ -82,7 +95,6 @@ sealed class Program
             }
             finally
             {
-                // keep connection lifecycle to EF; close if we explicitly opened it here
                 if (conn.State == System.Data.ConnectionState.Open)
                     conn.Close();
             }

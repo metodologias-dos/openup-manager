@@ -1,5 +1,4 @@
-﻿// Added domain entity for User with basic fields and constructors
-namespace OpenUpMan.Domain
+﻿namespace OpenUpMan.Domain
 {
     public class User
     {
@@ -7,6 +6,7 @@ namespace OpenUpMan.Domain
         public string Username { get; private set; } = null!;
         public string PasswordHash { get; private set; } = null!;
         public DateTime CreatedAt { get; private set; }
+        public DateTime? PasswordChangedAt { get; private set; }
 
         // Parameterless constructor for EF
         protected User() { }
@@ -17,11 +17,18 @@ namespace OpenUpMan.Domain
             Username = username;
             PasswordHash = passwordHash;
             CreatedAt = DateTime.UtcNow;
+            PasswordChangedAt = null;
         }
 
         public void SetPasswordHash(string passwordHash)
         {
+            if (string.IsNullOrWhiteSpace(passwordHash))
+            {
+                throw new ArgumentException("Password hash cannot be null or empty.", nameof(passwordHash));
+            }
+            
             PasswordHash = passwordHash;
+            PasswordChangedAt = DateTime.UtcNow;
         }
     }
 }

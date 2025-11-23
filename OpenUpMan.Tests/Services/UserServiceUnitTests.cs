@@ -1,4 +1,5 @@
-﻿using Moq;
+﻿using Microsoft.Extensions.Logging;
+using Moq;
 using OpenUpMan.Data;
 using OpenUpMan.Domain;
 using OpenUpMan.Services;
@@ -8,6 +9,11 @@ namespace OpenUpMan.Tests.Services
 {
     public class UserServiceUnitTests
     {
+        private static ILogger<UserService> CreateMockLogger()
+        {
+            return new Mock<ILogger<UserService>>().Object;
+        }
+
         #region CreateUser Tests
 
         [Fact]
@@ -18,7 +24,7 @@ namespace OpenUpMan.Tests.Services
             mockRepo.Setup(r => r.AddAsync(It.IsAny<User>(), default)).Returns(Task.CompletedTask).Verifiable();
             mockRepo.Setup(r => r.SaveChangesAsync(default)).Returns(Task.CompletedTask).Verifiable();
 
-            var service = new UserService(mockRepo.Object);
+            var service = new UserService(mockRepo.Object, CreateMockLogger());
 
             var result = await service.CreateUserAsync("mike", "P@ssw0rd");
 
@@ -38,7 +44,7 @@ namespace OpenUpMan.Tests.Services
             var mockRepo = new Mock<IUserRepository>(MockBehavior.Strict);
             mockRepo.Setup(r => r.GetByUsernameAsync("exists", default)).ReturnsAsync(existing);
             
-            var service = new UserService(mockRepo.Object);
+            var service = new UserService(mockRepo.Object, CreateMockLogger());
 
             var result = await service.CreateUserAsync("exists", "abc");
 
@@ -59,7 +65,7 @@ namespace OpenUpMan.Tests.Services
         public async Task CreateUser_ReturnsError_WhenCredentialsInvalid(string username, string password)
         {
             var mockRepo = new Mock<IUserRepository>(MockBehavior.Strict);
-            var service = new UserService(mockRepo.Object);
+            var service = new UserService(mockRepo.Object, CreateMockLogger());
 
             var result = await service.CreateUserAsync(username, password);
 
@@ -76,7 +82,7 @@ namespace OpenUpMan.Tests.Services
             mockRepo.Setup(r => r.GetByUsernameAsync("test", default))
                 .ThrowsAsync(new Exception("Database connection failed"));
             
-            var service = new UserService(mockRepo.Object);
+            var service = new UserService(mockRepo.Object, CreateMockLogger());
 
             var result = await service.CreateUserAsync("test", "password");
 
@@ -100,7 +106,7 @@ namespace OpenUpMan.Tests.Services
             var mockRepo = new Mock<IUserRepository>(MockBehavior.Strict);
             mockRepo.Setup(r => r.GetByUsernameAsync("authUser", default)).ReturnsAsync(existing);
 
-            var service = new UserService(mockRepo.Object);
+            var service = new UserService(mockRepo.Object, CreateMockLogger());
 
             var result = await service.AuthenticateAsync("authUser", password);
 
@@ -118,7 +124,7 @@ namespace OpenUpMan.Tests.Services
             var mockRepo = new Mock<IUserRepository>(MockBehavior.Strict);
             mockRepo.Setup(r => r.GetByUsernameAsync("nonexistent", default)).ReturnsAsync((User?)null);
 
-            var service = new UserService(mockRepo.Object);
+            var service = new UserService(mockRepo.Object, CreateMockLogger());
 
             var result = await service.AuthenticateAsync("nonexistent", "password");
 
@@ -139,7 +145,7 @@ namespace OpenUpMan.Tests.Services
             var mockRepo = new Mock<IUserRepository>(MockBehavior.Strict);
             mockRepo.Setup(r => r.GetByUsernameAsync("authUser", default)).ReturnsAsync(existing);
 
-            var service = new UserService(mockRepo.Object);
+            var service = new UserService(mockRepo.Object, CreateMockLogger());
 
             var result = await service.AuthenticateAsync("authUser", "wrongPassword");
 
@@ -159,7 +165,7 @@ namespace OpenUpMan.Tests.Services
         public async Task Authenticate_ReturnsError_WhenCredentialsAreEmpty(string username, string password)
         {
             var mockRepo = new Mock<IUserRepository>(MockBehavior.Strict);
-            var service = new UserService(mockRepo.Object);
+            var service = new UserService(mockRepo.Object, CreateMockLogger());
 
             var result = await service.AuthenticateAsync(username, password);
 
@@ -176,7 +182,7 @@ namespace OpenUpMan.Tests.Services
             mockRepo.Setup(r => r.GetByUsernameAsync("test", default))
                 .ThrowsAsync(new Exception("Database connection failed"));
             
-            var service = new UserService(mockRepo.Object);
+            var service = new UserService(mockRepo.Object, CreateMockLogger());
 
             var result = await service.AuthenticateAsync("test", "password");
 
@@ -203,7 +209,7 @@ namespace OpenUpMan.Tests.Services
             mockRepo.Setup(r => r.AddAsync(It.IsAny<User>(), default)).Returns(Task.CompletedTask);
             mockRepo.Setup(r => r.SaveChangesAsync(default)).Returns(Task.CompletedTask);
 
-            var service = new UserService(mockRepo.Object);
+            var service = new UserService(mockRepo.Object, CreateMockLogger());
 
             var result = await service.CreateUserAsync(username, password);
 
@@ -223,7 +229,7 @@ namespace OpenUpMan.Tests.Services
             mockRepo.Setup(r => r.AddAsync(It.IsAny<User>(), default)).Returns(Task.CompletedTask);
             mockRepo.Setup(r => r.SaveChangesAsync(default)).Returns(Task.CompletedTask);
 
-            var service = new UserService(mockRepo.Object);
+            var service = new UserService(mockRepo.Object, CreateMockLogger());
 
             var result = await service.CreateUserAsync(username, password);
 
@@ -241,7 +247,7 @@ namespace OpenUpMan.Tests.Services
             mockRepo.Setup(r => r.AddAsync(It.IsAny<User>(), default)).Returns(Task.CompletedTask);
             mockRepo.Setup(r => r.SaveChangesAsync(default)).Returns(Task.CompletedTask);
 
-            var service = new UserService(mockRepo.Object);
+            var service = new UserService(mockRepo.Object, CreateMockLogger());
 
             // Should handle gracefully - either accept or reject, but not crash
             var result = await service.CreateUserAsync(username, password);
@@ -261,7 +267,7 @@ namespace OpenUpMan.Tests.Services
             mockRepo.Setup(r => r.AddAsync(It.IsAny<User>(), default)).Returns(Task.CompletedTask);
             mockRepo.Setup(r => r.SaveChangesAsync(default)).Returns(Task.CompletedTask);
 
-            var service = new UserService(mockRepo.Object);
+            var service = new UserService(mockRepo.Object, CreateMockLogger());
 
             var result = await service.CreateUserAsync(username, password);
 
@@ -275,7 +281,7 @@ namespace OpenUpMan.Tests.Services
         public async Task CreateUser_HandlesWhitespaceVariations(string username, string password)
         {
             var mockRepo = new Mock<IUserRepository>(MockBehavior.Strict);
-            var service = new UserService(mockRepo.Object);
+            var service = new UserService(mockRepo.Object, CreateMockLogger());
 
             var result = await service.CreateUserAsync(username, password);
 
@@ -287,7 +293,7 @@ namespace OpenUpMan.Tests.Services
         public async Task Authenticate_HandlesNullUsername()
         {
             var mockRepo = new Mock<IUserRepository>(MockBehavior.Strict);
-            var service = new UserService(mockRepo.Object);
+            var service = new UserService(mockRepo.Object, CreateMockLogger());
 
             var result = await service.AuthenticateAsync(null!, "password");
 
@@ -299,7 +305,7 @@ namespace OpenUpMan.Tests.Services
         public async Task Authenticate_HandlesNullPassword()
         {
             var mockRepo = new Mock<IUserRepository>(MockBehavior.Strict);
-            var service = new UserService(mockRepo.Object);
+            var service = new UserService(mockRepo.Object, CreateMockLogger());
 
             var result = await service.AuthenticateAsync("username", null!);
 
@@ -314,7 +320,7 @@ namespace OpenUpMan.Tests.Services
             mockRepo.Setup(r => r.GetByUsernameAsync("test", default))
                 .ThrowsAsync(new TimeoutException("Database timeout"));
             
-            var service = new UserService(mockRepo.Object);
+            var service = new UserService(mockRepo.Object, CreateMockLogger());
 
             var result = await service.CreateUserAsync("test", "password");
 
@@ -331,7 +337,7 @@ namespace OpenUpMan.Tests.Services
             mockRepo.Setup(r => r.SaveChangesAsync(default))
                 .ThrowsAsync(new Exception("Database save failed"));
             
-            var service = new UserService(mockRepo.Object);
+            var service = new UserService(mockRepo.Object, CreateMockLogger());
 
             var result = await service.CreateUserAsync("test", "password");
 

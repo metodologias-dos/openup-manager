@@ -1,5 +1,4 @@
-﻿// User service to handle creation and authentication with obscured errors
-using BCrypt.Net;
+﻿using Microsoft.Extensions.Logging;
 using OpenUpMan.Data;
 using OpenUpMan.Domain;
 
@@ -8,10 +7,12 @@ namespace OpenUpMan.Services
     public class UserService : IUserService
     {
         private readonly IUserRepository _repo;
+        private readonly ILogger<UserService> _logger;
 
-        public UserService(IUserRepository repo)
+        public UserService(IUserRepository repo, ILogger<UserService> logger)
         {
             _repo = repo;
+            _logger = logger;
         }
 
         public async Task<ServiceResult> CreateUserAsync(string username, string password, CancellationToken ct = default)
@@ -53,9 +54,9 @@ namespace OpenUpMan.Services
                     User: user
                 );
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // Log exception here if you have logging
+                _logger.LogError(ex, "Error creating user with username: {Username}", username);
                 return new ServiceResult(
                     Success: false,
                     ResultType: ServiceResultType.Error,
@@ -108,9 +109,9 @@ namespace OpenUpMan.Services
                     User: user
                 );
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // Log exception here if you have logging
+                _logger.LogError(ex, "Error authenticating user with username: {Username}", username);
                 return new ServiceResult(
                     Success: false,
                     ResultType: ServiceResultType.Error,
