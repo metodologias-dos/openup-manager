@@ -146,22 +146,16 @@ jobs:
       - name: Download all artifacts from previous jobs
         uses: actions/download-artifact@v4
         with:
-          path: ./downloaded_artifacts
+          path: ./release_files
+          merge-multiple: true
 
       - name: List downloaded artifacts
         run: |
-          echo "📦 Downloaded artifacts structure:"
-          ls -laR ./downloaded_artifacts || true
-
-      - name: Prepare release files
-        run: |
-          mkdir -p ./release_files
-          echo "🔍 Finding and moving artifact files..."
-          # En v4, cada artifact está en su propia carpeta: downloaded_artifacts/ARTIFACT_NAME/archivo
-          # Mover todos los archivos .zip y .tar.gz a release_files/
-          find ./downloaded_artifacts -type f \( -name "*.zip" -o -name "*.tar.gz" \) -exec cp {} ./release_files/ \;
-          echo "📋 Files prepared for release:"
-          ls -lah ./release_files/
+          echo "📦 Downloaded artifacts (merged):"
+          ls -lah ./release_files/ || true
+          echo ""
+          echo "📋 Files ready for release:"
+          find ./release_files -type f \( -name "*.zip" -o -name "*.tar.gz" \) -ls
 
       - name: Set release version
         id: release_version
