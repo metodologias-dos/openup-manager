@@ -13,6 +13,9 @@ public partial class ProjectsPopupViewModel : ViewModelBase
     // Event to request the window to close
     public event Action? CloseRequested;
 
+    // Event to request a logout (close projects and return to login)
+    public event Action? LogoutRequested;
+
     public ProjectsPopupViewModel()
     {
         Projects = new ObservableCollection<ProjectListItemViewModel>();
@@ -27,6 +30,9 @@ public partial class ProjectsPopupViewModel : ViewModelBase
         CloseCommand = new RelayCommand(OnClose);
         OpenProjectCommand = new RelayCommand<ProjectListItemViewModel?>(OnOpenProject);
         DeleteProjectCommand = new RelayCommand<ProjectListItemViewModel?>(OnDeleteProject);
+
+        // logout command
+        LogoutCommand = new RelayCommand(OnLogout);
     }
 
     [ObservableProperty]
@@ -36,6 +42,9 @@ public partial class ProjectsPopupViewModel : ViewModelBase
     public IRelayCommand CloseCommand { get; }
     public IRelayCommand<ProjectListItemViewModel?> OpenProjectCommand { get; }
     public IRelayCommand<ProjectListItemViewModel?> DeleteProjectCommand { get; }
+
+    // Command to trigger logout
+    public IRelayCommand LogoutCommand { get; }
 
     private void OnNewProject()
     {
@@ -57,6 +66,11 @@ public partial class ProjectsPopupViewModel : ViewModelBase
     {
         if (project == null) return;
         Projects.Remove(project);
+    }
+
+    private void OnLogout()
+    {
+        LogoutRequested?.Invoke();
     }
 }
 

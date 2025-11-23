@@ -69,8 +69,8 @@
               <TextBlock Text="Nuevo Proyecto" VerticalAlignment="Center" />
             </StackPanel>
           </Button>
-          <Button Content="Salir" 
-                  Command="{Binding CloseCommand}"
+          <Button Content="Cerrar sesión" 
+                  Command="{Binding LogoutCommand}"
                   Padding="16,10"
                   FontSize="14" />
         </StackPanel>

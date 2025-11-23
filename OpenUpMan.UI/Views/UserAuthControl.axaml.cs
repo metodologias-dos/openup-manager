@@ -31,7 +31,7 @@ public partial class UserAuthControl : UserControl
         }
     }
 
-    private void OnAuthenticationSucceeded(Domain.User? user)
+    private void OnAuthenticationSucceeded(OpenUpMan.Domain.User? user)
     {
         // Open the ProjectsPopup window on the UI thread
         Avalonia.Threading.Dispatcher.UIThread.Post(() =>
@@ -46,7 +46,14 @@ public partial class UserAuthControl : UserControl
             var owner = TopLevel.GetTopLevel(this) as Window;
             if (owner != null)
             {
-                popup.Show(owner);
+                try
+                {
+                    owner.Hide(); // Hide the login window first instead of closing it
+                }
+                catch { }
+
+                // Show the popup after hiding the owner
+                popup.Show();
             }
             else
             {
