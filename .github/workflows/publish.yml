@@ -1,0 +1,181 @@
+﻿name: Publish portable executables
+
+permissions:
+  contents: write
+
+on:
+  push:
+    branches:
+      - 'release/**'
+  workflow_dispatch:
+    inputs:
+      rids:
+        description: 'JSON array of RIDs to build, e.g. ["win-x64","win-x86","linux-x64"]'
+        required: false
+        default: '["win-x64","win-x86","linux-x64"]'
+      create_release:
+        description: 'When true (workflow_dispatch), create a GitHub Release and upload artifacts. Use to simulate release.'
+        required: false
+        default: 'false'
+      version:
+        description: 'Optional version string for artifact names'
+        required: false
+        default: ''
+
+env:
+  PROJECT_PATH: OpenUpMan.UI/OpenUpMan.UI.csproj
+  PROJECT_NAME: OpenUpMan
+  DOTNET_VERSION: '9.0.x'
+  # VERSION will be set per-run in a step (uses workflow_dispatch input if provided)
+
+jobs:
+  build-and-publish:
+    strategy:
+      matrix:
+        # build RIDs come from workflow_dispatch input (JSON array) or default
+        rid: ${{ fromJson( github.event_name == 'workflow_dispatch' && github.event.inputs.rids || '["win-x64","win-x86","linux-x64"]' ) }}
+    # choose runner OS based on RID prefix
+    runs-on: ${{ startsWith(matrix.rid, 'win-') && 'windows-latest' || 'ubuntu-latest' }}
+    name: Build & publish - ${{ matrix.rid }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Publish single-file self-contained
+        run: |
+          dotnet publish ${{ env.PROJECT_PATH }} -c Release -r ${{ matrix.rid }} --self-contained true /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /p:PublishTrimmed=false /p:DebugType=None /p:DebugSymbols=false -o ./publish/${{ matrix.rid }}
+
+      - name: Prepare artifacts folder
+        shell: bash
+        run: mkdir -p artifacts
+
+      - name: Set VERSION and artifact name
+        shell: bash
+        run: |
+          # Determine VERSION
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && -n "${{ github.event.inputs.version }}" ]]; then
+            VERSION="${{ github.event.inputs.version }}"
+          elif [[ "${{ github.ref }}" == refs/heads/release/* ]]; then
+            VERSION="${{ github.ref }}"
+            VERSION="${VERSION#refs/heads/release/}"
+          else
+            VERSION="${{ github.run_number }}"
+          fi
+          
+          # Set artifact extension based on RID
+          if [[ "${{ matrix.rid }}" == win-* ]]; then
+            EXT="zip"
+          else
+            EXT="tar.gz"
+          fi
+          
+          ARTIFACT_NAME="${{ env.PROJECT_NAME }}-${VERSION}-${{ matrix.rid }}.${EXT}"
+          echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> $GITHUB_ENV
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "📦 Artifact will be: $ARTIFACT_NAME"
+
+      - name: Keep only single-file (Windows)
+        if: startsWith(matrix.rid, 'win-')
+        run: |
+          pwsh -NoProfile -Command "Set-Location ./publish/${{ matrix.rid }}; $files = Get-ChildItem -File; $exe = $files | Where-Object Extension -eq '.exe' | Select-Object -First 1; if ($null -eq $exe) { Write-Error 'No .exe found in publish output'; exit 1 }; $files | Where-Object { $_.FullName -ne $exe.FullName } | Remove-Item -Force -ErrorAction SilentlyContinue;"
+
+      - name: Keep only single-file (Linux)
+        if: startsWith(matrix.rid, 'linux-')
+        run: |
+          set -e
+          cd ./publish/${{ matrix.rid }}
+          files=(*)
+          if [ ${#files[@]} -eq 0 ]; then echo "No files in publish directory"; exit 1; fi
+          # choose largest file as the single-file executable and remove others
+          largest=$(for f in "${files[@]}"; do stat -c%s "$f" && echo "$f"; done | paste - - | sort -nr | head -n1 | cut -f2)
+          for f in "${files[@]}"; do if [ "$f" != "$largest" ]; then rm -f "$f" || true; fi; done
+
+      - name: Package (Windows)
+        if: startsWith(matrix.rid, 'win-')
+        run: |
+          pwsh -NoProfile -Command "Compress-Archive -Path ./publish/${{ matrix.rid }}/* -DestinationPath ./artifacts/${{ env.ARTIFACT_NAME }} -Force"
+
+      - name: Package (Linux)
+        if: startsWith(matrix.rid, 'linux-')
+        run: |
+          tar -C ./publish/${{ matrix.rid }} -czf ./artifacts/${{ env.ARTIFACT_NAME }} .
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ./artifacts/${{ env.ARTIFACT_NAME }}
+
+      - name: Cleanup publish folder
+        if: always()
+        run: |
+          rm -rf ./publish || true
+          # do not remove artifacts so they can be uploaded
+
+  create-release:
+    needs: build-and-publish
+    runs-on: ubuntu-latest
+    # Only create a Release when we're on a release branch push, or when manually requested via workflow_dispatch (create_release = 'true')
+    if: startsWith(github.ref, 'refs/heads/release/') || (github.event_name == 'workflow_dispatch' && github.event.inputs.create_release == 'true')
+    name: Create GitHub Release and upload artifacts
+    steps:
+      - name: Download all artifacts from previous jobs
+        uses: actions/download-artifact@v4
+        with:
+          path: ./downloaded_artifacts
+
+      - name: List downloaded artifacts
+        run: |
+          echo "Downloaded files:"
+          ls -la ./downloaded_artifacts || true
+          find ./downloaded_artifacts -type f || true
+
+      - name: Prepare release files
+        run: |
+          mkdir -p ./release_files
+          find ./downloaded_artifacts -type f -name "*.zip" -exec mv {} ./release_files/ \;
+          find ./downloaded_artifacts -type f -name "*.tar.gz" -exec mv {} ./release_files/ \;
+          ls -la ./release_files
+
+      - name: Set release version
+        id: release_version
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && -n "${{ github.event.inputs.version }}" ]]; then
+            VERSION="${{ github.event.inputs.version }}"
+          elif [[ "${{ github.ref }}" == refs/heads/release/* ]]; then
+            VERSION="${{ github.ref }}"
+            VERSION="${VERSION#refs/heads/release/}"
+          else
+            VERSION="run-${{ github.run_number }}"
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "🏷️ Release version: $VERSION"
+
+      - name: Create GitHub Release and upload assets
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.release_version.outputs.version }}
+          name: ${{ env.PROJECT_NAME }}-${{ steps.release_version.outputs.version }}
+          files: ./release_files/*
+          draft: false
+          prerelease: false
+          allowUpdates: true
+          generateReleaseNotes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
