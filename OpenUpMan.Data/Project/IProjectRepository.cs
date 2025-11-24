@@ -1,0 +1,12 @@
+using OpenUpMan.Domain;
+
+namespace OpenUpMan.Data
+{
+    public interface IProjectRepository
+    {
+        Task<Project?> GetByIdentifierAsync(string identifier, CancellationToken ct = default);
+        Task<IEnumerable<Project>> GetByOwnerAsync(Guid ownerId, CancellationToken ct = default);
+        Task AddAsync(Project project, CancellationToken ct = default);
+        Task SaveChangesAsync(CancellationToken ct = default);
+    }
+}
