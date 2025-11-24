@@ -157,12 +157,6 @@ jobs:
           echo "📋 Files ready for release:"
           find ./release_files -type f \( -name "*.zip" -o -name "*.tar.gz" \) -ls
 
-      - name: Checkout full repository for source code packaging
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.ref }}
-          path: ./source_checkout
-
       - name: Set release version
         id: release_version
         run: |
@@ -177,29 +171,6 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "🏷️ Release version: $VERSION"
-
-      - name: Package complete source code
-        run: |
-          cd ./source_checkout
-          echo "📦 Packaging complete source code (all projects)..."
-          
-          # Excluir carpetas de build, cache, y archivos temporales
-          echo "Excluding build artifacts and temp files..."
-          find . -type d \( -name 'bin' -o -name 'obj' -o -name '.vs' -o -name '.idea' -o -name 'publish' -o -name 'artifacts' \) -exec rm -rf {} + 2>/dev/null || true
-          find . -type f -name '*.user' -delete 2>/dev/null || true
-          
-          # Crear archivo zip con todo el código fuente
-          cd ..
-          echo "Creating source code archives..."
-          tar -czf ./release_files/${{ env.PROJECT_NAME }}-${{ env.VERSION }}-source.tar.gz -C ./source_checkout .
-          
-          # Para Windows también crear un zip
-          cd ./source_checkout
-          zip -r ../release_files/${{ env.PROJECT_NAME }}-${{ env.VERSION }}-source.zip . -x "*.git/*" "*.github/*" "*node_modules/*" 2>/dev/null || true
-          cd ..
-          
-          echo "📋 Source code packages created:"
-          ls -lh ./release_files/*source* || true
 
       - name: Create GitHub Release and upload assets
         uses: ncipollo/release-action@v1
