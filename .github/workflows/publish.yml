@@ -160,6 +160,7 @@ jobs:
       - name: Checkout full repository for source code packaging
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.ref }}
           path: ./source_checkout
 
       - name: Set release version
