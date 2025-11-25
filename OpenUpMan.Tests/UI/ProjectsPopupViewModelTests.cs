@@ -6,6 +6,14 @@ namespace OpenUpMan.Tests.UI
 {
     public class ProjectsPopupViewModelTests
     {
+        private static ProjectListItemViewModel[] GetSampleProjects() => new[] {
+            new ProjectListItemViewModel { Id = "PRJ-001", Name = "Sistema de Gestión Empresarial", LastEdited = "2025-11-23" },
+            new ProjectListItemViewModel { Id = "PRJ-002", Name = "Portal Web Corporativo", LastEdited = "2025-11-22" },
+            new ProjectListItemViewModel { Id = "PRJ-003", Name = "App Mobile de Ventas", LastEdited = "2025-11-20" },
+            new ProjectListItemViewModel { Id = "PRJ-004", Name = "Dashboard Analítico", LastEdited = "2025-11-18" },
+            new ProjectListItemViewModel { Id = "PRJ-005", Name = "Sistema de Inventario", LastEdited = "2025-11-15" }
+        };
+
         #region Constructor Tests
 
         [Fact]
@@ -20,9 +28,10 @@ namespace OpenUpMan.Tests.UI
         [Fact]
         public void Constructor_LoadsSampleProjects()
         {
-            var vm = new ProjectsPopupViewModel();
+            var sample = GetSampleProjects();
+            var vm = new ProjectsPopupViewModel(sample);
 
-            Assert.Equal(5, vm.Projects.Count);
+            Assert.Equal(sample.Length, vm.Projects.Count);
         }
 
         [Fact]
@@ -39,12 +48,12 @@ namespace OpenUpMan.Tests.UI
         [Fact]
         public void Constructor_LoadsProjectWithCorrectData()
         {
-            var vm = new ProjectsPopupViewModel();
-
+            var sample = GetSampleProjects();
+            var vm = new ProjectsPopupViewModel(sample);
             var firstProject = vm.Projects.First();
-            Assert.Equal("PRJ-001", firstProject.Id);
-            Assert.Equal("Sistema de Gestión Empresarial", firstProject.Name);
-            Assert.Equal("2025-11-23", firstProject.LastEdited);
+            Assert.Equal(sample[0].Id, firstProject.Id);
+            Assert.Equal(sample[0].Name, firstProject.Name);
+            Assert.Equal(sample[0].LastEdited, firstProject.LastEdited);
         }
 
         #endregion
@@ -78,7 +87,7 @@ namespace OpenUpMan.Tests.UI
         [Fact]
         public void DeleteProjectCommand_CanExecute()
         {
-            var vm = new ProjectsPopupViewModel();
+            var vm = new ProjectsPopupViewModel(GetSampleProjects());
             var project = vm.Projects.First();
 
             Assert.True(vm.DeleteProjectCommand.CanExecute(project));
@@ -87,7 +96,7 @@ namespace OpenUpMan.Tests.UI
         [Fact]
         public void DeleteProjectCommand_RemovesProject()
         {
-            var vm = new ProjectsPopupViewModel();
+            var vm = new ProjectsPopupViewModel(GetSampleProjects());
             var project = vm.Projects.First();
             var initialCount = vm.Projects.Count;
 
@@ -100,7 +109,7 @@ namespace OpenUpMan.Tests.UI
         [Fact]
         public void DeleteProjectCommand_WithNullProject_DoesNothing()
         {
-            var vm = new ProjectsPopupViewModel();
+            var vm = new ProjectsPopupViewModel(GetSampleProjects());
             var initialCount = vm.Projects.Count;
 
             vm.DeleteProjectCommand.Execute(null);
@@ -111,7 +120,7 @@ namespace OpenUpMan.Tests.UI
         [Fact]
         public void DeleteProjectCommand_RemovesCorrectProject()
         {
-            var vm = new ProjectsPopupViewModel();
+            var vm = new ProjectsPopupViewModel(GetSampleProjects());
             var projectToDelete = vm.Projects.FirstOrDefault(p => p.Id == "PRJ-003");
 
             vm.DeleteProjectCommand.Execute(projectToDelete);
@@ -128,7 +137,7 @@ namespace OpenUpMan.Tests.UI
         [Fact]
         public void OpenProjectCommand_CanExecute()
         {
-            var vm = new ProjectsPopupViewModel();
+            var vm = new ProjectsPopupViewModel(GetSampleProjects());
             var project = vm.Projects.First();
 
             Assert.True(vm.OpenProjectCommand.CanExecute(project));
@@ -147,7 +156,7 @@ namespace OpenUpMan.Tests.UI
         [Fact]
         public void OpenProjectCommand_WithValidProject_DoesNotThrow()
         {
-            var vm = new ProjectsPopupViewModel();
+            var vm = new ProjectsPopupViewModel(GetSampleProjects());
             var project = vm.Projects.First();
 
             var exception = Record.Exception(() => vm.OpenProjectCommand.Execute(project));
@@ -184,7 +193,7 @@ namespace OpenUpMan.Tests.UI
         [Fact]
         public void Projects_CanBeModified()
         {
-            var vm = new ProjectsPopupViewModel();
+            var vm = new ProjectsPopupViewModel(GetSampleProjects());
             var newProject = new ProjectListItemViewModel
             {
                 Id = "PRJ-006",
@@ -222,7 +231,7 @@ namespace OpenUpMan.Tests.UI
         [Fact]
         public void SampleData_ContainsExpectedProjects()
         {
-            var vm = new ProjectsPopupViewModel();
+            var vm = new ProjectsPopupViewModel(GetSampleProjects());
 
             Assert.Contains(vm.Projects, p => p.Id == "PRJ-001" && p.Name == "Sistema de Gestión Empresarial");
             Assert.Contains(vm.Projects, p => p.Id == "PRJ-002" && p.Name == "Portal Web Corporativo");
@@ -234,7 +243,7 @@ namespace OpenUpMan.Tests.UI
         [Fact]
         public void SampleData_HasValidDates()
         {
-            var vm = new ProjectsPopupViewModel();
+            var vm = new ProjectsPopupViewModel(GetSampleProjects());
 
             Assert.All(vm.Projects, project =>
             {
@@ -245,4 +254,3 @@ namespace OpenUpMan.Tests.UI
         #endregion
     }
 }
-

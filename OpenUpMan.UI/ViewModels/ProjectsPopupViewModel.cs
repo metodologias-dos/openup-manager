@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
+using System.Collections.Generic;
 using OpenUpMan.Domain;
 using System.Threading.Tasks;
 using System.Threading;
@@ -16,9 +17,16 @@ public partial class ProjectsPopupViewModel : ViewModelBase
     // Event to request a logout (close projects and return to login)
     public event Action? LogoutRequested;
 
-    public ProjectsPopupViewModel()
+    public ProjectsPopupViewModel(IEnumerable<ProjectListItemViewModel>? initialProjects = null)
     {
         Projects = new ObservableCollection<ProjectListItemViewModel>();
+
+        // If initial projects are provided (e.g. by tests or a service), populate the collection
+        if (initialProjects != null)
+        {
+            foreach (var p in initialProjects)
+                Projects.Add(p);
+        }
 
         NewProjectCommand = new RelayCommand(OnNewProject);
         CloseCommand = new RelayCommand(OnClose);

@@ -114,6 +114,20 @@ public partial class UserAuthViewModel : ViewModelBase
         {
             // Notify listeners (UI) that authentication succeeded
             AuthenticationSucceeded?.Invoke(result.User);
+
+            // Do NOT clear inputs here — unit tests expect Feedback/flags to remain after Submit.
+            // Clearing should be done when logging out / restoring the login view.
         }
+    }
+
+    // Public helper to clear username/password/feedback — call this on logout when restoring login view
+    public void ClearInputs()
+    {
+        Username = string.Empty;
+        Password = string.Empty;
+        Feedback = string.Empty;
+        IsSuccessFeedback = false;
+        IsErrorFeedback = false;
+        IsNeutralFeedback = false;
     }
 }
