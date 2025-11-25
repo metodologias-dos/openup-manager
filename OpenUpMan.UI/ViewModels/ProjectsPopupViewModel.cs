@@ -19,12 +19,6 @@ public partial class ProjectsPopupViewModel : ViewModelBase
     public ProjectsPopupViewModel()
     {
         Projects = new ObservableCollection<ProjectListItemViewModel>();
-        // Sample data placeholder - in future, load from a projects service
-        Projects.Add(new ProjectListItemViewModel { Id = "PRJ-001", Name = "Sistema de Gestión Empresarial", LastEdited = "2025-11-23" });
-        Projects.Add(new ProjectListItemViewModel { Id = "PRJ-002", Name = "Portal Web Corporativo", LastEdited = "2025-11-22" });
-        Projects.Add(new ProjectListItemViewModel { Id = "PRJ-003", Name = "App Mobile de Ventas", LastEdited = "2025-11-20" });
-        Projects.Add(new ProjectListItemViewModel { Id = "PRJ-004", Name = "Dashboard Analítico", LastEdited = "2025-11-18" });
-        Projects.Add(new ProjectListItemViewModel { Id = "PRJ-005", Name = "Sistema de Inventario", LastEdited = "2025-11-15" });
 
         NewProjectCommand = new RelayCommand(OnNewProject);
         CloseCommand = new RelayCommand(OnClose);
