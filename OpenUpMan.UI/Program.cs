@@ -78,8 +78,10 @@ sealed class Program
             var logger = scope.ServiceProvider.GetRequiredService<ILogger<OpenUpMan.Data.Migrations.DatabaseMigrator>>();
             
             // Use DatabaseMigrator to handle schema updates automatically
-            // autoRemoveObsoleteColumns=true will automatically remove columns that no longer exist in entities
-            var migrator = new OpenUpMan.Data.Migrations.DatabaseMigrator(ctx, logger, autoRemoveObsoleteColumns: true);
+            // autoRemoveObsoleteColumns should only be true in development to avoid data loss in production
+            var environment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+            bool autoRemoveObsoleteColumns = string.Equals(environment, "Development", StringComparison.OrdinalIgnoreCase);
+            var migrator = new OpenUpMan.Data.Migrations.DatabaseMigrator(ctx, logger, autoRemoveObsoleteColumns: autoRemoveObsoleteColumns);
             migrator.MigrateAsync().Wait();
 
             // Enable Write-Ahead Logging (WAL) for better concurrency (readers won't block writers)
