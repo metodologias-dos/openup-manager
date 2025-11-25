@@ -100,7 +100,7 @@ public class DatabaseMigratorTests
         var columns = new List<string>();
         using var cmd = connection.CreateCommand();
         cmd.CommandText = $"PRAGMA table_info({tableName})";
-        
+
         using var reader = await cmd.ExecuteReaderAsync();
         while (await reader.ReadAsync())
         {
@@ -177,7 +177,7 @@ public class DatabaseMigratorTests
                 x => x.Log(
                     LogLevel.Information,
                     It.IsAny<EventId>(),
-                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Database created successfully") || 
+                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Database created successfully") ||
                                                    v.ToString()!.Contains("Database schema migration completed successfully")),
                     It.IsAny<Exception>(),
                     It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
@@ -303,7 +303,7 @@ public class DatabaseMigratorTests
             {
                 cmd.CommandText = "SELECT Username, PasswordHash FROM Users WHERE Id = @id";
                 cmd.Parameters.AddWithValue("@id", userId.ToString());
-                
+
                 using var reader = await cmd.ExecuteReaderAsync();
                 Assert.True(await reader.ReadAsync());
                 Assert.Equal("testuser", reader.GetString(0));
@@ -805,7 +805,7 @@ public class DatabaseMigratorTests
 
             // Assert - Verify successful migration
             Assert.True(await TableExistsAsync(connection, "Users"));
-            
+
             mockLogger.Verify(
                 x => x.Log(
                     LogLevel.Information,
@@ -935,7 +935,7 @@ public class DatabaseMigratorTests
                 Assert.Equal("legacy_user", reader.GetString(1));
                 Assert.Equal("legacy_hash", reader.GetString(2));
             }
-            
+
             // Verify all columns were added
             var columns = await GetTableColumnsAsync(connection, "Users");
             Assert.Contains("PasswordChangedAt", columns);
@@ -970,7 +970,7 @@ public class DatabaseMigratorTests
         // This test verifies GetSqliteType coverage for all supported types
         // Since we can't directly test the private method, we test through migration
         // by creating entities with various types and verifying they are created correctly
-        
+
         var connection = new SqliteConnection("DataSource=:memory:");
         await connection.OpenAsync();
 
@@ -1108,12 +1108,12 @@ public class DatabaseMigratorTests
             {
                 cmd.CommandText = "PRAGMA table_info(Users)";
                 using var reader = await cmd.ExecuteReaderAsync();
-                
+
                 while (await reader.ReadAsync())
                 {
                     var columnName = reader.GetString(1);
                     var isPk = reader.GetInt32(5) != 0;
-                    
+
                     if (columnName == "Id")
                     {
                         Assert.True(isPk, "Id should be primary key");
@@ -1234,7 +1234,7 @@ public class DatabaseMigratorTests
             {
                 cmd.CommandText = "PRAGMA table_info(Users)";
                 using var reader = await cmd.ExecuteReaderAsync();
-                
+
                 var columnConstraints = new Dictionary<string, bool>();
                 while (await reader.ReadAsync())
                 {
@@ -1274,7 +1274,7 @@ public class DatabaseMigratorTests
                         PasswordHash TEXT NOT NULL,
                         CreatedAt TEXT NOT NULL
                     );
-                    INSERT INTO Users (Id, Username, PasswordHash, CreatedAt) 
+                    INSERT INTO Users (Id, Username, PasswordHash, CreatedAt)
                     VALUES ('id1', 'user1', 'hash1', '2024-01-01T00:00:00');
                 ";
                 await cmd.ExecuteNonQueryAsync();
@@ -1552,7 +1552,7 @@ public class DatabaseMigratorTests
             using (var cmd = connection.CreateCommand())
             {
                 cmd.CommandText = @"
-                    SELECT sql FROM sqlite_master 
+                    SELECT sql FROM sqlite_master
                     WHERE type='table' AND name='Users'
                 ";
                 var sql = (string)(await cmd.ExecuteScalarAsync())!;
@@ -1587,7 +1587,7 @@ public class DatabaseMigratorTests
     private class MultiEntityDbContext : DbContext
     {
         public MultiEntityDbContext(DbContextOptions options) : base(options) { }
-        
+
         public DbSet<User> Users { get; set; } = null!;
         public DbSet<TestEntity> TestEntities { get; set; } = null!;
 
@@ -1620,7 +1620,7 @@ public class DatabaseMigratorTests
     {
         // CreateTableAsync is called by CreateMissingTablesAsync when a model table doesn't exist
         // but the database exists (HasAnyModelTableAsync returns true).
-        // 
+        //
         // With a single-entity model (only Users), this scenario can't naturally occur because:
         // - If Users table exists: CreateTableAsync isn't called
         // - If Users table doesn't exist: HasAnyModelTableAsync returns false, so EnsureCreatedAsync is called instead
@@ -1634,7 +1634,7 @@ public class DatabaseMigratorTests
         //
         // We test this by having Users exist initially, verifying migration works, then checking
         // that the table structure matches what CreateTableAsync would create.
-        
+
         var connection = new SqliteConnection("DataSource=:memory:");
         await connection.OpenAsync();
 
@@ -1656,7 +1656,7 @@ public class DatabaseMigratorTests
             {
                 cmd.CommandText = "SELECT sql FROM sqlite_master WHERE type='table' AND name='Users'";
                 var createSql = (string)(await cmd.ExecuteScalarAsync())!;
-                
+
                 // Verify SQL contains all expected elements that GenerateCreateTableSql produces
                 Assert.Contains("CREATE TABLE", createSql);
                 Assert.Contains("Id", createSql);
@@ -1670,7 +1670,7 @@ public class DatabaseMigratorTests
             {
                 cmd.CommandText = "PRAGMA table_info(Users)";
                 using var reader = await cmd.ExecuteReaderAsync();
-                
+
                 var columnInfo = new Dictionary<string, (string type, bool notNull, bool isPk)>();
                 while (await reader.ReadAsync())
                 {
@@ -1706,7 +1706,7 @@ public class DatabaseMigratorTests
             // This is by design - it's only used when adding tables to an existing multi-entity database.
             // The functionality is fully tested through:
             // 1. GenerateCreateTableSql tests
-            // 2. CreateIndexesForTableAsync tests  
+            // 2. CreateIndexesForTableAsync tests
             // 3. EnsureCreatedAsync integration (which uses the same schema generation logic)
             // 4. This test verifying the expected output
         }
@@ -1743,7 +1743,7 @@ public class DatabaseMigratorTests
             {
                 cmd.CommandText = "PRAGMA table_info(TestTable)";
                 using var reader = await cmd.ExecuteReaderAsync();
-                
+
                 var types = new List<string>();
                 while (await reader.ReadAsync())
                 {
@@ -1786,7 +1786,7 @@ public class DatabaseMigratorTests
             {
                 cmd.CommandText = "PRAGMA table_info(TestTable)";
                 using var reader = await cmd.ExecuteReaderAsync();
-                
+
                 var types = new List<string>();
                 while (await reader.ReadAsync())
                 {
@@ -1897,17 +1897,17 @@ public class DatabaseMigratorTests
             using (var cmd = connection.CreateCommand())
             {
                 cmd.CommandText = @"
-                    SELECT PasswordHash, CreatedAt 
-                    FROM Users 
+                    SELECT PasswordHash, CreatedAt
+                    FROM Users
                     WHERE Id = 'test-guid'
                 ";
                 using var reader = await cmd.ExecuteReaderAsync();
                 Assert.True(await reader.ReadAsync());
-                
+
                 // PasswordHash (string/TEXT) should have empty string default
                 var passwordHash = reader.GetString(0);
                 Assert.Equal("", passwordHash);
-                
+
                 // CreatedAt (DateTime/TEXT) should have datetime default
                 var createdAt = reader.GetString(1);
                 Assert.NotEmpty(createdAt);
@@ -1945,7 +1945,7 @@ public class DatabaseMigratorTests
             {
                 cmd.CommandText = "PRAGMA table_info(CompositeKeyTable)";
                 using var reader = await cmd.ExecuteReaderAsync();
-                
+
                 var pkCount = 0;
                 while (await reader.ReadAsync())
                 {
@@ -2248,7 +2248,7 @@ public class DatabaseMigratorTests
 
             // Verify database was created successfully
             Assert.True(await TableExistsAsync(connection, "Users"), "Users table should be created");
-            
+
             // Connection should still be open (was open when we started)
             Assert.Equal(System.Data.ConnectionState.Open, connection.State);
         }

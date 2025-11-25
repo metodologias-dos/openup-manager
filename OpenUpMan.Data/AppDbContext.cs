@@ -80,7 +80,9 @@ namespace OpenUpMan.Data
                     .IsRequired();
 
                 b.Property(pp => pp.Name).IsRequired();
-                b.Property(pp => pp.Order).IsRequired();
+                b.Property(pp => pp.Order)
+                    .HasColumnName("DisplayOrder")
+                    .IsRequired();
 
                 b.HasOne(pp => pp.Project)
                     .WithMany()
@@ -93,6 +95,7 @@ namespace OpenUpMan.Data
                 b.HasKey(pi => pi.Id);
 
                 b.Property(pi => pi.Type)
+                    .HasColumnName("ItemType")
                     .HasConversion<string>()
                     .IsRequired();
 
