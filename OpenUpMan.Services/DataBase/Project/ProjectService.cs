@@ -7,87 +7,91 @@ namespace OpenUpMan.Services
     public class ProjectService : IProjectService
     {
         private readonly IProjectRepository _repo;
+        private readonly IUserRepository _userRepo;
         private readonly ILogger<ProjectService> _logger;
 
-        public ProjectService(IProjectRepository repo, ILogger<ProjectService> logger)
+        public ProjectService(IProjectRepository repo, IUserRepository userRepo, ILogger<ProjectService> logger)
         {
             _repo = repo;
+            _userRepo = userRepo;
             _logger = logger;
         }
 
-        public async Task<ProjectServiceResult> CreateProjectAsync(
-            string identifier,
-            string name,
-            DateTime startDate,
-            Guid ownerId,
-            string? description = null,
-            CancellationToken ct = default)
+        public async Task<ProjectServiceResult> CreateProjectAsync(string identifier, string name, DateTime startDate, Guid ownerId, string? description = null, CancellationToken ct = default)
         {
             try
             {
-                // Validaciones básicas
-                if (string.IsNullOrWhiteSpace(identifier))
+                if (string.IsNullOrWhiteSpace(identifier) || string.IsNullOrWhiteSpace(name))
                 {
                     return new ProjectServiceResult(
                         Success: false,
-                        ResultType: ProjectServiceResultType.Error,
-                        Message: "El identificador del proyecto no puede estar vacío.",
-                        Project: null
+                        ResultType: ServiceResultType.Error,
+                        Message: "Identificador y nombre son requeridos."
                     );
                 }
 
-                if (string.IsNullOrWhiteSpace(name))
-                {
-                    return new ProjectServiceResult(
-                        Success: false,
-                        ResultType: ProjectServiceResultType.Error,
-                        Message: "El nombre del proyecto no puede estar vacío.",
-                        Project: null
-                    );
-                }
-
-                if (ownerId == Guid.Empty)
-                {
-                    return new ProjectServiceResult(
-                        Success: false,
-                        ResultType: ProjectServiceResultType.Error,
-                        Message: "El propietario del proyecto no es válido.",
-                        Project: null
-                    );
-                }
-
-                // Verificar si ya existe un proyecto con el mismo identificador
                 var existing = await _repo.GetByIdentifierAsync(identifier, ct);
                 if (existing != null)
                 {
                     return new ProjectServiceResult(
                         Success: false,
-                        ResultType: ProjectServiceResultType.AlreadyExists,
-                        Message: "Ya existe un proyecto con ese identificador.",
-                        Project: null
+                        ResultType: ServiceResultType.Error,
+                        Message: "Ya existe un proyecto con ese identificador."
                     );
                 }
 
-                // Crear el proyecto
                 var project = new Project(identifier, name, startDate, ownerId, description);
                 await _repo.AddAsync(project, ct);
                 await _repo.SaveChangesAsync(ct);
 
+                _logger.LogInformation("Proyecto creado: {ProjectId} - {Identifier}", project.Id, identifier);
+
                 return new ProjectServiceResult(
                     Success: true,
-                    ResultType: ProjectServiceResultType.Success,
+                    ResultType: ServiceResultType.Success,
                     Message: "Proyecto creado exitosamente.",
                     Project: project
                 );
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating project with identifier: {Identifier}", identifier);
+                _logger.LogError(ex, "Error al crear proyecto");
                 return new ProjectServiceResult(
                     Success: false,
-                    ResultType: ProjectServiceResultType.Error,
-                    Message: "Error al crear el proyecto. Por favor, inténtelo de nuevo.",
-                    Project: null
+                    ResultType: ServiceResultType.Error,
+                    Message: "Error al crear el proyecto."
+                );
+            }
+        }
+
+        public async Task<ProjectServiceResult> GetProjectByIdAsync(Guid id, CancellationToken ct = default)
+        {
+            try
+            {
+                var project = await _repo.GetByIdAsync(id, ct);
+                if (project == null)
+                {
+                    return new ProjectServiceResult(
+                        Success: false,
+                        ResultType: ServiceResultType.Error,
+                        Message: "Proyecto no encontrado."
+                    );
+                }
+
+                return new ProjectServiceResult(
+                    Success: true,
+                    ResultType: ServiceResultType.Success,
+                    Message: "Proyecto encontrado.",
+                    Project: project
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener proyecto");
+                return new ProjectServiceResult(
+                    Success: false,
+                    ResultType: ServiceResultType.Error,
+                    Message: "Error al obtener el proyecto."
                 );
             }
         }
@@ -96,189 +100,107 @@ namespace OpenUpMan.Services
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(identifier))
-                {
-                    return new ProjectServiceResult(
-                        Success: false,
-                        ResultType: ProjectServiceResultType.Error,
-                        Message: "El identificador del proyecto no puede estar vacío.",
-                        Project: null
-                    );
-                }
-
                 var project = await _repo.GetByIdentifierAsync(identifier, ct);
                 if (project == null)
                 {
                     return new ProjectServiceResult(
                         Success: false,
-                        ResultType: ProjectServiceResultType.NotFound,
-                        Message: "No se encontró el proyecto.",
-                        Project: null
+                        ResultType: ServiceResultType.Error,
+                        Message: "Proyecto no encontrado."
                     );
                 }
 
                 return new ProjectServiceResult(
                     Success: true,
-                    ResultType: ProjectServiceResultType.Success,
+                    ResultType: ServiceResultType.Success,
                     Message: "Proyecto encontrado.",
                     Project: project
                 );
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting project with identifier: {Identifier}", identifier);
+                _logger.LogError(ex, "Error al obtener proyecto");
                 return new ProjectServiceResult(
                     Success: false,
-                    ResultType: ProjectServiceResultType.Error,
-                    Message: "Error al obtener el proyecto. Por favor, inténtelo de nuevo.",
-                    Project: null
+                    ResultType: ServiceResultType.Error,
+                    Message: "Error al obtener el proyecto."
                 );
             }
         }
 
-        public async Task<ProjectServiceResult> GetProjectsByOwnerAsync(Guid ownerId, CancellationToken ct = default)
+        public async Task<IEnumerable<Project>> GetProjectsByOwnerAsync(Guid ownerId, CancellationToken ct = default)
         {
-            try
-            {
-                if (ownerId == Guid.Empty)
-                {
-                    return new ProjectServiceResult(
-                        Success: false,
-                        ResultType: ProjectServiceResultType.Error,
-                        Message: "El propietario no es válido.",
-                        Projects: null
-                    );
-                }
-
-                var projects = await _repo.GetByOwnerAsync(ownerId, ct);
-
-                return new ProjectServiceResult(
-                    Success: true,
-                    ResultType: ProjectServiceResultType.Success,
-                    Message: "Proyectos obtenidos exitosamente.",
-                    Projects: projects
-                );
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting projects for owner: {OwnerId}", ownerId);
-                return new ProjectServiceResult(
-                    Success: false,
-                    ResultType: ProjectServiceResultType.Error,
-                    Message: "Error al obtener los proyectos. Por favor, inténtelo de nuevo.",
-                    Projects: null
-                );
-            }
+            return await _repo.GetByOwnerAsync(ownerId, ct);
         }
 
-        public async Task<ProjectServiceResult> UpdateProjectAsync(
-            string identifier,
-            string name,
-            string? description,
-            DateTime startDate,
-            CancellationToken ct = default)
+        public async Task<ProjectServiceResult> UpdateProjectAsync(Guid id, string name, string? description, DateTime startDate, CancellationToken ct = default)
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(identifier))
-                {
-                    return new ProjectServiceResult(
-                        Success: false,
-                        ResultType: ProjectServiceResultType.Error,
-                        Message: "El identificador del proyecto no puede estar vacío.",
-                        Project: null
-                    );
-                }
-
-                if (string.IsNullOrWhiteSpace(name))
-                {
-                    return new ProjectServiceResult(
-                        Success: false,
-                        ResultType: ProjectServiceResultType.Error,
-                        Message: "El nombre del proyecto no puede estar vacío.",
-                        Project: null
-                    );
-                }
-
-                var project = await _repo.GetByIdentifierAsync(identifier, ct);
+                var project = await _repo.GetByIdAsync(id, ct);
                 if (project == null)
                 {
                     return new ProjectServiceResult(
                         Success: false,
-                        ResultType: ProjectServiceResultType.NotFound,
-                        Message: "No se encontró el proyecto.",
-                        Project: null
+                        ResultType: ServiceResultType.Error,
+                        Message: "Proyecto no encontrado."
                     );
                 }
 
                 project.UpdateDetails(name, description, startDate);
+                await _repo.UpdateAsync(project, ct);
                 await _repo.SaveChangesAsync(ct);
 
                 return new ProjectServiceResult(
                     Success: true,
-                    ResultType: ProjectServiceResultType.Success,
+                    ResultType: ServiceResultType.Success,
                     Message: "Proyecto actualizado exitosamente.",
                     Project: project
                 );
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating project with identifier: {Identifier}", identifier);
+                _logger.LogError(ex, "Error al actualizar proyecto");
                 return new ProjectServiceResult(
                     Success: false,
-                    ResultType: ProjectServiceResultType.Error,
-                    Message: "Error al actualizar el proyecto. Por favor, inténtelo de nuevo.",
-                    Project: null
+                    ResultType: ServiceResultType.Error,
+                    Message: "Error al actualizar el proyecto."
                 );
             }
         }
 
-        public async Task<ProjectServiceResult> ChangeProjectStateAsync(
-            string identifier,
-            ProjectState newState,
-            CancellationToken ct = default)
+        public async Task<ProjectServiceResult> ChangeProjectStateAsync(Guid id, ProjectState newState, CancellationToken ct = default)
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(identifier))
-                {
-                    return new ProjectServiceResult(
-                        Success: false,
-                        ResultType: ProjectServiceResultType.Error,
-                        Message: "El identificador del proyecto no puede estar vacío.",
-                        Project: null
-                    );
-                }
-
-                var project = await _repo.GetByIdentifierAsync(identifier, ct);
+                var project = await _repo.GetByIdAsync(id, ct);
                 if (project == null)
                 {
                     return new ProjectServiceResult(
                         Success: false,
-                        ResultType: ProjectServiceResultType.NotFound,
-                        Message: "No se encontró el proyecto.",
-                        Project: null
+                        ResultType: ServiceResultType.Error,
+                        Message: "Proyecto no encontrado."
                     );
                 }
 
                 project.SetState(newState);
+                await _repo.UpdateAsync(project, ct);
                 await _repo.SaveChangesAsync(ct);
 
                 return new ProjectServiceResult(
                     Success: true,
-                    ResultType: ProjectServiceResultType.Success,
-                    Message: "Estado del proyecto actualizado exitosamente.",
+                    ResultType: ServiceResultType.Success,
+                    Message: "Estado del proyecto actualizado.",
                     Project: project
                 );
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error changing state for project with identifier: {Identifier}", identifier);
+                _logger.LogError(ex, "Error al cambiar estado del proyecto");
                 return new ProjectServiceResult(
                     Success: false,
-                    ResultType: ProjectServiceResultType.Error,
-                    Message: "Error al cambiar el estado del proyecto. Por favor, inténtelo de nuevo.",
-                    Project: null
+                    ResultType: ServiceResultType.Error,
+                    Message: "Error al cambiar el estado del proyecto."
                 );
             }
         }

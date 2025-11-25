@@ -1,13 +1,3 @@
-using OpenUpMan.Domain;
-
-namespace OpenUpMan.Services
-{
-    public record ProjectServiceResult(
-        bool Success,
-        ProjectServiceResultType ResultType,
-        string Message,
-        Project? Project = null,
-        IEnumerable<Project>? Projects = null
-    );
-}
+// Este archivo está duplicado. Usar ProjectServiceResult.cs en su lugar.
+// Mantener vacío para evitar errores de compilación.
 
