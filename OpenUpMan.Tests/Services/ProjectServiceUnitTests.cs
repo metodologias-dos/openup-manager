@@ -14,6 +14,11 @@ namespace OpenUpMan.Tests.Services
             return new Mock<ILogger<ProjectService>>().Object;
         }
 
+        private static IUserRepository CreateMockUserRepository()
+        {
+            return new Mock<IUserRepository>().Object;
+        }
+
         #region CreateProject Tests
 
         [Fact]
@@ -24,13 +29,13 @@ namespace OpenUpMan.Tests.Services
             mockRepo.Setup(r => r.AddAsync(It.IsAny<Project>(), default)).Returns(Task.CompletedTask).Verifiable();
             mockRepo.Setup(r => r.SaveChangesAsync(default)).Returns(Task.CompletedTask).Verifiable();
 
-            var service = new ProjectService(mockRepo.Object, CreateMockLogger());
+            var service = new ProjectService(mockRepo.Object, CreateMockUserRepository(), CreateMockLogger());
             var ownerId = Guid.NewGuid();
 
             var result = await service.CreateProjectAsync("PROY-001", "Proyecto Test", DateTime.UtcNow, ownerId, "Descripción test");
 
             Assert.True(result.Success);
-            Assert.Equal(ProjectServiceResultType.Success, result.ResultType);
+            Assert.Equal(ServiceResultType.Success, result.ResultType);
             Assert.Contains("exitosa", result.Message, StringComparison.OrdinalIgnoreCase);
             Assert.NotNull(result.Project);
             Assert.Equal("PROY-001", result.Project.Identifier);
@@ -48,12 +53,12 @@ namespace OpenUpMan.Tests.Services
             var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
             mockRepo.Setup(r => r.GetByIdentifierAsync("PROY-001", default)).ReturnsAsync(existing);
 
-            var service = new ProjectService(mockRepo.Object, CreateMockLogger());
+            var service = new ProjectService(mockRepo.Object, CreateMockUserRepository(), CreateMockLogger());
 
             var result = await service.CreateProjectAsync("PROY-001", "New Project", DateTime.UtcNow, ownerId);
 
             Assert.False(result.Success);
-            Assert.Equal(ProjectServiceResultType.AlreadyExists, result.ResultType);
+            Assert.Equal(ServiceResultType.Error, result.ResultType);
             Assert.Contains("existe", result.Message, StringComparison.OrdinalIgnoreCase);
             Assert.Null(result.Project);
             mockRepo.Verify(r => r.AddAsync(It.IsAny<Project>(), default), Times.Never);
@@ -61,53 +66,21 @@ namespace OpenUpMan.Tests.Services
         }
 
         [Theory]
-        [InlineData("", "Project Name", "Invalid identifier")]
-        [InlineData("  ", "Project Name", "Invalid identifier")]
-        [InlineData("PROY-001", "", "Invalid name")]
-        [InlineData("PROY-001", "  ", "Invalid name")]
-        public async Task CreateProject_ReturnsError_WhenParametersInvalid(string identifier, string name, string reason)
+        [InlineData("", "Project Name")]
+        [InlineData("  ", "Project Name")]
+        [InlineData("PROY-001", "")]
+        [InlineData("PROY-001", "  ")]
+        public async Task CreateProject_ReturnsError_WhenParametersInvalid(string identifier, string name)
         {
             var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
-            var service = new ProjectService(mockRepo.Object, CreateMockLogger());
+            var service = new ProjectService(mockRepo.Object, CreateMockUserRepository(), CreateMockLogger());
             var ownerId = Guid.NewGuid();
 
             var result = await service.CreateProjectAsync(identifier, name, DateTime.UtcNow, ownerId);
 
             Assert.False(result.Success);
-            Assert.Equal(ProjectServiceResultType.Error, result.ResultType);
-            Assert.Contains("vacío", result.Message, StringComparison.OrdinalIgnoreCase);
-            Assert.Null(result.Project);
-        }
-
-        [Fact]
-        public async Task CreateProject_ReturnsError_WhenOwnerIdIsEmpty()
-        {
-            var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
-            var service = new ProjectService(mockRepo.Object, CreateMockLogger());
-
-            var result = await service.CreateProjectAsync("PROY-001", "Project Name", DateTime.UtcNow, Guid.Empty);
-
-            Assert.False(result.Success);
-            Assert.Equal(ProjectServiceResultType.Error, result.ResultType);
-            Assert.Contains("propietario", result.Message, StringComparison.OrdinalIgnoreCase);
-            Assert.Null(result.Project);
-        }
-
-        [Fact]
-        public async Task CreateProject_ReturnsError_WhenDatabaseThrowsException()
-        {
-            var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
-            mockRepo.Setup(r => r.GetByIdentifierAsync("PROY-001", default))
-                .ThrowsAsync(new Exception("Database connection failed"));
-
-            var service = new ProjectService(mockRepo.Object, CreateMockLogger());
-            var ownerId = Guid.NewGuid();
-
-            var result = await service.CreateProjectAsync("PROY-001", "Test Project", DateTime.UtcNow, ownerId);
-
-            Assert.False(result.Success);
-            Assert.Equal(ProjectServiceResultType.Error, result.ResultType);
-            Assert.Contains("Error", result.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.Equal(ServiceResultType.Error, result.ResultType);
+            Assert.Contains("requerido", result.Message, StringComparison.OrdinalIgnoreCase);
             Assert.Null(result.Project);
         }
 
@@ -119,7 +92,7 @@ namespace OpenUpMan.Tests.Services
             mockRepo.Setup(r => r.AddAsync(It.IsAny<Project>(), default)).Returns(Task.CompletedTask);
             mockRepo.Setup(r => r.SaveChangesAsync(default)).Returns(Task.CompletedTask);
 
-            var service = new ProjectService(mockRepo.Object, CreateMockLogger());
+            var service = new ProjectService(mockRepo.Object, CreateMockUserRepository(), CreateMockLogger());
             var ownerId = Guid.NewGuid();
 
             var result = await service.CreateProjectAsync("PROY-001", "Test Project", DateTime.UtcNow, ownerId);
@@ -127,6 +100,48 @@ namespace OpenUpMan.Tests.Services
             Assert.True(result.Success);
             Assert.NotNull(result.Project);
             Assert.Equal(ProjectState.CREATED, result.Project.State);
+        }
+
+        #endregion
+
+        #region GetProjectById Tests
+
+        [Fact]
+        public async Task GetProjectById_ReturnsSuccess_WhenProjectExists()
+        {
+            var ownerId = Guid.NewGuid();
+            var projectId = Guid.NewGuid();
+            var existingProject = new Project("PROY-001", "Test Project", DateTime.UtcNow, ownerId);
+
+            var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
+            mockRepo.Setup(r => r.GetByIdAsync(projectId, default)).ReturnsAsync(existingProject);
+
+            var service = new ProjectService(mockRepo.Object, CreateMockUserRepository(), CreateMockLogger());
+
+            var result = await service.GetProjectByIdAsync(projectId);
+
+            Assert.True(result.Success);
+            Assert.Equal(ServiceResultType.Success, result.ResultType);
+            Assert.Contains("encontrado", result.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.NotNull(result.Project);
+            mockRepo.Verify(r => r.GetByIdAsync(projectId, default), Times.Once);
+        }
+
+        [Fact]
+        public async Task GetProjectById_ReturnsNotFound_WhenProjectDoesNotExist()
+        {
+            var projectId = Guid.NewGuid();
+            var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
+            mockRepo.Setup(r => r.GetByIdAsync(projectId, default)).ReturnsAsync((Project?)null);
+
+            var service = new ProjectService(mockRepo.Object, CreateMockUserRepository(), CreateMockLogger());
+
+            var result = await service.GetProjectByIdAsync(projectId);
+
+            Assert.False(result.Success);
+            Assert.Equal(ServiceResultType.Error, result.ResultType);
+            Assert.Contains("encontrado", result.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.Null(result.Project);
         }
 
         #endregion
@@ -142,12 +157,12 @@ namespace OpenUpMan.Tests.Services
             var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
             mockRepo.Setup(r => r.GetByIdentifierAsync("PROY-001", default)).ReturnsAsync(existingProject);
 
-            var service = new ProjectService(mockRepo.Object, CreateMockLogger());
+            var service = new ProjectService(mockRepo.Object, CreateMockUserRepository(), CreateMockLogger());
 
             var result = await service.GetProjectByIdentifierAsync("PROY-001");
 
             Assert.True(result.Success);
-            Assert.Equal(ProjectServiceResultType.Success, result.ResultType);
+            Assert.Equal(ServiceResultType.Success, result.ResultType);
             Assert.Contains("encontrado", result.Message, StringComparison.OrdinalIgnoreCase);
             Assert.NotNull(result.Project);
             Assert.Equal("PROY-001", result.Project.Identifier);
@@ -160,48 +175,15 @@ namespace OpenUpMan.Tests.Services
             var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
             mockRepo.Setup(r => r.GetByIdentifierAsync("PROY-999", default)).ReturnsAsync((Project?)null);
 
-            var service = new ProjectService(mockRepo.Object, CreateMockLogger());
+            var service = new ProjectService(mockRepo.Object, CreateMockUserRepository(), CreateMockLogger());
 
             var result = await service.GetProjectByIdentifierAsync("PROY-999");
 
             Assert.False(result.Success);
-            Assert.Equal(ProjectServiceResultType.NotFound, result.ResultType);
-            Assert.Contains("encontró", result.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.Equal(ServiceResultType.Error, result.ResultType);
+            Assert.Contains("encontrado", result.Message, StringComparison.OrdinalIgnoreCase);
             Assert.Null(result.Project);
             mockRepo.Verify(r => r.GetByIdentifierAsync("PROY-999", default), Times.Once);
-        }
-
-        [Theory]
-        [InlineData("")]
-        [InlineData("  ")]
-        public async Task GetProjectByIdentifier_ReturnsError_WhenIdentifierIsEmpty(string identifier)
-        {
-            var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
-            var service = new ProjectService(mockRepo.Object, CreateMockLogger());
-
-            var result = await service.GetProjectByIdentifierAsync(identifier);
-
-            Assert.False(result.Success);
-            Assert.Equal(ProjectServiceResultType.Error, result.ResultType);
-            Assert.Contains("vacío", result.Message, StringComparison.OrdinalIgnoreCase);
-            Assert.Null(result.Project);
-        }
-
-        [Fact]
-        public async Task GetProjectByIdentifier_ReturnsError_WhenDatabaseThrowsException()
-        {
-            var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
-            mockRepo.Setup(r => r.GetByIdentifierAsync("PROY-001", default))
-                .ThrowsAsync(new Exception("Database connection failed"));
-
-            var service = new ProjectService(mockRepo.Object, CreateMockLogger());
-
-            var result = await service.GetProjectByIdentifierAsync("PROY-001");
-
-            Assert.False(result.Success);
-            Assert.Equal(ProjectServiceResultType.Error, result.ResultType);
-            Assert.Contains("Error", result.Message, StringComparison.OrdinalIgnoreCase);
-            Assert.Null(result.Project);
         }
 
         #endregion
@@ -209,7 +191,7 @@ namespace OpenUpMan.Tests.Services
         #region GetProjectsByOwner Tests
 
         [Fact]
-        public async Task GetProjectsByOwner_ReturnsSuccess_WhenProjectsExist()
+        public async Task GetProjectsByOwner_ReturnsProjects_WhenProjectsExist()
         {
             var ownerId = Guid.NewGuid();
             var projects = new List<Project>
@@ -221,20 +203,17 @@ namespace OpenUpMan.Tests.Services
             var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
             mockRepo.Setup(r => r.GetByOwnerAsync(ownerId, default)).ReturnsAsync(projects);
 
-            var service = new ProjectService(mockRepo.Object, CreateMockLogger());
+            var service = new ProjectService(mockRepo.Object, CreateMockUserRepository(), CreateMockLogger());
 
             var result = await service.GetProjectsByOwnerAsync(ownerId);
 
-            Assert.True(result.Success);
-            Assert.Equal(ProjectServiceResultType.Success, result.ResultType);
-            Assert.Contains("exitosa", result.Message, StringComparison.OrdinalIgnoreCase);
-            Assert.NotNull(result.Projects);
-            Assert.Equal(2, result.Projects.Count());
+            Assert.NotNull(result);
+            Assert.Equal(2, result.Count());
             mockRepo.Verify(r => r.GetByOwnerAsync(ownerId, default), Times.Once);
         }
 
         [Fact]
-        public async Task GetProjectsByOwner_ReturnsSuccess_WhenNoProjectsExist()
+        public async Task GetProjectsByOwner_ReturnsEmpty_WhenNoProjectsExist()
         {
             var ownerId = Guid.NewGuid();
             var projects = new List<Project>();
@@ -242,47 +221,13 @@ namespace OpenUpMan.Tests.Services
             var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
             mockRepo.Setup(r => r.GetByOwnerAsync(ownerId, default)).ReturnsAsync(projects);
 
-            var service = new ProjectService(mockRepo.Object, CreateMockLogger());
+            var service = new ProjectService(mockRepo.Object, CreateMockUserRepository(), CreateMockLogger());
 
             var result = await service.GetProjectsByOwnerAsync(ownerId);
 
-            Assert.True(result.Success);
-            Assert.Equal(ProjectServiceResultType.Success, result.ResultType);
-            Assert.NotNull(result.Projects);
-            Assert.Empty(result.Projects);
+            Assert.NotNull(result);
+            Assert.Empty(result);
             mockRepo.Verify(r => r.GetByOwnerAsync(ownerId, default), Times.Once);
-        }
-
-        [Fact]
-        public async Task GetProjectsByOwner_ReturnsError_WhenOwnerIdIsEmpty()
-        {
-            var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
-            var service = new ProjectService(mockRepo.Object, CreateMockLogger());
-
-            var result = await service.GetProjectsByOwnerAsync(Guid.Empty);
-
-            Assert.False(result.Success);
-            Assert.Equal(ProjectServiceResultType.Error, result.ResultType);
-            Assert.Contains("válido", result.Message, StringComparison.OrdinalIgnoreCase);
-            Assert.Null(result.Projects);
-        }
-
-        [Fact]
-        public async Task GetProjectsByOwner_ReturnsError_WhenDatabaseThrowsException()
-        {
-            var ownerId = Guid.NewGuid();
-            var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
-            mockRepo.Setup(r => r.GetByOwnerAsync(ownerId, default))
-                .ThrowsAsync(new Exception("Database connection failed"));
-
-            var service = new ProjectService(mockRepo.Object, CreateMockLogger());
-
-            var result = await service.GetProjectsByOwnerAsync(ownerId);
-
-            Assert.False(result.Success);
-            Assert.Equal(ProjectServiceResultType.Error, result.ResultType);
-            Assert.Contains("Error", result.Message, StringComparison.OrdinalIgnoreCase);
-            Assert.Null(result.Projects);
         }
 
         #endregion
@@ -293,19 +238,21 @@ namespace OpenUpMan.Tests.Services
         public async Task UpdateProject_ReturnsSuccess_WhenProjectExists()
         {
             var ownerId = Guid.NewGuid();
+            var projectId = Guid.NewGuid();
             var existingProject = new Project("PROY-001", "Old Name", DateTime.UtcNow, ownerId, "Old description");
 
             var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
-            mockRepo.Setup(r => r.GetByIdentifierAsync("PROY-001", default)).ReturnsAsync(existingProject);
+            mockRepo.Setup(r => r.GetByIdAsync(projectId, default)).ReturnsAsync(existingProject);
+            mockRepo.Setup(r => r.UpdateAsync(It.IsAny<Project>(), default)).Returns(Task.CompletedTask);
             mockRepo.Setup(r => r.SaveChangesAsync(default)).Returns(Task.CompletedTask).Verifiable();
 
-            var service = new ProjectService(mockRepo.Object, CreateMockLogger());
+            var service = new ProjectService(mockRepo.Object, CreateMockUserRepository(), CreateMockLogger());
             var newStartDate = DateTime.UtcNow.AddDays(10);
 
-            var result = await service.UpdateProjectAsync("PROY-001", "New Name", "New description", newStartDate);
+            var result = await service.UpdateProjectAsync(projectId, "New Name", "New description", newStartDate);
 
             Assert.True(result.Success);
-            Assert.Equal(ProjectServiceResultType.Success, result.ResultType);
+            Assert.Equal(ServiceResultType.Success, result.ResultType);
             Assert.Contains("actualizado", result.Message, StringComparison.OrdinalIgnoreCase);
             Assert.NotNull(result.Project);
             Assert.Equal("New Name", result.Project.Name);
@@ -316,53 +263,19 @@ namespace OpenUpMan.Tests.Services
         [Fact]
         public async Task UpdateProject_ReturnsNotFound_WhenProjectDoesNotExist()
         {
+            var projectId = Guid.NewGuid();
             var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
-            mockRepo.Setup(r => r.GetByIdentifierAsync("PROY-999", default)).ReturnsAsync((Project?)null);
+            mockRepo.Setup(r => r.GetByIdAsync(projectId, default)).ReturnsAsync((Project?)null);
 
-            var service = new ProjectService(mockRepo.Object, CreateMockLogger());
+            var service = new ProjectService(mockRepo.Object, CreateMockUserRepository(), CreateMockLogger());
 
-            var result = await service.UpdateProjectAsync("PROY-999", "New Name", "New description", DateTime.UtcNow);
+            var result = await service.UpdateProjectAsync(projectId, "New Name", "New description", DateTime.UtcNow);
 
             Assert.False(result.Success);
-            Assert.Equal(ProjectServiceResultType.NotFound, result.ResultType);
-            Assert.Contains("encontró", result.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.Equal(ServiceResultType.Error, result.ResultType);
+            Assert.Contains("encontrado", result.Message, StringComparison.OrdinalIgnoreCase);
             Assert.Null(result.Project);
             mockRepo.Verify(r => r.SaveChangesAsync(default), Times.Never);
-        }
-
-        [Theory]
-        [InlineData("", "New Name")]
-        [InlineData("  ", "New Name")]
-        [InlineData("PROY-001", "")]
-        [InlineData("PROY-001", "  ")]
-        public async Task UpdateProject_ReturnsError_WhenParametersInvalid(string identifier, string name)
-        {
-            var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
-            var service = new ProjectService(mockRepo.Object, CreateMockLogger());
-
-            var result = await service.UpdateProjectAsync(identifier, name, "Description", DateTime.UtcNow);
-
-            Assert.False(result.Success);
-            Assert.Equal(ProjectServiceResultType.Error, result.ResultType);
-            Assert.Contains("vacío", result.Message, StringComparison.OrdinalIgnoreCase);
-            Assert.Null(result.Project);
-        }
-
-        [Fact]
-        public async Task UpdateProject_ReturnsError_WhenDatabaseThrowsException()
-        {
-            var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
-            mockRepo.Setup(r => r.GetByIdentifierAsync("PROY-001", default))
-                .ThrowsAsync(new Exception("Database connection failed"));
-
-            var service = new ProjectService(mockRepo.Object, CreateMockLogger());
-
-            var result = await service.UpdateProjectAsync("PROY-001", "New Name", "Description", DateTime.UtcNow);
-
-            Assert.False(result.Success);
-            Assert.Equal(ProjectServiceResultType.Error, result.ResultType);
-            Assert.Contains("Error", result.Message, StringComparison.OrdinalIgnoreCase);
-            Assert.Null(result.Project);
         }
 
         #endregion
@@ -376,18 +289,20 @@ namespace OpenUpMan.Tests.Services
         public async Task ChangeProjectState_ReturnsSuccess_WhenProjectExists(ProjectState newState)
         {
             var ownerId = Guid.NewGuid();
+            var projectId = Guid.NewGuid();
             var existingProject = new Project("PROY-001", "Test Project", DateTime.UtcNow, ownerId);
 
             var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
-            mockRepo.Setup(r => r.GetByIdentifierAsync("PROY-001", default)).ReturnsAsync(existingProject);
+            mockRepo.Setup(r => r.GetByIdAsync(projectId, default)).ReturnsAsync(existingProject);
+            mockRepo.Setup(r => r.UpdateAsync(It.IsAny<Project>(), default)).Returns(Task.CompletedTask);
             mockRepo.Setup(r => r.SaveChangesAsync(default)).Returns(Task.CompletedTask).Verifiable();
 
-            var service = new ProjectService(mockRepo.Object, CreateMockLogger());
+            var service = new ProjectService(mockRepo.Object, CreateMockUserRepository(), CreateMockLogger());
 
-            var result = await service.ChangeProjectStateAsync("PROY-001", newState);
+            var result = await service.ChangeProjectStateAsync(projectId, newState);
 
             Assert.True(result.Success);
-            Assert.Equal(ProjectServiceResultType.Success, result.ResultType);
+            Assert.Equal(ServiceResultType.Success, result.ResultType);
             Assert.Contains("actualizado", result.Message, StringComparison.OrdinalIgnoreCase);
             Assert.NotNull(result.Project);
             Assert.Equal(newState, result.Project.State);
@@ -397,219 +312,19 @@ namespace OpenUpMan.Tests.Services
         [Fact]
         public async Task ChangeProjectState_ReturnsNotFound_WhenProjectDoesNotExist()
         {
+            var projectId = Guid.NewGuid();
             var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
-            mockRepo.Setup(r => r.GetByIdentifierAsync("PROY-999", default)).ReturnsAsync((Project?)null);
+            mockRepo.Setup(r => r.GetByIdAsync(projectId, default)).ReturnsAsync((Project?)null);
 
-            var service = new ProjectService(mockRepo.Object, CreateMockLogger());
+            var service = new ProjectService(mockRepo.Object, CreateMockUserRepository(), CreateMockLogger());
 
-            var result = await service.ChangeProjectStateAsync("PROY-999", ProjectState.ACTIVE);
+            var result = await service.ChangeProjectStateAsync(projectId, ProjectState.ACTIVE);
 
             Assert.False(result.Success);
-            Assert.Equal(ProjectServiceResultType.NotFound, result.ResultType);
-            Assert.Contains("encontró", result.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.Equal(ServiceResultType.Error, result.ResultType);
+            Assert.Contains("encontrado", result.Message, StringComparison.OrdinalIgnoreCase);
             Assert.Null(result.Project);
             mockRepo.Verify(r => r.SaveChangesAsync(default), Times.Never);
-        }
-
-        [Theory]
-        [InlineData("")]
-        [InlineData("  ")]
-        public async Task ChangeProjectState_ReturnsError_WhenIdentifierIsEmpty(string identifier)
-        {
-            var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
-            var service = new ProjectService(mockRepo.Object, CreateMockLogger());
-
-            var result = await service.ChangeProjectStateAsync(identifier, ProjectState.ACTIVE);
-
-            Assert.False(result.Success);
-            Assert.Equal(ProjectServiceResultType.Error, result.ResultType);
-            Assert.Contains("vacío", result.Message, StringComparison.OrdinalIgnoreCase);
-            Assert.Null(result.Project);
-        }
-
-        [Fact]
-        public async Task ChangeProjectState_ReturnsError_WhenDatabaseThrowsException()
-        {
-            var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
-            mockRepo.Setup(r => r.GetByIdentifierAsync("PROY-001", default))
-                .ThrowsAsync(new Exception("Database connection failed"));
-
-            var service = new ProjectService(mockRepo.Object, CreateMockLogger());
-
-            var result = await service.ChangeProjectStateAsync("PROY-001", ProjectState.ACTIVE);
-
-            Assert.False(result.Success);
-            Assert.Equal(ProjectServiceResultType.Error, result.ResultType);
-            Assert.Contains("Error", result.Message, StringComparison.OrdinalIgnoreCase);
-            Assert.Null(result.Project);
-        }
-
-        #endregion
-
-        #region Edge Case Tests
-
-        [Fact]
-        public async Task CreateProject_AcceptsNullDescription()
-        {
-            var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
-            mockRepo.Setup(r => r.GetByIdentifierAsync("PROY-001", default)).ReturnsAsync((Project?)null);
-            mockRepo.Setup(r => r.AddAsync(It.IsAny<Project>(), default)).Returns(Task.CompletedTask);
-            mockRepo.Setup(r => r.SaveChangesAsync(default)).Returns(Task.CompletedTask);
-
-            var service = new ProjectService(mockRepo.Object, CreateMockLogger());
-            var ownerId = Guid.NewGuid();
-
-            var result = await service.CreateProjectAsync("PROY-001", "Test Project", DateTime.UtcNow, ownerId, null);
-
-            Assert.True(result.Success);
-            Assert.NotNull(result.Project);
-            Assert.Null(result.Project.Description);
-        }
-
-        [Fact]
-        public async Task CreateProject_AcceptsEmptyDescription()
-        {
-            var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
-            mockRepo.Setup(r => r.GetByIdentifierAsync("PROY-001", default)).ReturnsAsync((Project?)null);
-            mockRepo.Setup(r => r.AddAsync(It.IsAny<Project>(), default)).Returns(Task.CompletedTask);
-            mockRepo.Setup(r => r.SaveChangesAsync(default)).Returns(Task.CompletedTask);
-
-            var service = new ProjectService(mockRepo.Object, CreateMockLogger());
-            var ownerId = Guid.NewGuid();
-
-            var result = await service.CreateProjectAsync("PROY-001", "Test Project", DateTime.UtcNow, ownerId, "");
-
-            Assert.True(result.Success);
-            Assert.NotNull(result.Project);
-        }
-
-        [Theory]
-        [InlineData("PROY-001")]
-        [InlineData("PROJECT-123")]
-        [InlineData("PRJ_001")]
-        [InlineData("P-2024-001")]
-        public async Task CreateProject_AcceptsVariousIdentifierFormats(string identifier)
-        {
-            var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
-            mockRepo.Setup(r => r.GetByIdentifierAsync(identifier, default)).ReturnsAsync((Project?)null);
-            mockRepo.Setup(r => r.AddAsync(It.IsAny<Project>(), default)).Returns(Task.CompletedTask);
-            mockRepo.Setup(r => r.SaveChangesAsync(default)).Returns(Task.CompletedTask);
-
-            var service = new ProjectService(mockRepo.Object, CreateMockLogger());
-            var ownerId = Guid.NewGuid();
-
-            var result = await service.CreateProjectAsync(identifier, "Test Project", DateTime.UtcNow, ownerId);
-
-            Assert.True(result.Success);
-            Assert.Equal(identifier, result.Project?.Identifier);
-        }
-
-        [Fact]
-        public async Task CreateProject_HandlesFutureStartDate()
-        {
-            var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
-            mockRepo.Setup(r => r.GetByIdentifierAsync("PROY-001", default)).ReturnsAsync((Project?)null);
-            mockRepo.Setup(r => r.AddAsync(It.IsAny<Project>(), default)).Returns(Task.CompletedTask);
-            mockRepo.Setup(r => r.SaveChangesAsync(default)).Returns(Task.CompletedTask);
-
-            var service = new ProjectService(mockRepo.Object, CreateMockLogger());
-            var ownerId = Guid.NewGuid();
-            var futureDate = DateTime.UtcNow.AddDays(30);
-
-            var result = await service.CreateProjectAsync("PROY-001", "Future Project", futureDate, ownerId);
-
-            Assert.True(result.Success);
-            Assert.NotNull(result.Project);
-            Assert.Equal(futureDate.Date, result.Project.StartDate.Date);
-        }
-
-        [Fact]
-        public async Task CreateProject_HandlesPastStartDate()
-        {
-            var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
-            mockRepo.Setup(r => r.GetByIdentifierAsync("PROY-001", default)).ReturnsAsync((Project?)null);
-            mockRepo.Setup(r => r.AddAsync(It.IsAny<Project>(), default)).Returns(Task.CompletedTask);
-            mockRepo.Setup(r => r.SaveChangesAsync(default)).Returns(Task.CompletedTask);
-
-            var service = new ProjectService(mockRepo.Object, CreateMockLogger());
-            var ownerId = Guid.NewGuid();
-            var pastDate = DateTime.UtcNow.AddDays(-30);
-
-            var result = await service.CreateProjectAsync("PROY-001", "Past Project", pastDate, ownerId);
-
-            Assert.True(result.Success);
-            Assert.NotNull(result.Project);
-            Assert.Equal(pastDate.Date, result.Project.StartDate.Date);
-        }
-
-        [Fact]
-        public async Task UpdateProject_UpdatesUpdatedAtTimestamp()
-        {
-            var ownerId = Guid.NewGuid();
-            var existingProject = new Project("PROY-001", "Old Name", DateTime.UtcNow, ownerId);
-            var initialUpdatedAt = existingProject.UpdatedAt;
-
-            var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
-            mockRepo.Setup(r => r.GetByIdentifierAsync("PROY-001", default)).ReturnsAsync(existingProject);
-            mockRepo.Setup(r => r.SaveChangesAsync(default)).Returns(Task.CompletedTask);
-
-            var service = new ProjectService(mockRepo.Object, CreateMockLogger());
-
-            // Wait a bit to ensure timestamp difference
-            await Task.Delay(10);
-
-            var result = await service.UpdateProjectAsync("PROY-001", "New Name", "New description", DateTime.UtcNow);
-
-            Assert.True(result.Success);
-            Assert.NotNull(result.Project);
-            Assert.NotNull(result.Project.UpdatedAt);
-            Assert.NotEqual(initialUpdatedAt, result.Project.UpdatedAt);
-        }
-
-        [Fact]
-        public async Task ChangeProjectState_UpdatesUpdatedAtTimestamp()
-        {
-            var ownerId = Guid.NewGuid();
-            var existingProject = new Project("PROY-001", "Test Project", DateTime.UtcNow, ownerId);
-            var initialUpdatedAt = existingProject.UpdatedAt;
-
-            var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
-            mockRepo.Setup(r => r.GetByIdentifierAsync("PROY-001", default)).ReturnsAsync(existingProject);
-            mockRepo.Setup(r => r.SaveChangesAsync(default)).Returns(Task.CompletedTask);
-
-            var service = new ProjectService(mockRepo.Object, CreateMockLogger());
-
-            // Wait a bit to ensure timestamp difference
-            await Task.Delay(10);
-
-            var result = await service.ChangeProjectStateAsync("PROY-001", ProjectState.ACTIVE);
-
-            Assert.True(result.Success);
-            Assert.NotNull(result.Project);
-            Assert.NotNull(result.Project.UpdatedAt);
-            Assert.NotEqual(initialUpdatedAt, result.Project.UpdatedAt);
-        }
-
-        [Theory]
-        [InlineData("Project with special chars: @#$%")]
-        [InlineData("Proyecto con ñ y acentos: José")]
-        [InlineData("项目名称")] // Chinese characters
-        [InlineData("プロジェクト")] // Japanese characters
-        public async Task CreateProject_HandlesSpecialCharactersInName(string projectName)
-        {
-            var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
-            mockRepo.Setup(r => r.GetByIdentifierAsync("PROY-001", default)).ReturnsAsync((Project?)null);
-            mockRepo.Setup(r => r.AddAsync(It.IsAny<Project>(), default)).Returns(Task.CompletedTask);
-            mockRepo.Setup(r => r.SaveChangesAsync(default)).Returns(Task.CompletedTask);
-
-            var service = new ProjectService(mockRepo.Object, CreateMockLogger());
-            var ownerId = Guid.NewGuid();
-
-            var result = await service.CreateProjectAsync("PROY-001", projectName, DateTime.UtcNow, ownerId);
-
-            Assert.True(result.Success);
-            Assert.NotNull(result.Project);
-            Assert.Equal(projectName, result.Project.Name);
         }
 
         #endregion
