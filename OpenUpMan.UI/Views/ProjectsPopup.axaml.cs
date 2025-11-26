@@ -1,10 +1,8 @@
 ﻿using Avalonia.Controls;
-using Avalonia.Interactivity;
 using OpenUpMan.UI.ViewModels;
 using System;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
-using System.Linq;
 
 namespace OpenUpMan.UI.Views;
 
@@ -15,11 +13,38 @@ public partial class ProjectsPopup : Window
         InitializeComponent();
     }
 
+    private bool _isClosingProgrammatically = false;
+    
     public ProjectsPopup(ProjectsPopupViewModel vm) : this()
     {
         DataContext = vm;
         vm.CloseRequested += OnCloseRequested;
         vm.LogoutRequested += OnLogoutRequested;
+        vm.NewProjectDialogRequested += OnNewProjectDialogRequested;
+        
+        // Handle window closing (X button) to trigger logout
+        this.Closing += OnWindowClosing;
+    }
+    
+    private void OnWindowClosing(object? sender, System.ComponentModel.CancelEventArgs e)
+    {
+        // If we're already closing programmatically, allow it
+        if (_isClosingProgrammatically)
+        {
+            return;
+        }
+        
+        // Cancel the default close behavior
+        e.Cancel = true;
+        
+        // Trigger logout on the UI thread asynchronously to avoid recursion
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            if (DataContext is ProjectsPopupViewModel vm)
+            {
+                OnLogoutRequested();
+            }
+        });
     }
 
     private void OnCloseRequested()
@@ -27,8 +52,39 @@ public partial class ProjectsPopup : Window
         this.Close();
     }
 
+    private async void OnNewProjectDialogRequested()
+    {
+        if (DataContext is not ProjectsPopupViewModel vm || vm.CurrentUser == null)
+            return;
+
+        // Obtener los servicios desde el ServiceProvider
+        var projectService = Program.ServiceProvider.GetService(typeof(OpenUpMan.Services.IProjectService)) as OpenUpMan.Services.IProjectService;
+        var projectUserService = Program.ServiceProvider.GetService(typeof(OpenUpMan.Services.IProjectUserService)) as OpenUpMan.Services.IProjectUserService;
+
+        if (projectService == null || projectUserService == null)
+        {
+            Console.WriteLine("Error: No se pudieron obtener los servicios necesarios");
+            return;
+        }
+
+        var dialogVm = new ProjectDialogViewModel(projectService, projectUserService, vm.CurrentUser.Id);
+        var dialog = new ProjectDialog(dialogVm);
+
+        // Suscribirse al evento de proyecto creado
+        dialogVm.ProjectCreated += (result) =>
+        {
+            vm.AddProject(result);
+        };
+
+        // Mostrar el diálogo como modal
+        await dialog.ShowDialog(this);
+    }
+
     private void OnLogoutRequested()
     {
+        // Set flag to prevent infinite recursion
+        _isClosingProgrammatically = true;
+        
         // Close this projects window
         this.Close();
 

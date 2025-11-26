@@ -8,37 +8,58 @@ namespace OpenUpMan.Services
     {
         private readonly IProjectRepository _repo;
         private readonly IUserRepository _userRepo;
+        private readonly IProjectUserRepository _projectUserRepo;
+        private readonly IProjectPhaseRepository _projectPhaseRepo;
         private readonly ILogger<ProjectService> _logger;
 
-        public ProjectService(IProjectRepository repo, IUserRepository userRepo, ILogger<ProjectService> logger)
+        public ProjectService(
+            IProjectRepository repo, 
+            IUserRepository userRepo,
+            IProjectUserRepository projectUserRepo,
+            IProjectPhaseRepository projectPhaseRepo,
+            ILogger<ProjectService> logger)
         {
             _repo = repo;
             _userRepo = userRepo;
+            _projectUserRepo = projectUserRepo;
+            _projectPhaseRepo = projectPhaseRepo;
             _logger = logger;
         }
 
-        public async Task<ProjectServiceResult> CreateProjectAsync(string identifier, string name, DateTime startDate, Guid ownerId, string? description = null, CancellationToken ct = default)
+        public async Task<string> GenerateUniqueIdentifierAsync(CancellationToken ct = default)
+        {
+            // Generate identifier in format PROY-XXXX where XXXX is a sequential number
+            var year = DateTime.Now.Year.ToString().Substring(2); // Last 2 digits of year
+            var counter = 1;
+            string identifier;
+
+            do
+            {
+                identifier = $"PROY-{year}{counter:D4}";
+                var existing = await _repo.GetByIdentifierAsync(identifier, ct);
+                if (existing == null)
+                    break;
+                counter++;
+            } while (counter < 10000); // Safety limit
+
+            return identifier;
+        }
+
+        public async Task<ProjectServiceResult> CreateProjectAsync(string name, DateTime startDate, Guid ownerId, string? description = null, CancellationToken ct = default)
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(identifier) || string.IsNullOrWhiteSpace(name))
+                if (string.IsNullOrWhiteSpace(name))
                 {
                     return new ProjectServiceResult(
                         Success: false,
                         ResultType: ServiceResultType.Error,
-                        Message: "Identificador y nombre son requeridos."
+                        Message: "El nombre es requerido."
                     );
                 }
 
-                var existing = await _repo.GetByIdentifierAsync(identifier, ct);
-                if (existing != null)
-                {
-                    return new ProjectServiceResult(
-                        Success: false,
-                        ResultType: ServiceResultType.Error,
-                        Message: "Ya existe un proyecto con ese identificador."
-                    );
-                }
+                // Auto-generate unique identifier
+                var identifier = await GenerateUniqueIdentifierAsync(ct);
 
                 var project = new Project(identifier, name, startDate, ownerId, description);
                 await _repo.AddAsync(project, ct);
@@ -201,6 +222,65 @@ namespace OpenUpMan.Services
                     Success: false,
                     ResultType: ServiceResultType.Error,
                     Message: "Error al cambiar el estado del proyecto."
+                );
+            }
+        }
+
+        public async Task<ProjectServiceResult> DeleteProjectAsync(Guid id, CancellationToken ct = default)
+        {
+            try
+            {
+                var project = await _repo.GetByIdAsync(id, ct);
+                if (project == null)
+                {
+                    return new ProjectServiceResult(
+                        Success: false,
+                        ResultType: ServiceResultType.Error,
+                        Message: "Proyecto no encontrado."
+                    );
+                }
+
+                _logger.LogInformation("Iniciando borrado del proyecto {ProjectId} - {Identifier}", id, project.Identifier);
+
+                // 1. Eliminar todos los ProjectUser asociados al proyecto
+                var projectUsers = await _projectUserRepo.GetByProjectIdAsync(id, ct);
+                foreach (var pu in projectUsers)
+                {
+                    await _projectUserRepo.RemoveAsync(pu, ct);
+                }
+                _logger.LogInformation("Eliminados {Count} usuarios del proyecto {ProjectId}", projectUsers.Count(), id);
+
+                // 2. Eliminar todas las fases del proyecto (ProjectPhase)
+                var projectPhases = await _projectPhaseRepo.GetByProjectIdAsync(id, ct);
+                foreach (var phase in projectPhases)
+                {
+                    // La eliminación en cascada de PhaseItems y PhaseItemUsers ya está configurada en EF Core
+                    // (ver AppDbContext.cs, líneas 116 y 138)
+                    await _projectPhaseRepo.DeleteAsync(phase, ct);
+                }
+                _logger.LogInformation("Eliminadas {Count} fases del proyecto {ProjectId}", projectPhases.Count(), id);
+
+                // 3. Eliminar el proyecto
+                await _repo.DeleteAsync(project, ct);
+                
+                // 4. Guardar todos los cambios en la base de datos
+                await _repo.SaveChangesAsync(ct);
+
+                _logger.LogInformation("Proyecto {ProjectId} - {Identifier} eliminado exitosamente", id, project.Identifier);
+
+                return new ProjectServiceResult(
+                    Success: true,
+                    ResultType: ServiceResultType.Success,
+                    Message: "Proyecto eliminado exitosamente."
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al eliminar proyecto {ProjectId}", id);
+                return new ProjectServiceResult(
+                    Success: false,
+                    ResultType: ServiceResultType.Error,
+                    Message: $"Error al eliminar el proyecto: {ex.Message}"
                 );
             }
         }

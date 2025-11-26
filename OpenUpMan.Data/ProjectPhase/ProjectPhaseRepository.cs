@@ -44,6 +44,12 @@ namespace OpenUpMan.Data
             await Task.CompletedTask;
         }
 
+        public async Task DeleteAsync(ProjectPhase projectPhase, CancellationToken ct = default)
+        {
+            _ctx.ProjectPhases.Remove(projectPhase);
+            await Task.CompletedTask;
+        }
+
         public async Task SaveChangesAsync(CancellationToken ct = default)
         {
             await _ctx.SaveChangesAsync(ct);

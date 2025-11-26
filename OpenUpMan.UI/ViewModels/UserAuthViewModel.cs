@@ -103,7 +103,15 @@ public partial class UserAuthViewModel : ViewModelBase
             ? await _userService.CreateUserAsync(Username, Password, ct)
             : await _userService.AuthenticateAsync(Username, Password, ct);
 
-        Feedback = result.Message;
+        // Personalizar el mensaje de éxito para creación de usuario
+        if (result.ResultType == ServiceResultType.Success && IsCreateMode)
+        {
+            Feedback = "Usuario creado e iniciado sesión exitosamente";
+        }
+        else
+        {
+            Feedback = result.Message;
+        }
 
         // Set the feedback visibility flags based on result type
         IsSuccessFeedback = result.ResultType == ServiceResultType.Success;

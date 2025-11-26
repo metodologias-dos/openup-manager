@@ -52,6 +52,10 @@ namespace OpenUpMan.Data
             {
                 b.HasKey(pu => new { pu.ProjectId, pu.UserId });
 
+                b.Property(pu => pu.Permissions)
+                    .HasConversion<string>()
+                    .IsRequired();
+
                 b.Property(pu => pu.Role)
                     .HasConversion<string>()
                     .IsRequired();

@@ -36,7 +36,8 @@ entity "project_users" as project_users {
     --
     FOREIGN_KEY(project_id) : TEXT
     FOREIGN_KEY(user_id)    : TEXT
-    role                    : TEXT   ' VIEWER, EDITOR, OWNER
+    permissions             : TEXT   ' VIEWER, EDITOR, OWNER
+    role                    : TEXT   ' AUTOR, REVISOR, PO, SM, DESARROLLADOR, TESTER, ADMIN
 }
 
 entity "project_phases" as project_phases {

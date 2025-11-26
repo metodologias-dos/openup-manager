@@ -1,7 +1,9 @@
-﻿using Avalonia;
+﻿﻿using Avalonia;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Globalization;
+using System.Threading;
 using OpenUpMan.Data;
 using OpenUpMan.Services;
 using Microsoft.EntityFrameworkCore;
@@ -17,8 +19,17 @@ sealed class Program
     // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
     // yet and stuff might break.
     [STAThread]
-    public static void Main(string[] args) => BuildAvaloniaApp()
-        .StartWithClassicDesktopLifetime(args);
+    public static void Main(string[] args)
+    {
+        // Set Mexican culture for DD/MM/YYYY date format
+        var culture = new CultureInfo("es-MX");
+        CultureInfo.DefaultThreadCurrentCulture = culture;
+        CultureInfo.DefaultThreadCurrentUICulture = culture;
+        Thread.CurrentThread.CurrentCulture = culture;
+        Thread.CurrentThread.CurrentUICulture = culture;
+        
+        BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+    }
 
     // Avalonia configuration, don't remove; also used by visual designer.
     public static AppBuilder BuildAvaloniaApp()
@@ -64,6 +75,15 @@ sealed class Program
         // Repositories and services
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IUserService, UserService>();
+        
+        services.AddScoped<IProjectRepository, ProjectRepository>();
+        services.AddScoped<IProjectService, ProjectService>();
+        
+        services.AddScoped<IProjectUserRepository, ProjectUserRepository>();
+        services.AddScoped<IProjectUserService, ProjectUserService>();
+        
+        services.AddScoped<IProjectPhaseRepository, ProjectPhaseRepository>();
+        services.AddScoped<IProjectPhaseService, ProjectPhaseService>();
 
         // ViewModels
         services.AddTransient<OpenUpMan.UI.ViewModels.MainWindowViewModel>();

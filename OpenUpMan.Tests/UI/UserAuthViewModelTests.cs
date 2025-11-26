@@ -244,7 +244,7 @@ namespace OpenUpMan.Tests.UI
 
             Assert.True(vm.IsSuccessFeedback);
             Assert.False(vm.IsErrorFeedback);
-            Assert.Equal("Usuario creado exitosamente", vm.Feedback);
+            Assert.Equal("Usuario creado e iniciado sesión exitosamente", vm.Feedback);
         }
 
         [Fact]

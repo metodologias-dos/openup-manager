@@ -22,6 +22,8 @@
     <Setter Property="Cursor" Value="Hand" />
     <Setter Property="HorizontalAlignment" Value="Stretch" />
     <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="MinHeight" Value="40" />
     <Setter Property="Transitions">
       <Transitions>
         <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15" />
@@ -37,6 +39,9 @@
     <Setter Property="Background" Value="{StaticResource PrimaryPressedBrush}" />
     <Setter Property="RenderTransform" Value="scale(0.98)" />
   </Style>
+  <Style Selector="Button.primary:disabled">
+    <Setter Property="Opacity" Value="0.5" />
+  </Style>
 
   <!-- Success/Submit Button variant (for register actions) -->
   <Style Selector="Button.success">
@@ -50,6 +55,8 @@
     <Setter Property="Cursor" Value="Hand" />
     <Setter Property="HorizontalAlignment" Value="Stretch" />
     <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="MinHeight" Value="40" />
     <Setter Property="Transitions">
       <Transitions>
         <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15" />
@@ -65,6 +72,9 @@
     <Setter Property="Background" Value="{StaticResource SuccessPressedBrush}" />
     <Setter Property="RenderTransform" Value="scale(0.98)" />
   </Style>
+  <Style Selector="Button.success:disabled">
+    <Setter Property="Opacity" Value="0.5" />
+  </Style>
 
   <!-- Link-style button for toggle actions - subtle, secondary -->
   <Style Selector="Button.link">
@@ -74,7 +84,9 @@
     <Setter Property="Padding" Value="8,6" />
     <Setter Property="Cursor" Value="Hand" />
     <Setter Property="FontSize" Value="13" />
-    <Setter Property="FontWeight" Value="Normal" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
     <Setter Property="Transitions">
       <Transitions>
         <BrushTransition Property="Foreground" Duration="0:0:0.1" />
@@ -177,12 +189,21 @@
 
   <!-- Card with beautiful shadow and theme-aware background -->
   <Style Selector="Border.card">
-    <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundAltHighBrush}" />
-    <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" />
+    <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource CardStrokeColorDefaultBrush}" />
     <Setter Property="BorderThickness" Value="1" />
     <Setter Property="CornerRadius" Value="12" />
     <Setter Property="Padding" Value="40,36" />
-    <Setter Property="BoxShadow" Value="0 8 32 0 #18000000" />
+    <Setter Property="BoxShadow" Value="0 8 32 0 #30000000" />
+    <Setter Property="Transitions">
+      <Transitions>
+        <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.2" />
+      </Transitions>
+    </Setter>
+  </Style>
+  
+  <Style Selector="Border.card:pointerover">
+    <Setter Property="BoxShadow" Value="0 12 40 0 #40000000" />
   </Style>
 
   <!-- Divider with text (e.g., "o") -->
@@ -190,6 +211,139 @@
     <Setter Property="Height" Value="1" />
     <Setter Property="Background" Value="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" />
     <Setter Property="Margin" Value="0,16" />
+  </Style>
+
+  <!-- Additional Fluent Design Card Styles -->
+  
+  <Style Selector="Border.card-header">
+    <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource CardStrokeColorDefaultBrush}" />
+    <Setter Property="BorderThickness" Value="0,0,0,1" />
+    <Setter Property="Padding" Value="20,16" />
+  </Style>
+  
+  <Style Selector="Border.dialog-card">
+    <Setter Property="Background" Value="{DynamicResource SolidBackgroundFillColorBaseBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource CardStrokeColorDefaultBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="12" />
+    <Setter Property="BoxShadow" Value="0 8 32 0 #40000000" />
+    <Setter Property="Padding" Value="24" />
+  </Style>
+  
+  <!-- List Item Style with Hover Effects -->
+  <Style Selector="Border.list-item">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="{DynamicResource CardStrokeColorDefaultBrush}" />
+    <Setter Property="BorderThickness" Value="0,0,0,1" />
+    <Setter Property="Padding" Value="16,12" />
+    <Setter Property="CornerRadius" Value="4" />
+    <Setter Property="Transitions">
+      <Transitions>
+        <BrushTransition Property="Background" Duration="0:0:0.2" />
+      </Transitions>
+    </Setter>
+  </Style>
+  
+  <Style Selector="Border.list-item:pointerover">
+    <Setter Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+  </Style>
+  
+  <Style Selector="Border.list-item:pressed">
+    <Setter Property="Background" Value="{DynamicResource SubtleFillColorTertiaryBrush}" />
+  </Style>
+  
+  <!-- Section Header Styles -->
+  <Style Selector="TextBlock.section-header">
+    <Setter Property="FontSize" Value="20" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Margin" Value="0,0,0,8" />
+  </Style>
+  
+  <Style Selector="TextBlock.section-subtitle">
+    <Setter Property="FontSize" Value="14" />
+    <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+    <Setter Property="Margin" Value="0,0,0,16" />
+  </Style>
+  
+  <Style Selector="TextBlock.label-text">
+    <Setter Property="FontSize" Value="14" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Margin" Value="0,0,0,4" />
+  </Style>
+  
+  <!-- Elevation and Shadow Levels (Fluent Design) -->
+  <Style Selector="Border.elevation-1">
+    <Setter Property="BoxShadow" Value="0 2 4 0 #15000000" />
+  </Style>
+  
+  <Style Selector="Border.elevation-2">
+    <Setter Property="BoxShadow" Value="0 4 8 0 #20000000" />
+  </Style>
+  
+  <Style Selector="Border.elevation-3">
+    <Setter Property="BoxShadow" Value="0 8 16 0 #25000000" />
+  </Style>
+  
+  <Style Selector="Border.elevation-4">
+    <Setter Property="BoxShadow" Value="0 16 32 0 #30000000" />
+  </Style>
+  
+  <!-- Dialog Button Styles -->
+  <Style Selector="Button.dialog-button">
+    <Setter Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+    <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="BorderBrush" Value="{DynamicResource CardStrokeColorDefaultBrush}" />
+    <Setter Property="Padding" Value="16,10" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="FontSize" Value="14" />
+    <Setter Property="CornerRadius" Value="6" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="MinWidth" Value="100" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="MinHeight" Value="36" />
+    <Setter Property="Transitions">
+      <Transitions>
+        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15" />
+        <BrushTransition Property="Background" Duration="0:0:0.15" />
+        <BrushTransition Property="BorderBrush" Duration="0:0:0.15" />
+      </Transitions>
+    </Setter>
+  </Style>
+  
+  <Style Selector="Button.dialog-button:pointerover">
+    <Setter Property="Background" Value="{DynamicResource SubtleFillColorTertiaryBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}" />
+    <Setter Property="RenderTransform" Value="scale(1.02)" />
+  </Style>
+  
+  <Style Selector="Button.dialog-button:pressed">
+    <Setter Property="Background" Value="{DynamicResource SubtleFillColorDisabledBrush}" />
+    <Setter Property="RenderTransform" Value="scale(0.98)" />
+  </Style>
+  
+  <Style Selector="Button.dialog-button.primary">
+    <Setter Property="Background" Value="{StaticResource PrimaryBrush}" />
+    <Setter Property="Foreground" Value="White" />
+    <Setter Property="BorderThickness" Value="0" />
+  </Style>
+  
+  <Style Selector="Button.dialog-button.primary:pointerover">
+    <Setter Property="Background" Value="{StaticResource PrimaryHoverBrush}" />
+  </Style>
+  
+  <Style Selector="Button.dialog-button.primary:pressed">
+    <Setter Property="Background" Value="{StaticResource PrimaryPressedBrush}" />
+  </Style>
+  
+  <!-- Enhanced CalendarDatePicker Style -->
+  <Style Selector="CalendarDatePicker">
+    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="CornerRadius" Value="6" />
+    <Setter Property="MinHeight" Value="40" />
   </Style>
 
 </Styles>

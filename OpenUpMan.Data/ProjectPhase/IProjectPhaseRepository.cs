@@ -9,6 +9,7 @@ namespace OpenUpMan.Data
         Task<ProjectPhase?> GetByProjectIdAndCodeAsync(Guid projectId, PhaseCode code, CancellationToken ct = default);
         Task AddAsync(ProjectPhase projectPhase, CancellationToken ct = default);
         Task UpdateAsync(ProjectPhase projectPhase, CancellationToken ct = default);
+        Task DeleteAsync(ProjectPhase projectPhase, CancellationToken ct = default);
         Task SaveChangesAsync(CancellationToken ct = default);
     }
 }
