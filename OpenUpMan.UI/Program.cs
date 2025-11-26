@@ -70,6 +70,9 @@ sealed class Program
         
         services.AddScoped<IProjectUserRepository, ProjectUserRepository>();
         services.AddScoped<IProjectUserService, ProjectUserService>();
+        
+        services.AddScoped<IProjectPhaseRepository, ProjectPhaseRepository>();
+        services.AddScoped<IProjectPhaseService, ProjectPhaseService>();
 
         // ViewModels
         services.AddTransient<OpenUpMan.UI.ViewModels.MainWindowViewModel>();

@@ -9,6 +9,7 @@ namespace OpenUpMan.Data
         Task<IEnumerable<Project>> GetByOwnerAsync(Guid ownerId, CancellationToken ct = default);
         Task AddAsync(Project project, CancellationToken ct = default);
         Task UpdateAsync(Project project, CancellationToken ct = default);
+        Task DeleteAsync(Project project, CancellationToken ct = default);
         Task SaveChangesAsync(CancellationToken ct = default);
     }
 }

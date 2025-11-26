@@ -8,12 +8,21 @@ namespace OpenUpMan.Services
     {
         private readonly IProjectRepository _repo;
         private readonly IUserRepository _userRepo;
+        private readonly IProjectUserRepository _projectUserRepo;
+        private readonly IProjectPhaseRepository _projectPhaseRepo;
         private readonly ILogger<ProjectService> _logger;
 
-        public ProjectService(IProjectRepository repo, IUserRepository userRepo, ILogger<ProjectService> logger)
+        public ProjectService(
+            IProjectRepository repo, 
+            IUserRepository userRepo,
+            IProjectUserRepository projectUserRepo,
+            IProjectPhaseRepository projectPhaseRepo,
+            ILogger<ProjectService> logger)
         {
             _repo = repo;
             _userRepo = userRepo;
+            _projectUserRepo = projectUserRepo;
+            _projectPhaseRepo = projectPhaseRepo;
             _logger = logger;
         }
 
@@ -201,6 +210,63 @@ namespace OpenUpMan.Services
                     Success: false,
                     ResultType: ServiceResultType.Error,
                     Message: "Error al cambiar el estado del proyecto."
+                );
+            }
+        }
+
+        public async Task<ProjectServiceResult> DeleteProjectAsync(Guid id, CancellationToken ct = default)
+        {
+            try
+            {
+                var project = await _repo.GetByIdAsync(id, ct);
+                if (project == null)
+                {
+                    return new ProjectServiceResult(
+                        Success: false,
+                        ResultType: ServiceResultType.Error,
+                        Message: "Proyecto no encontrado."
+                    );
+                }
+
+                _logger.LogInformation("Iniciando borrado del proyecto {ProjectId} - {Identifier}", id, project.Identifier);
+
+                // 1. Eliminar todos los ProjectUser asociados al proyecto
+                var projectUsers = await _projectUserRepo.GetByProjectIdAsync(id, ct);
+                foreach (var pu in projectUsers)
+                {
+                    await _projectUserRepo.RemoveAsync(pu, ct);
+                }
+                _logger.LogInformation("Eliminados {Count} usuarios del proyecto {ProjectId}", projectUsers.Count(), id);
+
+                // 2. Eliminar todas las fases del proyecto (ProjectPhase)
+                var projectPhases = await _projectPhaseRepo.GetByProjectIdAsync(id, ct);
+                foreach (var phase in projectPhases)
+                {
+                    // La eliminación en cascada de PhaseItems y PhaseItemUsers debería manejarse en EF Core
+                    // o agregarse aquí si es necesario
+                    await _projectPhaseRepo.DeleteAsync(phase, ct);
+                }
+                _logger.LogInformation("Eliminadas {Count} fases del proyecto {ProjectId}", projectPhases.Count(), id);
+
+                // 3. Finalmente, eliminar el proyecto
+                await _repo.DeleteAsync(project, ct);
+                await _repo.SaveChangesAsync(ct);
+
+                _logger.LogInformation("Proyecto {ProjectId} - {Identifier} eliminado exitosamente", id, project.Identifier);
+
+                return new ProjectServiceResult(
+                    Success: true,
+                    ResultType: ServiceResultType.Success,
+                    Message: "Proyecto eliminado exitosamente."
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al eliminar proyecto {ProjectId}", id);
+                return new ProjectServiceResult(
+                    Success: false,
+                    ResultType: ServiceResultType.Error,
+                    Message: $"Error al eliminar el proyecto: {ex.Message}"
                 );
             }
         }

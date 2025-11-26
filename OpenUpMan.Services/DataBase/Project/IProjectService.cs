@@ -10,6 +10,7 @@ namespace OpenUpMan.Services
         Task<IEnumerable<Project>> GetProjectsByOwnerAsync(Guid ownerId, CancellationToken ct = default);
         Task<ProjectServiceResult> UpdateProjectAsync(Guid id, string name, string? description, DateTime startDate, CancellationToken ct = default);
         Task<ProjectServiceResult> ChangeProjectStateAsync(Guid id, ProjectState newState, CancellationToken ct = default);
+        Task<ProjectServiceResult> DeleteProjectAsync(Guid id, CancellationToken ct = default);
     }
 }
 

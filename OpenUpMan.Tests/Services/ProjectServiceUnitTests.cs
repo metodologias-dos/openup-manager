@@ -19,6 +19,27 @@ namespace OpenUpMan.Tests.Services
             return new Mock<IUserRepository>().Object;
         }
 
+        private static IProjectUserRepository CreateMockProjectUserRepository()
+        {
+            return new Mock<IProjectUserRepository>().Object;
+        }
+
+        private static IProjectPhaseRepository CreateMockProjectPhaseRepository()
+        {
+            return new Mock<IProjectPhaseRepository>().Object;
+        }
+
+        private static ProjectService CreateProjectService(IProjectRepository projectRepo)
+        {
+            return new ProjectService(
+                projectRepo,
+                CreateMockUserRepository(),
+                CreateMockProjectUserRepository(),
+                CreateMockProjectPhaseRepository(),
+                CreateMockLogger()
+            );
+        }
+
         #region CreateProject Tests
 
         [Fact]
@@ -29,7 +50,7 @@ namespace OpenUpMan.Tests.Services
             mockRepo.Setup(r => r.AddAsync(It.IsAny<Project>(), default)).Returns(Task.CompletedTask).Verifiable();
             mockRepo.Setup(r => r.SaveChangesAsync(default)).Returns(Task.CompletedTask).Verifiable();
 
-            var service = new ProjectService(mockRepo.Object, CreateMockUserRepository(), CreateMockLogger());
+            var service = CreateProjectService(mockRepo.Object);
             var ownerId = Guid.NewGuid();
 
             var result = await service.CreateProjectAsync("PROY-001", "Proyecto Test", DateTime.UtcNow, ownerId, "Descripción test");
@@ -53,7 +74,7 @@ namespace OpenUpMan.Tests.Services
             var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
             mockRepo.Setup(r => r.GetByIdentifierAsync("PROY-001", default)).ReturnsAsync(existing);
 
-            var service = new ProjectService(mockRepo.Object, CreateMockUserRepository(), CreateMockLogger());
+            var service = CreateProjectService(mockRepo.Object);
 
             var result = await service.CreateProjectAsync("PROY-001", "New Project", DateTime.UtcNow, ownerId);
 
@@ -73,7 +94,7 @@ namespace OpenUpMan.Tests.Services
         public async Task CreateProject_ReturnsError_WhenParametersInvalid(string identifier, string name)
         {
             var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
-            var service = new ProjectService(mockRepo.Object, CreateMockUserRepository(), CreateMockLogger());
+            var service = CreateProjectService(mockRepo.Object);
             var ownerId = Guid.NewGuid();
 
             var result = await service.CreateProjectAsync(identifier, name, DateTime.UtcNow, ownerId);
@@ -92,7 +113,7 @@ namespace OpenUpMan.Tests.Services
             mockRepo.Setup(r => r.AddAsync(It.IsAny<Project>(), default)).Returns(Task.CompletedTask);
             mockRepo.Setup(r => r.SaveChangesAsync(default)).Returns(Task.CompletedTask);
 
-            var service = new ProjectService(mockRepo.Object, CreateMockUserRepository(), CreateMockLogger());
+            var service = CreateProjectService(mockRepo.Object);
             var ownerId = Guid.NewGuid();
 
             var result = await service.CreateProjectAsync("PROY-001", "Test Project", DateTime.UtcNow, ownerId);
@@ -116,7 +137,7 @@ namespace OpenUpMan.Tests.Services
             var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
             mockRepo.Setup(r => r.GetByIdAsync(projectId, default)).ReturnsAsync(existingProject);
 
-            var service = new ProjectService(mockRepo.Object, CreateMockUserRepository(), CreateMockLogger());
+            var service = CreateProjectService(mockRepo.Object);
 
             var result = await service.GetProjectByIdAsync(projectId);
 
@@ -134,7 +155,7 @@ namespace OpenUpMan.Tests.Services
             var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
             mockRepo.Setup(r => r.GetByIdAsync(projectId, default)).ReturnsAsync((Project?)null);
 
-            var service = new ProjectService(mockRepo.Object, CreateMockUserRepository(), CreateMockLogger());
+            var service = CreateProjectService(mockRepo.Object);
 
             var result = await service.GetProjectByIdAsync(projectId);
 
@@ -157,7 +178,7 @@ namespace OpenUpMan.Tests.Services
             var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
             mockRepo.Setup(r => r.GetByIdentifierAsync("PROY-001", default)).ReturnsAsync(existingProject);
 
-            var service = new ProjectService(mockRepo.Object, CreateMockUserRepository(), CreateMockLogger());
+            var service = CreateProjectService(mockRepo.Object);
 
             var result = await service.GetProjectByIdentifierAsync("PROY-001");
 
@@ -175,7 +196,7 @@ namespace OpenUpMan.Tests.Services
             var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
             mockRepo.Setup(r => r.GetByIdentifierAsync("PROY-999", default)).ReturnsAsync((Project?)null);
 
-            var service = new ProjectService(mockRepo.Object, CreateMockUserRepository(), CreateMockLogger());
+            var service = CreateProjectService(mockRepo.Object);
 
             var result = await service.GetProjectByIdentifierAsync("PROY-999");
 
@@ -203,7 +224,7 @@ namespace OpenUpMan.Tests.Services
             var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
             mockRepo.Setup(r => r.GetByOwnerAsync(ownerId, default)).ReturnsAsync(projects);
 
-            var service = new ProjectService(mockRepo.Object, CreateMockUserRepository(), CreateMockLogger());
+            var service = CreateProjectService(mockRepo.Object);
 
             var result = await service.GetProjectsByOwnerAsync(ownerId);
 
@@ -221,7 +242,7 @@ namespace OpenUpMan.Tests.Services
             var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
             mockRepo.Setup(r => r.GetByOwnerAsync(ownerId, default)).ReturnsAsync(projects);
 
-            var service = new ProjectService(mockRepo.Object, CreateMockUserRepository(), CreateMockLogger());
+            var service = CreateProjectService(mockRepo.Object);
 
             var result = await service.GetProjectsByOwnerAsync(ownerId);
 
@@ -246,7 +267,7 @@ namespace OpenUpMan.Tests.Services
             mockRepo.Setup(r => r.UpdateAsync(It.IsAny<Project>(), default)).Returns(Task.CompletedTask);
             mockRepo.Setup(r => r.SaveChangesAsync(default)).Returns(Task.CompletedTask).Verifiable();
 
-            var service = new ProjectService(mockRepo.Object, CreateMockUserRepository(), CreateMockLogger());
+            var service = CreateProjectService(mockRepo.Object);
             var newStartDate = DateTime.UtcNow.AddDays(10);
 
             var result = await service.UpdateProjectAsync(projectId, "New Name", "New description", newStartDate);
@@ -267,7 +288,7 @@ namespace OpenUpMan.Tests.Services
             var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
             mockRepo.Setup(r => r.GetByIdAsync(projectId, default)).ReturnsAsync((Project?)null);
 
-            var service = new ProjectService(mockRepo.Object, CreateMockUserRepository(), CreateMockLogger());
+            var service = CreateProjectService(mockRepo.Object);
 
             var result = await service.UpdateProjectAsync(projectId, "New Name", "New description", DateTime.UtcNow);
 
@@ -297,7 +318,7 @@ namespace OpenUpMan.Tests.Services
             mockRepo.Setup(r => r.UpdateAsync(It.IsAny<Project>(), default)).Returns(Task.CompletedTask);
             mockRepo.Setup(r => r.SaveChangesAsync(default)).Returns(Task.CompletedTask).Verifiable();
 
-            var service = new ProjectService(mockRepo.Object, CreateMockUserRepository(), CreateMockLogger());
+            var service = CreateProjectService(mockRepo.Object);
 
             var result = await service.ChangeProjectStateAsync(projectId, newState);
 
@@ -316,7 +337,7 @@ namespace OpenUpMan.Tests.Services
             var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
             mockRepo.Setup(r => r.GetByIdAsync(projectId, default)).ReturnsAsync((Project?)null);
 
-            var service = new ProjectService(mockRepo.Object, CreateMockUserRepository(), CreateMockLogger());
+            var service = CreateProjectService(mockRepo.Object);
 
             var result = await service.ChangeProjectStateAsync(projectId, ProjectState.ACTIVE);
 

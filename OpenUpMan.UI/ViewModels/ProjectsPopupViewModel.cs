@@ -44,7 +44,7 @@ public partial class ProjectsPopupViewModel : ViewModelBase
         NewProjectCommand = new RelayCommand(OnNewProject);
         CloseCommand = new RelayCommand(OnClose);
         OpenProjectCommand = new RelayCommand<ProjectListItemViewModel?>(OnOpenProject);
-        DeleteProjectCommand = new RelayCommand<ProjectListItemViewModel?>(OnDeleteProject);
+        DeleteProjectCommand = new AsyncRelayCommand<ProjectListItemViewModel?>(OnDeleteProjectAsync);
         LogoutCommand = new RelayCommand(OnLogout);
 
         // Cargar proyectos del usuario automáticamente
@@ -67,7 +67,7 @@ public partial class ProjectsPopupViewModel : ViewModelBase
         NewProjectCommand = new RelayCommand(OnNewProject);
         CloseCommand = new RelayCommand(OnClose);
         OpenProjectCommand = new RelayCommand<ProjectListItemViewModel?>(OnOpenProject);
-        DeleteProjectCommand = new RelayCommand<ProjectListItemViewModel?>(OnDeleteProject);
+        DeleteProjectCommand = new AsyncRelayCommand<ProjectListItemViewModel?>(OnDeleteProjectAsync);
         LogoutCommand = new RelayCommand(OnLogout);
     }
 
@@ -141,7 +141,7 @@ public partial class ProjectsPopupViewModel : ViewModelBase
     public IRelayCommand NewProjectCommand { get; }
     public IRelayCommand CloseCommand { get; }
     public IRelayCommand<ProjectListItemViewModel?> OpenProjectCommand { get; }
-    public IRelayCommand<ProjectListItemViewModel?> DeleteProjectCommand { get; }
+    public IAsyncRelayCommand<ProjectListItemViewModel?> DeleteProjectCommand { get; }
 
     // Command to trigger logout
     public IRelayCommand LogoutCommand { get; }
@@ -162,10 +162,46 @@ public partial class ProjectsPopupViewModel : ViewModelBase
         // TODO: open the project in a new Window
     }
 
-    private void OnDeleteProject(ProjectListItemViewModel? project)
+    private async Task OnDeleteProjectAsync(ProjectListItemViewModel? project)
     {
         if (project == null) return;
-        Projects.Remove(project);
+
+        // Si no hay servicio (modo test), solo eliminar de la UI
+        if (_projectService == null)
+        {
+            Projects.Remove(project);
+            return;
+        }
+
+        try
+        {
+            // Obtener el proyecto completo por su identificador
+            var projectResult = await _projectService.GetProjectByIdentifierAsync(project.Id);
+            
+            if (!projectResult.Success || projectResult.Project == null)
+            {
+                Console.WriteLine($"No se pudo encontrar el proyecto {project.Id}");
+                return;
+            }
+
+            // Eliminar el proyecto de la base de datos
+            var deleteResult = await _projectService.DeleteProjectAsync(projectResult.Project.Id);
+
+            if (deleteResult.Success)
+            {
+                // Eliminar de la UI
+                Projects.Remove(project);
+                Console.WriteLine($"Proyecto {project.Name} eliminado exitosamente");
+            }
+            else
+            {
+                Console.WriteLine($"Error al eliminar proyecto: {deleteResult.Message}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error inesperado al eliminar proyecto: {ex.Message}");
+        }
     }
 
     private void OnLogout()
