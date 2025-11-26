@@ -336,7 +336,7 @@ namespace OpenUpMan.Tests.UI
 
             // Assert
             Assert.True(vm.AuthViewModel.IsSuccessFeedback);
-            Assert.Equal("Usuario creado", vm.AuthViewModel.Feedback);
+            Assert.Equal("Usuario creado e iniciado sesión exitosamente", vm.AuthViewModel.Feedback);
             mockService.Verify(s => s.CreateUserAsync("createdUser", "password123", It.IsAny<CancellationToken>()), Times.Once);
         }
 

@@ -26,28 +26,40 @@ namespace OpenUpMan.Services
             _logger = logger;
         }
 
-        public async Task<ProjectServiceResult> CreateProjectAsync(string identifier, string name, DateTime startDate, Guid ownerId, string? description = null, CancellationToken ct = default)
+        public async Task<string> GenerateUniqueIdentifierAsync(CancellationToken ct = default)
+        {
+            // Generate identifier in format PROY-XXXX where XXXX is a sequential number
+            var year = DateTime.Now.Year.ToString().Substring(2); // Last 2 digits of year
+            var counter = 1;
+            string identifier;
+
+            do
+            {
+                identifier = $"PROY-{year}{counter:D4}";
+                var existing = await _repo.GetByIdentifierAsync(identifier, ct);
+                if (existing == null)
+                    break;
+                counter++;
+            } while (counter < 10000); // Safety limit
+
+            return identifier;
+        }
+
+        public async Task<ProjectServiceResult> CreateProjectAsync(string name, DateTime startDate, Guid ownerId, string? description = null, CancellationToken ct = default)
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(identifier) || string.IsNullOrWhiteSpace(name))
+                if (string.IsNullOrWhiteSpace(name))
                 {
                     return new ProjectServiceResult(
                         Success: false,
                         ResultType: ServiceResultType.Error,
-                        Message: "Identificador y nombre son requeridos."
+                        Message: "El nombre es requerido."
                     );
                 }
 
-                var existing = await _repo.GetByIdentifierAsync(identifier, ct);
-                if (existing != null)
-                {
-                    return new ProjectServiceResult(
-                        Success: false,
-                        ResultType: ServiceResultType.Error,
-                        Message: "Ya existe un proyecto con ese identificador."
-                    );
-                }
+                // Auto-generate unique identifier
+                var identifier = await GenerateUniqueIdentifierAsync(ct);
 
                 var project = new Project(identifier, name, startDate, ownerId, description);
                 await _repo.AddAsync(project, ct);

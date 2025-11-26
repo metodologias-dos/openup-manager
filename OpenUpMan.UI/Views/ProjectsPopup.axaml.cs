@@ -1,11 +1,8 @@
 ﻿using Avalonia.Controls;
-using Avalonia.Interactivity;
 using OpenUpMan.UI.ViewModels;
 using System;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
-using System.Linq;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace OpenUpMan.UI.Views;
 
@@ -16,12 +13,38 @@ public partial class ProjectsPopup : Window
         InitializeComponent();
     }
 
+    private bool _isClosingProgrammatically = false;
+    
     public ProjectsPopup(ProjectsPopupViewModel vm) : this()
     {
         DataContext = vm;
         vm.CloseRequested += OnCloseRequested;
         vm.LogoutRequested += OnLogoutRequested;
         vm.NewProjectDialogRequested += OnNewProjectDialogRequested;
+        
+        // Handle window closing (X button) to trigger logout
+        this.Closing += OnWindowClosing;
+    }
+    
+    private void OnWindowClosing(object? sender, System.ComponentModel.CancelEventArgs e)
+    {
+        // If we're already closing programmatically, allow it
+        if (_isClosingProgrammatically)
+        {
+            return;
+        }
+        
+        // Cancel the default close behavior
+        e.Cancel = true;
+        
+        // Trigger logout on the UI thread asynchronously to avoid recursion
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            if (DataContext is ProjectsPopupViewModel vm)
+            {
+                OnLogoutRequested();
+            }
+        });
     }
 
     private void OnCloseRequested()
@@ -59,6 +82,9 @@ public partial class ProjectsPopup : Window
 
     private void OnLogoutRequested()
     {
+        // Set flag to prevent infinite recursion
+        _isClosingProgrammatically = true;
+        
         // Close this projects window
         this.Close();
 

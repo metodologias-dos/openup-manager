@@ -26,6 +26,10 @@ public partial class ProjectsPopupViewModel : ViewModelBase
     
     // Current logged in user
     public User? CurrentUser { get; private set; }
+    
+    // Display username
+    public string UserDisplayName => CurrentUser != null ? $"Usuario: {CurrentUser.Username}" : string.Empty;
+    public bool HasUser => CurrentUser != null;
 
     [ObservableProperty]
     private bool _isLoadingProjects;

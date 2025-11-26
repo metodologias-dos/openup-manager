@@ -16,25 +16,35 @@ public partial class ProjectDialogViewModel : ViewModelBase
     public event Action<ProjectDialogResult>? ProjectCreated;
 
     [ObservableProperty]
-    private string _identifier = string.Empty;
-
-    [ObservableProperty]
     private string _name = string.Empty;
 
     [ObservableProperty]
     private string? _description;
 
     [ObservableProperty]
-    private DateTimeOffset? _startDate;
+    private DateTime? _startDate = DateTime.Now;
 
     [ObservableProperty]
     private string _errorMessage = string.Empty;
+    
+    [ObservableProperty]
+    private string _dateValidationFeedback = string.Empty;
+    
+    [ObservableProperty]
+    private bool _hasDateValidationFeedback;
 
     [ObservableProperty]
     private bool _hasError;
 
     [ObservableProperty]
     private bool _isSaving;
+
+
+    [ObservableProperty]
+    private bool _nameError;
+
+    [ObservableProperty]
+    private bool _startDateError;
 
     public IRelayCommand CreateCommand { get; }
     public IRelayCommand CancelCommand { get; }
@@ -47,42 +57,83 @@ public partial class ProjectDialogViewModel : ViewModelBase
         
         CreateCommand = new AsyncRelayCommand(OnCreateAsync);
         CancelCommand = new RelayCommand(OnCancel);
+        
+        // Listen to StartDate changes for validation
+        PropertyChanged += (s, e) =>
+        {
+            if (e.PropertyName == nameof(StartDate))
+            {
+                ValidateStartDate();
+            }
+        };
+    }
+    
+    private void ValidateStartDate()
+    {
+        // Clear previous feedback
+        HasDateValidationFeedback = false;
+        DateValidationFeedback = string.Empty;
+        
+        // If StartDate is null, set to today and show feedback
+        if (StartDate == null)
+        {
+            StartDate = DateTime.Now;
+            DateValidationFeedback = "⚠ Fecha inválida. Se estableció la fecha de hoy.";
+            HasDateValidationFeedback = true;
+            return;
+        }
+        
+        // If date is in the future more than 1 year, it might be a mistake
+        if (StartDate.Value > DateTime.Now.AddYears(1))
+        {
+            DateValidationFeedback = "⚠ La fecha parece estar muy en el futuro. Verifique que sea correcta.";
+            HasDateValidationFeedback = true;
+        }
+        // If date is more than 10 years in the past, it might be a mistake
+        else if (StartDate.Value < DateTime.Now.AddYears(-10))
+        {
+            DateValidationFeedback = "⚠ La fecha parece estar muy en el pasado. Verifique que sea correcta.";
+            HasDateValidationFeedback = true;
+        }
     }
 
     private async Task OnCreateAsync()
     {
+        // Reset all field errors
+        NameError = false;
+        StartDateError = false;
+        ClearError();
+        
         // Validar campos obligatorios
-        if (string.IsNullOrWhiteSpace(Identifier))
-        {
-            ShowError("El identificador es obligatorio");
-            return;
-        }
+        bool hasValidationErrors = false;
 
         if (string.IsNullOrWhiteSpace(Name))
         {
-            ShowError("El nombre del proyecto es obligatorio");
-            return;
+            NameError = true;
+            hasValidationErrors = true;
         }
 
         if (StartDate == null)
         {
-            ShowError("La fecha de inicio es obligatoria");
-            return;
+            StartDateError = true;
+            hasValidationErrors = true;
         }
 
-        // Limpiar error si todo está bien
-        ClearError();
+        if (hasValidationErrors)
+        {
+            ShowError("Por favor complete todos los campos obligatorios marcados con *");
+            return;
+        }
         
         // Indicar que se está guardando
         IsSaving = true;
 
         try
         {
-            // Crear el proyecto en la base de datos
+            // Crear el proyecto en la base de datos (el identificador se autogenera)
             var projectResult = await _projectService.CreateProjectAsync(
-                identifier: Identifier.Trim(),
                 name: Name.Trim(),
-                startDate: StartDate.Value.DateTime,
+                startDate: StartDate!.Value,
                 ownerId: _currentUserId,
                 description: string.IsNullOrWhiteSpace(Description) ? null : Description.Trim()
             );
