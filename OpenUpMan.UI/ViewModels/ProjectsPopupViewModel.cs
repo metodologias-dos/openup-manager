@@ -107,17 +107,14 @@ public partial class ProjectsPopupViewModel : ViewModelBase
             Projects.Clear();
             foreach (var project in projects.Where(p => p != null))
             {
-                if (project != null)
+                var projectVm = new ProjectListItemViewModel
                 {
-                    var projectVm = new ProjectListItemViewModel
-                    {
-                        Id = project.Identifier,
-                        Name = project.Name,
-                        LastEdited = project.UpdatedAt?.ToString("dd/MM/yyyy HH:mm") 
-                                     ?? project.CreatedAt.ToString("dd/MM/yyyy HH:mm")
-                    };
-                    Projects.Add(projectVm);
-                }
+                    Id = project.Identifier,
+                    Name = project.Name,
+                    LastEdited = project.UpdatedAt?.ToString("dd/MM/yyyy HH:mm") 
+                                 ?? project.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                };
+                Projects.Add(projectVm);
             }
 
             LoadingMessage = Projects.Count > 0 

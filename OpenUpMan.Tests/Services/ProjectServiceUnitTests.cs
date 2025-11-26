@@ -3,7 +3,6 @@ using Moq;
 using OpenUpMan.Data;
 using OpenUpMan.Domain;
 using OpenUpMan.Services;
-using Xunit;
 
 namespace OpenUpMan.Tests.Services
 {
@@ -349,6 +348,158 @@ namespace OpenUpMan.Tests.Services
         }
 
         #endregion
+
+        #region DeleteProject Tests
+
+        [Fact]
+        public async Task DeleteProject_ReturnsNotFound_WhenProjectDoesNotExist()
+        {
+            var projectId = Guid.NewGuid();
+            var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
+            mockRepo.Setup(r => r.GetByIdAsync(projectId, default)).ReturnsAsync((Project?)null);
+
+            var mockProjectUserRepo = new Mock<IProjectUserRepository>(MockBehavior.Strict);
+            var mockProjectPhaseRepo = new Mock<IProjectPhaseRepository>(MockBehavior.Strict);
+
+            var service = new ProjectService(
+                mockRepo.Object,
+                CreateMockUserRepository(),
+                mockProjectUserRepo.Object,
+                mockProjectPhaseRepo.Object,
+                CreateMockLogger()
+            );
+
+            var result = await service.DeleteProjectAsync(projectId);
+
+            Assert.False(result.Success);
+            Assert.Equal(ServiceResultType.Error, result.ResultType);
+            Assert.Contains("encontrado", result.Message, StringComparison.OrdinalIgnoreCase);
+
+            mockRepo.Verify(r => r.GetByIdAsync(projectId, default), Times.Once);
+            mockProjectUserRepo.Verify(r => r.GetByProjectIdAsync(It.IsAny<Guid>(), default), Times.Never);
+            mockProjectPhaseRepo.Verify(r => r.GetByProjectIdAsync(It.IsAny<Guid>(), default), Times.Never);
+        }
+
+        [Fact]
+        public async Task DeleteProject_DeletesAssociatedUsersAndPhases_WhenProjectExists()
+        {
+            var ownerId = Guid.NewGuid();
+            var existingProject = new Project("PROY-DEL", "To Delete", DateTime.UtcNow, ownerId);
+            var projectId = existingProject.Id;
+
+            var projectUsers = new List<ProjectUser>
+            {
+                new ProjectUser(projectId, Guid.NewGuid(), ProjectUserPermission.EDITOR, ProjectUserRole.DESARROLLADOR),
+                new ProjectUser(projectId, Guid.NewGuid(), ProjectUserPermission.OWNER, ProjectUserRole.ADMIN)
+            };
+
+            var projectPhases = new List<ProjectPhase>
+            {
+                new ProjectPhase(projectId, PhaseCode.INCEPTION, "Phase 1", 1),
+                new ProjectPhase(projectId, PhaseCode.ELABORATION, "Phase 2", 2)
+            };
+
+            var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
+            mockRepo.Setup(r => r.GetByIdAsync(projectId, default)).ReturnsAsync(existingProject);
+
+            var mockProjectUserRepo = new Mock<IProjectUserRepository>(MockBehavior.Strict);
+            mockProjectUserRepo.Setup(r => r.GetByProjectIdAsync(projectId, default)).ReturnsAsync(projectUsers);
+            mockProjectUserRepo.Setup(r => r.RemoveAsync(It.IsAny<ProjectUser>(), default)).Returns(Task.CompletedTask).Verifiable();
+
+            var mockProjectPhaseRepo = new Mock<IProjectPhaseRepository>(MockBehavior.Strict);
+            mockProjectPhaseRepo.Setup(r => r.GetByProjectIdAsync(projectId, default)).ReturnsAsync(projectPhases);
+            mockProjectPhaseRepo.Setup(r => r.DeleteAsync(It.IsAny<ProjectPhase>(), default)).Returns(Task.CompletedTask).Verifiable();
+
+            var service = new ProjectService(
+                mockRepo.Object,
+                CreateMockUserRepository(),
+                mockProjectUserRepo.Object,
+                mockProjectPhaseRepo.Object,
+                CreateMockLogger()
+            );
+
+            var result = await service.DeleteProjectAsync(projectId);
+
+            Assert.True(result.Success);
+            Assert.Equal(ServiceResultType.Success, result.ResultType);
+            Assert.Contains("eliminado", result.Message, StringComparison.OrdinalIgnoreCase);
+
+            mockRepo.Verify(r => r.GetByIdAsync(projectId, default), Times.Once);
+            mockProjectUserRepo.Verify(r => r.GetByProjectIdAsync(projectId, default), Times.Once);
+            mockProjectUserRepo.Verify(r => r.RemoveAsync(It.IsAny<ProjectUser>(), default), Times.Exactly(projectUsers.Count));
+            mockProjectPhaseRepo.Verify(r => r.GetByProjectIdAsync(projectId, default), Times.Once);
+            mockProjectPhaseRepo.Verify(r => r.DeleteAsync(It.IsAny<ProjectPhase>(), default), Times.Exactly(projectPhases.Count));
+        }
+
+        [Fact]
+        public async Task DeleteProject_Succeeds_WhenNoAssociatedUsersOrPhases()
+        {
+            var ownerId = Guid.NewGuid();
+            var existingProject = new Project("PROY-DEL-EMPTY", "To Delete Empty", DateTime.UtcNow, ownerId);
+            var projectId = existingProject.Id;
+
+            var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
+            mockRepo.Setup(r => r.GetByIdAsync(projectId, default)).ReturnsAsync(existingProject);
+
+            var mockProjectUserRepo = new Mock<IProjectUserRepository>(MockBehavior.Strict);
+            mockProjectUserRepo.Setup(r => r.GetByProjectIdAsync(projectId, default)).ReturnsAsync(new List<ProjectUser>());
+
+            var mockProjectPhaseRepo = new Mock<IProjectPhaseRepository>(MockBehavior.Strict);
+            mockProjectPhaseRepo.Setup(r => r.GetByProjectIdAsync(projectId, default)).ReturnsAsync(new List<ProjectPhase>());
+
+            var service = new ProjectService(
+                mockRepo.Object,
+                CreateMockUserRepository(),
+                mockProjectUserRepo.Object,
+                mockProjectPhaseRepo.Object,
+                CreateMockLogger()
+            );
+
+            var result = await service.DeleteProjectAsync(projectId);
+
+            Assert.True(result.Success);
+            Assert.Equal(ServiceResultType.Success, result.ResultType);
+            Assert.Contains("eliminado", result.Message, StringComparison.OrdinalIgnoreCase);
+
+            mockProjectUserRepo.Verify(r => r.RemoveAsync(It.IsAny<ProjectUser>(), default), Times.Never);
+            mockProjectPhaseRepo.Verify(r => r.DeleteAsync(It.IsAny<ProjectPhase>(), default), Times.Never);
+            mockProjectUserRepo.Verify(r => r.GetByProjectIdAsync(projectId, default), Times.Once);
+            mockProjectPhaseRepo.Verify(r => r.GetByProjectIdAsync(projectId, default), Times.Once);
+        }
+
+        [Fact]
+        public async Task DeleteProject_ReturnsError_WhenDeletionThrows()
+        {
+            var ownerId = Guid.NewGuid();
+            var existingProject = new Project("PROY-DEL-ERR", "To Delete Err", DateTime.UtcNow, ownerId);
+            var projectId = existingProject.Id;
+
+            var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
+            mockRepo.Setup(r => r.GetByIdAsync(projectId, default)).ReturnsAsync(existingProject);
+
+            var mockProjectUserRepo = new Mock<IProjectUserRepository>(MockBehavior.Strict);
+            mockProjectUserRepo.Setup(r => r.GetByProjectIdAsync(projectId, default)).ThrowsAsync(new Exception("boom"));
+
+            var mockProjectPhaseRepo = new Mock<IProjectPhaseRepository>(MockBehavior.Strict);
+
+            var service = new ProjectService(
+                mockRepo.Object,
+                CreateMockUserRepository(),
+                mockProjectUserRepo.Object,
+                mockProjectPhaseRepo.Object,
+                CreateMockLogger()
+            );
+
+            var result = await service.DeleteProjectAsync(projectId);
+
+            Assert.False(result.Success);
+            Assert.Equal(ServiceResultType.Error, result.ResultType);
+            Assert.Contains("Error al eliminar", result.Message, StringComparison.OrdinalIgnoreCase);
+
+            mockRepo.Verify(r => r.GetByIdAsync(projectId, default), Times.Once);
+            mockProjectUserRepo.Verify(r => r.GetByProjectIdAsync(projectId, default), Times.Once);
+        }
+
+        #endregion
     }
 }
-

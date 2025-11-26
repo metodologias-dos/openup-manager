@@ -242,15 +242,13 @@ namespace OpenUpMan.Services
                 var projectPhases = await _projectPhaseRepo.GetByProjectIdAsync(id, ct);
                 foreach (var phase in projectPhases)
                 {
-                    // La eliminación en cascada de PhaseItems y PhaseItemUsers debería manejarse en EF Core
-                    // o agregarse aquí si es necesario
+                    // La eliminación en cascada de PhaseItems y PhaseItemUsers ya está configurada en EF Core
+                    // (ver AppDbContext.cs, líneas 116 y 138)
                     await _projectPhaseRepo.DeleteAsync(phase, ct);
                 }
                 _logger.LogInformation("Eliminadas {Count} fases del proyecto {ProjectId}", projectPhases.Count(), id);
 
-                // 3. Finalmente, eliminar el proyecto
-                await _repo.DeleteAsync(project, ct);
-                await _repo.SaveChangesAsync(ct);
+                // Eliminar el proyecto; las entidades relacionadas se eliminarán en cascada por EF Core
 
                 _logger.LogInformation("Proyecto {ProjectId} - {Identifier} eliminado exitosamente", id, project.Identifier);
 
