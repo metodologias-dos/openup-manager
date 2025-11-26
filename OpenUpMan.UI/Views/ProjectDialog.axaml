@@ -1,0 +1,141 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:OpenUpMan.UI.ViewModels"
+        x:Class="OpenUpMan.UI.Views.ProjectDialog"
+        x:DataType="vm:ProjectDialogViewModel"
+        Width="600" Height="550"
+        MinWidth="500" MinHeight="500"
+        MaxWidth="700" MaxHeight="600"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="Nuevo Proyecto - OpenUpMan"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False">
+
+  <Window.Styles>
+    <!-- Estilo para labels -->
+    <Style Selector="TextBlock.field-label">
+      <Setter Property="FontSize" Value="14" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Margin" Value="0,0,0,8" />
+    </Style>
+
+    <!-- Estilo para campos de texto -->
+    <Style Selector="TextBox.field-input">
+      <Setter Property="Padding" Value="12,10" />
+      <Setter Property="FontSize" Value="14" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="BorderThickness" Value="1" />
+    </Style>
+
+    <!-- Estilo para botones -->
+    <Style Selector="Button.dialog-button">
+      <Setter Property="Padding" Value="20,12" />
+      <Setter Property="FontSize" Value="14" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="MinWidth" Value="120" />
+      <Setter Property="Cursor" Value="Hand" />
+    </Style>
+  </Window.Styles>
+
+  <Border Padding="32" Background="{DynamicResource SystemControlBackgroundAltHighBrush}">
+    <Grid RowDefinitions="Auto,*,Auto">
+      <!-- Header -->
+      <StackPanel Grid.Row="0" Spacing="8" Margin="0,0,0,24">
+        <TextBlock Text="Crear Nuevo Proyecto" 
+                   FontSize="24" 
+                   FontWeight="Bold" />
+        <TextBlock Text="Complete los detalles del proyecto" 
+                   FontSize="13" 
+                   Opacity="0.7" />
+      </StackPanel>
+
+      <!-- Form Fields -->
+      <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+        <StackPanel Spacing="20">
+          <!-- Identificador -->
+          <StackPanel Spacing="8">
+            <TextBlock Text="Identificador *" Classes="field-label" />
+            <TextBox Text="{Binding Identifier}" 
+                     Classes="field-input"
+                     Watermark="Ej: PROY-001"
+                     MaxLength="50" />
+            <TextBlock Text="Código único del proyecto" 
+                       FontSize="12" 
+                       Opacity="0.6" 
+                       Margin="0,4,0,0" />
+          </StackPanel>
+
+          <!-- Nombre del Proyecto -->
+          <StackPanel Spacing="8">
+            <TextBlock Text="Nombre del Proyecto *" Classes="field-label" />
+            <TextBox Text="{Binding Name}" 
+                     Classes="field-input"
+                     Watermark="Ingrese el nombre del proyecto"
+                     MaxLength="200" />
+          </StackPanel>
+
+          <!-- Descripción -->
+          <StackPanel Spacing="8">
+            <TextBlock Text="Descripción (Opcional)" Classes="field-label" />
+            <TextBox Text="{Binding Description}" 
+                     Classes="field-input"
+                     Watermark="Ingrese una descripción del proyecto"
+                     TextWrapping="Wrap"
+                     AcceptsReturn="True"
+                     Height="100"
+                     MaxLength="1000" />
+          </StackPanel>
+
+          <!-- Fecha de Inicio -->
+          <StackPanel Spacing="8">
+            <TextBlock Text="Fecha de Inicio *" Classes="field-label" />
+            <DatePicker SelectedDate="{Binding StartDate}"
+                       HorizontalAlignment="Stretch"
+                       BorderThickness="1"
+                       CornerRadius="6"
+                       FontSize="14"
+                       DayVisible="True"
+                       MonthVisible="True"
+                       YearVisible="True" />
+            <TextBlock Text="Fecha en la que inicia el proyecto" 
+                       FontSize="12" 
+                       Opacity="0.6" 
+                       Margin="0,4,0,0" />
+          </StackPanel>
+
+          <!-- Mensaje de error (si hay) -->
+          <TextBlock Text="{Binding ErrorMessage}" 
+                     Foreground="Red" 
+                     FontSize="13"
+                     TextWrapping="Wrap"
+                     IsVisible="{Binding HasError}" />
+        </StackPanel>
+      </ScrollViewer>
+
+      <!-- Action Buttons -->
+      <Border Grid.Row="2" 
+              Padding="0,24,0,0" 
+              BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+              BorderThickness="0,1,0,0">
+        <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,16,0,0">
+          <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="4">
+            <TextBlock Text="*" Foreground="Red" FontSize="12" VerticalAlignment="Center" />
+            <TextBlock Text="Campos obligatorios" FontSize="12" Opacity="0.6" VerticalAlignment="Center" />
+          </StackPanel>
+
+          <Button Grid.Column="1" 
+                  Content="Cancelar" 
+                  Command="{Binding CancelCommand}"
+                  Classes="dialog-button"
+                  Margin="0,0,12,0" />
+          
+          <Button Grid.Column="2" 
+                  Content="Crear Proyecto" 
+                  Command="{Binding CreateCommand}"
+                  Classes="dialog-button primary" />
+        </Grid>
+      </Border>
+    </Grid>
+  </Border>
+</Window>
+

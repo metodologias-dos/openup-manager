@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
 using System.Collections.Generic;
@@ -16,6 +16,9 @@ public partial class ProjectsPopupViewModel : ViewModelBase
 
     // Event to request a logout (close projects and return to login)
     public event Action? LogoutRequested;
+
+    // Event to request opening the new project dialog
+    public event Action? NewProjectDialogRequested;
 
     public ProjectsPopupViewModel(IEnumerable<ProjectListItemViewModel>? initialProjects = null)
     {
@@ -50,7 +53,7 @@ public partial class ProjectsPopupViewModel : ViewModelBase
 
     private void OnNewProject()
     {
-        // TODO: open a new project creation window
+        NewProjectDialogRequested?.Invoke();
     }
 
     private void OnClose()
@@ -73,6 +76,17 @@ public partial class ProjectsPopupViewModel : ViewModelBase
     private void OnLogout()
     {
         LogoutRequested?.Invoke();
+    }
+
+    public void AddProject(ProjectDialogResult result)
+    {
+        var newProject = new ProjectListItemViewModel
+        {
+            Id = result.Identifier,
+            Name = result.Name,
+            LastEdited = DateTime.Now.ToString("dd/MM/yyyy HH:mm")
+        };
+        Projects.Add(newProject);
     }
 }
 

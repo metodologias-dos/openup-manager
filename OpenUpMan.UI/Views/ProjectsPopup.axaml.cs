@@ -1,4 +1,4 @@
-﻿using Avalonia.Controls;
+﻿﻿using Avalonia.Controls;
 using Avalonia.Interactivity;
 using OpenUpMan.UI.ViewModels;
 using System;
@@ -20,11 +20,30 @@ public partial class ProjectsPopup : Window
         DataContext = vm;
         vm.CloseRequested += OnCloseRequested;
         vm.LogoutRequested += OnLogoutRequested;
+        vm.NewProjectDialogRequested += OnNewProjectDialogRequested;
     }
 
     private void OnCloseRequested()
     {
         this.Close();
+    }
+
+    private async void OnNewProjectDialogRequested()
+    {
+        var dialogVm = new ProjectDialogViewModel();
+        var dialog = new ProjectDialog(dialogVm);
+
+        // Suscribirse al evento de proyecto creado
+        dialogVm.ProjectCreated += (result) =>
+        {
+            if (DataContext is ProjectsPopupViewModel vm)
+            {
+                vm.AddProject(result);
+            }
+        };
+
+        // Mostrar el diálogo como modal
+        await dialog.ShowDialog(this);
     }
 
     private void OnLogoutRequested()
