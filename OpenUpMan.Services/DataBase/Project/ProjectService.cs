@@ -248,7 +248,11 @@ namespace OpenUpMan.Services
                 }
                 _logger.LogInformation("Eliminadas {Count} fases del proyecto {ProjectId}", projectPhases.Count(), id);
 
-                // Eliminar el proyecto; las entidades relacionadas se eliminarán en cascada por EF Core
+                // 3. Eliminar el proyecto
+                await _repo.DeleteAsync(project, ct);
+                
+                // 4. Guardar todos los cambios en la base de datos
+                await _repo.SaveChangesAsync(ct);
 
                 _logger.LogInformation("Proyecto {ProjectId} - {Identifier} eliminado exitosamente", id, project.Identifier);
 

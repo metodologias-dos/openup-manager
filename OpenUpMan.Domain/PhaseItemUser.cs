@@ -9,7 +9,10 @@ namespace OpenUpMan.Domain
         public string Role { get; private set; }  // PARTICIPANT, RESPONSIBLE, etc.
 
         // Parameterless constructor for EF
-        protected PhaseItemUser() { }
+        protected PhaseItemUser()
+        {
+            Role = string.Empty;
+        }
 
         public PhaseItemUser(Guid phaseItemId, Guid userId, string role = "PARTICIPANT")
         {

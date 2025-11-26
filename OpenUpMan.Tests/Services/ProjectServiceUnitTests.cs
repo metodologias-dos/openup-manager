@@ -401,6 +401,8 @@ namespace OpenUpMan.Tests.Services
 
             var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
             mockRepo.Setup(r => r.GetByIdAsync(projectId, default)).ReturnsAsync(existingProject);
+            mockRepo.Setup(r => r.DeleteAsync(existingProject, default)).Returns(Task.CompletedTask).Verifiable();
+            mockRepo.Setup(r => r.SaveChangesAsync(default)).Returns(Task.CompletedTask).Verifiable();
 
             var mockProjectUserRepo = new Mock<IProjectUserRepository>(MockBehavior.Strict);
             mockProjectUserRepo.Setup(r => r.GetByProjectIdAsync(projectId, default)).ReturnsAsync(projectUsers);
@@ -429,6 +431,8 @@ namespace OpenUpMan.Tests.Services
             mockProjectUserRepo.Verify(r => r.RemoveAsync(It.IsAny<ProjectUser>(), default), Times.Exactly(projectUsers.Count));
             mockProjectPhaseRepo.Verify(r => r.GetByProjectIdAsync(projectId, default), Times.Once);
             mockProjectPhaseRepo.Verify(r => r.DeleteAsync(It.IsAny<ProjectPhase>(), default), Times.Exactly(projectPhases.Count));
+            mockRepo.Verify(r => r.DeleteAsync(existingProject, default), Times.Once);
+            mockRepo.Verify(r => r.SaveChangesAsync(default), Times.Once);
         }
 
         [Fact]
@@ -440,6 +444,8 @@ namespace OpenUpMan.Tests.Services
 
             var mockRepo = new Mock<IProjectRepository>(MockBehavior.Strict);
             mockRepo.Setup(r => r.GetByIdAsync(projectId, default)).ReturnsAsync(existingProject);
+            mockRepo.Setup(r => r.DeleteAsync(existingProject, default)).Returns(Task.CompletedTask).Verifiable();
+            mockRepo.Setup(r => r.SaveChangesAsync(default)).Returns(Task.CompletedTask).Verifiable();
 
             var mockProjectUserRepo = new Mock<IProjectUserRepository>(MockBehavior.Strict);
             mockProjectUserRepo.Setup(r => r.GetByProjectIdAsync(projectId, default)).ReturnsAsync(new List<ProjectUser>());
@@ -465,6 +471,8 @@ namespace OpenUpMan.Tests.Services
             mockProjectPhaseRepo.Verify(r => r.DeleteAsync(It.IsAny<ProjectPhase>(), default), Times.Never);
             mockProjectUserRepo.Verify(r => r.GetByProjectIdAsync(projectId, default), Times.Once);
             mockProjectPhaseRepo.Verify(r => r.GetByProjectIdAsync(projectId, default), Times.Once);
+            mockRepo.Verify(r => r.DeleteAsync(existingProject, default), Times.Once);
+            mockRepo.Verify(r => r.SaveChangesAsync(default), Times.Once);
         }
 
         [Fact]

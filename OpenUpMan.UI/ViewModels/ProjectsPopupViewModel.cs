@@ -109,7 +109,7 @@ public partial class ProjectsPopupViewModel : ViewModelBase
             {
                 var projectVm = new ProjectListItemViewModel
                 {
-                    Id = project.Identifier,
+                    Id = project!.Identifier,
                     Name = project.Name,
                     LastEdited = project.UpdatedAt?.ToString("dd/MM/yyyy HH:mm") 
                                  ?? project.CreatedAt.ToString("dd/MM/yyyy HH:mm")
