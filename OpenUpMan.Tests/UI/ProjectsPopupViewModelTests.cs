@@ -121,12 +121,12 @@ namespace OpenUpMan.Tests.UI
         }
 
         [Fact]
-        public void DeleteProjectCommand_RemovesCorrectProject()
+        public async Task DeleteProjectCommand_RemovesCorrectProject()
         {
             var vm = new ProjectsPopupViewModel(GetSampleUser(), GetSampleProjects());
             var projectToDelete = vm.Projects.FirstOrDefault(p => p.Id == "PRJ-003");
 
-            vm.DeleteProjectCommand.Execute(projectToDelete);
+            await vm.DeleteProjectCommand.ExecuteAsync(projectToDelete);
 
             Assert.DoesNotContain(vm.Projects, p => p.Id == "PRJ-003");
             Assert.Contains(vm.Projects, p => p.Id == "PRJ-001");
