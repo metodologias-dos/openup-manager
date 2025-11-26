@@ -1,0 +1,278 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:OpenUpMan.UI.ViewModels"
+        x:Class="OpenUpMan.UI.Views.ProjectsPopup"
+        x:DataType="vm:ProjectsPopupViewModel"
+        Width="1200" Height="700"
+        MinWidth="900" MinHeight="600"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="Gestor de Proyectos - OpenUpMan"
+        Background="{DynamicResource ApplicationPageBackgroundThemeBrush}"
+        TransparencyLevelHint="AcrylicBlur">
+
+  <Window.Styles>
+    <!-- Estilo para botones pequeños de acción -->
+    <Style Selector="Button.action-button">
+      <Setter Property="Padding" Value="14,8" />
+      <Setter Property="Margin" Value="4,0" />
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="MinHeight" Value="36" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="Transitions">
+        <Transitions>
+          <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15" />
+          <BrushTransition Property="Background" Duration="0:0:0.15" />
+        </Transitions>
+      </Setter>
+    </Style>
+    
+    <Style Selector="Button.action-button:pointerover">
+      <Setter Property="RenderTransform" Value="scale(1.02)" />
+    </Style>
+    
+    <Style Selector="Button.action-button:pressed">
+      <Setter Property="RenderTransform" Value="scale(0.98)" />
+    </Style>
+
+    <!-- Estilo para el header de columnas -->
+    <Style Selector="TextBlock.column-header">
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="Margin" Value="0,0,0,8" />
+      <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+    </Style>
+  </Window.Styles>
+
+  <Grid RowDefinitions="Auto,*" Margin="32,24">
+    <!-- Header Section -->
+    <Border Grid.Row="0" Padding="0,0,0,32">
+      <Grid ColumnDefinitions="*,Auto">
+        <!-- Title -->
+        <StackPanel Grid.Column="0" Spacing="6">
+          <TextBlock Text="Mis Proyectos" 
+                     FontSize="32" 
+                     FontWeight="SemiBold" />
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="Gestiona y organiza tus proyectos" 
+                       FontSize="14" 
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+            <TextBlock Text="•" 
+                       FontSize="14" 
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" 
+                       IsVisible="{Binding HasUser}" />
+            <TextBlock Text="{Binding UserDisplayName}" 
+                       FontSize="14" 
+                       Foreground="{DynamicResource AccentFillColorDefaultBrush}"
+                       FontWeight="SemiBold"
+                       IsVisible="{Binding HasUser}" />
+          </StackPanel>
+        </StackPanel>
+
+        <!-- Action Buttons -->
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+          <Button Command="{Binding NewProjectCommand}" 
+                  Classes="primary"
+                  Padding="20,12"
+                  FontSize="14"
+                  CornerRadius="6"
+                  VerticalAlignment="Center"
+                  HorizontalContentAlignment="Center"
+                  VerticalContentAlignment="Center">
+            <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+              <TextBlock Text="+" 
+                        FontSize="14" 
+                        FontWeight="Bold"
+                        VerticalAlignment="Center" />
+              <TextBlock Text="Nuevo Proyecto" VerticalAlignment="Center" />
+            </StackPanel>
+          </Button>
+          <Button Content="Cerrar sesión" 
+                  Command="{Binding LogoutCommand}"
+                  Padding="20,12"
+                  FontSize="14"
+                  CornerRadius="6"
+                  VerticalAlignment="Center"
+                  HorizontalContentAlignment="Center"
+                  VerticalContentAlignment="Center" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- Projects List Section -->
+    <Border Grid.Row="1" 
+            Classes="card"
+            Padding="0">
+      
+      <Grid RowDefinitions="Auto,*">
+        <!-- Column Headers -->
+        <Border Grid.Row="0" 
+                Classes="card-header"
+                CornerRadius="8,8,0,0"
+                Margin="-16,-16,-16,0">
+          <Grid ColumnDefinitions="3*,1.5*,2*,Auto,Auto">
+            <TextBlock Grid.Column="0" 
+                       Text="NOMBRE DEL PROYECTO" 
+                       Classes="column-header"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+            <TextBlock Grid.Column="1" 
+                       Text="ID" 
+                       Classes="column-header" 
+                       HorizontalAlignment="Center"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+            <TextBlock Grid.Column="2" 
+                       Text="ÚLTIMA EDICIÓN" 
+                       Classes="column-header" 
+                       HorizontalAlignment="Center"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+            <TextBlock Grid.Column="3" 
+                       Text="ACCIONES" 
+                       Classes="column-header" 
+                       HorizontalAlignment="Center" 
+                       Margin="0,0,80,8"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+          </Grid>
+        </Border>
+
+        <!-- Projects List with Scroll -->
+        <ScrollViewer Grid.Row="1"
+                      HorizontalScrollBarVisibility="Disabled" 
+                      VerticalScrollBarVisibility="Auto"
+                      Padding="0"
+                      IsVisible="{Binding !IsLoadingProjects}">
+          <ItemsControl ItemsSource="{Binding Projects}" Margin="0,16,0,0">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate DataType="vm:ProjectListItemViewModel">
+                <Border Classes="list-item">
+                  <Grid ColumnDefinitions="3*,1.5*,2*,Auto,Auto">
+                    <!-- Nombre con icono -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="14" VerticalAlignment="Center">
+                      <Border Background="{DynamicResource AccentFillColorDefaultBrush}"
+                              Width="44" Height="44"
+                              CornerRadius="8"
+                              VerticalAlignment="Center"
+                              HorizontalAlignment="Center">
+                        <Viewbox Width="22" Height="22"
+                                 VerticalAlignment="Top"
+                                 HorizontalAlignment="Center">
+                          <Canvas Width="24" Height="24">
+                            <Path Fill="White" Data="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
+                          </Canvas>
+                        </Viewbox>
+                      </Border>
+                      <StackPanel VerticalAlignment="Center" Spacing="2">
+                        <TextBlock Text="{Binding Name}" 
+                                   FontSize="15"
+                                   VerticalAlignment="Center"
+                                   FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding Id}" 
+                                   FontSize="12"
+                                   VerticalAlignment="Center"
+                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                   FontFamily="Consolas, Courier New" />
+                      </StackPanel>
+                    </StackPanel>
+
+                    <!-- ID (hidden now, shown in name section) -->
+                    <TextBlock Grid.Column="1" 
+                               VerticalAlignment="Center" 
+                               HorizontalAlignment="Center"
+                               FontSize="13"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+
+                    <!-- Fecha -->
+                    <TextBlock Grid.Column="2" 
+                               Text="{Binding LastEdited}" 
+                               VerticalAlignment="Center" 
+                               HorizontalAlignment="Center"
+                               FontSize="13"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+
+                    <!-- Botón Abrir -->
+                    <Button Grid.Column="3" 
+                            Command="{Binding $parent[Window].((vm:ProjectsPopupViewModel)DataContext).OpenProjectCommand}" 
+                            CommandParameter="{Binding}"
+                            Classes="primary action-button"
+                            VerticalAlignment="Center"
+                            HorizontalContentAlignment="Center"
+                            VerticalContentAlignment="Center">
+                      <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                        <Viewbox Width="14" Height="14" VerticalAlignment="Center">
+                          <Canvas Width="24" Height="24">
+                            <Path Fill="White" Data="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/>
+                          </Canvas>
+                        </Viewbox>
+                        <TextBlock Text="Abrir" VerticalAlignment="Center" />
+                      </StackPanel>
+                    </Button>
+
+                    <!-- Botón Borrar -->
+                    <Button Grid.Column="4" 
+                            Command="{Binding $parent[Window].((vm:ProjectsPopupViewModel)DataContext).DeleteProjectCommand}" 
+                            CommandParameter="{Binding}"
+                            Classes="action-button"
+                            Background="#E81123"
+                            Foreground="White"
+                            VerticalAlignment="Center"
+                            HorizontalContentAlignment="Center"
+                            VerticalContentAlignment="Center">
+                      <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                        <Viewbox Width="14" Height="14" VerticalAlignment="Center">
+                          <Canvas Width="24" Height="24">
+                            <Path Fill="White" Data="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                          </Canvas>
+                        </Viewbox>
+                        <TextBlock Text="Borrar" VerticalAlignment="Center" />
+                      </StackPanel>
+                      <Button.Styles>
+                        <Style Selector="Button:pointerover">
+                          <Setter Property="Background" Value="#D0101F" />
+                        </Style>
+                        <Style Selector="Button:pressed">
+                          <Setter Property="Background" Value="#B80D1A" />
+                        </Style>
+                      </Button.Styles>
+                    </Button>
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+        
+        <!-- Overlay de carga -->
+        <Border Grid.Row="1"
+                Background="{DynamicResource LayerFillColorDefaultBrush}"
+                IsVisible="{Binding IsLoadingProjects}">
+          <StackPanel HorizontalAlignment="Center" 
+                      VerticalAlignment="Center" 
+                      Spacing="20">
+            <!-- Spinner de carga con estilo Fluent -->
+            <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    Padding="40,32"
+                    BoxShadow="0 4 16 0 #20000000">
+              <StackPanel Spacing="20">
+                <ProgressBar IsIndeterminate="True" 
+                             Width="160" 
+                             Height="4"
+                             HorizontalAlignment="Center" />
+                <TextBlock Text="{Binding LoadingMessage}" 
+                           FontSize="16" 
+                           FontWeight="SemiBold"
+                           HorizontalAlignment="Center"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+              </StackPanel>
+            </Border>
+          </StackPanel>
+        </Border>
+      </Grid>
+    </Border>
+  </Grid>
+
+</Window>

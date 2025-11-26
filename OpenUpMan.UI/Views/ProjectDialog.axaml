@@ -1,0 +1,310 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:OpenUpMan.UI.ViewModels"
+        x:Class="OpenUpMan.UI.Views.ProjectDialog"
+        x:DataType="vm:ProjectDialogViewModel"
+        Width="650" Height="680"
+        MinWidth="600" MinHeight="650"
+        MaxWidth="750" MaxHeight="800"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="Nuevo Proyecto - OpenUpMan"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False">
+
+  <Window.Styles>
+    <!-- Red asterisk for required fields -->
+    <Style Selector="Run.required">
+      <Setter Property="Foreground" Value="#E81123" />
+      <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+    
+    <!-- Estilo para labels -->
+    <Style Selector="TextBlock.field-label">
+      <Setter Property="FontSize" Value="14" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Margin" Value="0,0,0,8" />
+    </Style>
+    
+    <!-- Validation error style -->
+    <Style Selector="TextBox.field-input.error /template/ Border#PART_BorderElement">
+      <Setter Property="BorderBrush" Value="#E81123" />
+      <Setter Property="BorderThickness" Value="2" />
+    </Style>
+    
+    <Style Selector="Border.field-container">
+      <Setter Property="BorderBrush" Value="{DynamicResource CardStrokeColorDefaultBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Transitions">
+        <Transitions>
+          <BrushTransition Property="BorderBrush" Duration="0:0:0.2" />
+          <BrushTransition Property="Background" Duration="0:0:0.2" />
+          <ThicknessTransition Property="BorderThickness" Duration="0:0:0.2" />
+        </Transitions>
+      </Setter>
+    </Style>
+    
+    <Style Selector="Border.field-container.error">
+      <Setter Property="BorderBrush" Value="#E81123" />
+      <Setter Property="BorderThickness" Value="2" />
+      <Setter Property="Background" Value="#10E81123" />
+    </Style>
+    
+    <!-- CalendarDatePicker styling -->
+    <Style Selector="CalendarDatePicker">
+      <Setter Property="Padding" Value="12,10" />
+      <Setter Property="FontSize" Value="14" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="MinHeight" Value="40" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+    </Style>
+    
+    <!-- Allow manual text input in CalendarDatePicker -->
+    <Style Selector="CalendarDatePicker /template/ TextBox#PART_TextBox">
+      <Setter Property="IsReadOnly" Value="False" />
+      <Setter Property="Watermark" Value="DD/MM/AAAA" />
+    </Style>
+    
+    <!-- Make the entire background look interactive -->
+    <Style Selector="CalendarDatePicker /template/ Border#Background">
+      <Setter Property="Transitions">
+        <Transitions>
+          <BrushTransition Property="BorderBrush" Duration="0:0:0.15" />
+          <BrushTransition Property="Background" Duration="0:0:0.15" />
+        </Transitions>
+      </Setter>
+    </Style>
+    
+    <Style Selector="CalendarDatePicker:pointerover /template/ Border#Background">
+      <Setter Property="BorderBrush" Value="{DynamicResource TextControlBorderBrushPointerOver}" />
+      <Setter Property="Background" Value="{DynamicResource TextControlBackgroundPointerOver}" />
+    </Style>
+    
+    <!-- PART_Button styling - Make it look like a proper blue button -->
+    <Style Selector="CalendarDatePicker /template/ Button#PART_Button">
+      <Setter Property="Width" Value="52" />
+      <Setter Property="Height" Value="45" />
+      <Setter Property="Margin" Value="2" />
+      <Setter Property="Foreground" Value="#2086d4" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="Transitions">
+        <Transitions>
+          <BrushTransition Property="Background" Duration="0:0:0.15" />
+          <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15" />
+        </Transitions>
+      </Setter>
+    </Style>
+    
+    <Style Selector="CalendarDatePicker /template/ Button#PART_Button:pointerover">
+      <Setter Property="Foreground" Value="#b8e0ff" />
+      <Setter Property="RenderTransform" Value="scale(1.4)" />
+    </Style>
+    
+    <Style Selector="CalendarDatePicker /template/ Button#PART_Button:pressed">
+      <Setter Property="RenderTransform" Value="scale(0.9)" />
+    </Style>
+
+    <!-- Estilo para campos de texto -->
+    <Style Selector="TextBox.field-input">
+      <Setter Property="Padding" Value="12,10" />
+      <Setter Property="FontSize" Value="14" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="MinHeight" Value="40" />
+      <Setter Property="Transitions">
+        <Transitions>
+          <BrushTransition Property="BorderBrush" Duration="0:0:0.1" />
+          <BrushTransition Property="Background" Duration="0:0:0.1" />
+        </Transitions>
+      </Setter>
+    </Style>
+    
+    <Style Selector="TextBox.field-input:pointerover /template/ Border#PART_BorderElement">
+      <Setter Property="BorderBrush" Value="{DynamicResource TextControlBorderBrushPointerOver}" />
+      <Setter Property="Background" Value="{DynamicResource TextControlBackgroundPointerOver}" />
+    </Style>
+    
+    <Style Selector="TextBox.field-input:focus /template/ Border#PART_BorderElement">
+      <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}" />
+      <Setter Property="BorderThickness" Value="2" />
+    </Style>
+
+    <!-- Estilo para botones -->
+    <Style Selector="Button.dialog-button">
+      <Setter Property="Padding" Value="20,12" />
+      <Setter Property="FontSize" Value="14" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="MinWidth" Value="120" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Transitions">
+        <Transitions>
+          <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15" />
+          <BrushTransition Property="Background" Duration="0:0:0.15" />
+        </Transitions>
+      </Setter>
+    </Style>
+    
+    <Style Selector="Button.dialog-button:pointerover">
+      <Setter Property="RenderTransform" Value="scale(1.02)" />
+    </Style>
+    
+    <Style Selector="Button.dialog-button:pressed">
+      <Setter Property="RenderTransform" Value="scale(0.98)" />
+    </Style>
+  </Window.Styles>
+
+  <Border Background="{DynamicResource LayerFillColorDefaultBrush}">
+    <Border Classes="dialog-card" Margin="24">
+      <Grid RowDefinitions="Auto,*,Auto">
+        <!-- Header -->
+        <Border Classes="card-header" Grid.Row="0" Margin="-24,-24,-24,0" CornerRadius="12,12,0,0">
+          <StackPanel Spacing="4">
+            <TextBlock Text="Crear Nuevo Proyecto" 
+                       FontSize="24" 
+                       FontWeight="SemiBold" />
+            <TextBlock Text="Complete los detalles del proyecto" 
+                       FontSize="13" 
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+          </StackPanel>
+        </Border>
+
+        <!-- Form Fields -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,28,0,0">
+          <StackPanel Spacing="28">
+
+            <!-- Nombre del Proyecto -->
+            <Border Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"
+                    CornerRadius="8"
+                    Padding="16"
+                    Classes.error="{Binding NameError}"
+                    Classes="field-container">
+              <StackPanel Spacing="10">
+                <TextBlock Classes="label-text">
+                  <Run Text="Nombre del Proyecto" />
+                  <Run Text=" *" Classes="required" />
+                </TextBlock>
+                <TextBox Text="{Binding Name}" 
+                         Classes="field-input"
+                         Classes.error="{Binding NameError}"
+                         Watermark="Ingrese el nombre del proyecto"
+                         MaxLength="200" />
+              </StackPanel>
+            </Border>
+
+            <!-- Descripción -->
+            <Border Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"
+                    CornerRadius="8"
+                    Padding="16"
+                    Classes="field-container">
+              <StackPanel Spacing="10">
+                <TextBlock Classes="label-text">
+                  <Run Text="Descripción" />
+                  <Run Text=" (Opcional)" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontWeight="Normal" />
+                </TextBlock>
+                <TextBox Text="{Binding Description}" 
+                         Classes="field-input"
+                         Watermark="Ingrese una descripción del proyecto"
+                         TextWrapping="Wrap"
+                         AcceptsReturn="True"
+                         Height="100"
+                         MaxLength="1000" />
+              </StackPanel>
+            </Border>
+
+            <!-- Fecha de Inicio -->
+            <Border Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"
+                    CornerRadius="8"
+                    Padding="16"
+                    Classes.error="{Binding StartDateError}"
+                    Classes="field-container">
+              <StackPanel Spacing="10">
+                <TextBlock Classes="label-text">
+                  <Run Text="Fecha de Inicio" />
+                  <Run Text=" *" Classes="required" />
+                </TextBlock>
+                <CalendarDatePicker x:Name="StartDatePicker"
+                                   SelectedDate="{Binding StartDate}"
+                                   HorizontalAlignment="Stretch"
+                                   Watermark="DD/MM/AAAA"
+                                   IsTodayHighlighted="True"
+                                   SelectedDateFormat="Short"
+                                   IsEnabled="True" />
+                
+                <!-- Date validation feedback -->
+                <TextBlock FontSize="12" 
+                           Foreground="#FF9500" 
+                           FontWeight="SemiBold"
+                           Margin="0,8,0,0"
+                           Text="{Binding DateValidationFeedback}"
+                           IsVisible="{Binding HasDateValidationFeedback}" />
+              </StackPanel>
+            </Border>
+
+            <!-- Mensaje de error (si hay) -->
+            <Border Background="#20E81123"
+                    BorderBrush="#E81123"
+                    BorderThickness="2"
+                    CornerRadius="8"
+                    Padding="16,14"
+                    IsVisible="{Binding HasError}">
+              <StackPanel Spacing="4" Orientation="Horizontal">
+                <TextBlock Text="⚠" 
+                           FontSize="16"
+                           Foreground="#E81123"
+                           VerticalAlignment="Top"
+                           Margin="0,0,8,0" />
+                <TextBlock Text="{Binding ErrorMessage}" 
+                           Foreground="#E81123" 
+                           FontSize="13"
+                           FontWeight="SemiBold"
+                           TextWrapping="Wrap" 
+                           VerticalAlignment="Center" />
+              </StackPanel>
+            </Border>
+          </StackPanel>
+        </ScrollViewer>
+
+        <!-- Action Buttons -->
+        <Border Grid.Row="2" 
+                Padding="0,24,0,0" 
+                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                BorderThickness="0,1,0,0"
+                Margin="-24,0,-24,-24">
+          <Grid ColumnDefinitions="*,Auto,Auto" Margin="24,20,24,24">
+
+            <Button Grid.Column="1" 
+                    Content="Cancelar" 
+                    Command="{Binding CancelCommand}"
+                    Classes="dialog-button"
+                    IsEnabled="{Binding !IsSaving}"
+                    Margin="0,0,12,0"
+                    VerticalAlignment="Center" />
+            
+            <Button Grid.Column="2" 
+                    Command="{Binding CreateCommand}"
+                    Classes="dialog-button primary"
+                    IsEnabled="{Binding !IsSaving}"
+                    VerticalAlignment="Center">
+              <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <PathIcon Data="{StaticResource SaveRegular}" 
+                          Width="16" Height="16"
+                          IsVisible="{Binding !IsSaving}"
+                          VerticalAlignment="Center" />
+                <TextBlock Text="Crear Proyecto" IsVisible="{Binding !IsSaving}" VerticalAlignment="Center" />
+                <ProgressBar IsIndeterminate="True" 
+                             Width="80" Height="4"
+                             IsVisible="{Binding IsSaving}"
+                             VerticalAlignment="Center" />
+                <TextBlock Text="Guardando..." IsVisible="{Binding IsSaving}" VerticalAlignment="Center" />
+              </StackPanel>
+            </Button>
+          </Grid>
+        </Border>
+      </Grid>
+    </Border>
+  </Border>
+</Window>
+
