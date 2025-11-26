@@ -64,6 +64,12 @@ sealed class Program
         // Repositories and services
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IUserService, UserService>();
+        
+        services.AddScoped<IProjectRepository, ProjectRepository>();
+        services.AddScoped<IProjectService, ProjectService>();
+        
+        services.AddScoped<IProjectUserRepository, ProjectUserRepository>();
+        services.AddScoped<IProjectUserService, ProjectUserService>();
 
         // ViewModels
         services.AddTransient<OpenUpMan.UI.ViewModels.MainWindowViewModel>();

@@ -5,6 +5,7 @@ using System;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using System.Linq;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace OpenUpMan.UI.Views;
 
@@ -30,16 +31,26 @@ public partial class ProjectsPopup : Window
 
     private async void OnNewProjectDialogRequested()
     {
-        var dialogVm = new ProjectDialogViewModel();
+        if (DataContext is not ProjectsPopupViewModel vm || vm.CurrentUser == null)
+            return;
+
+        // Obtener los servicios desde el ServiceProvider
+        var projectService = Program.ServiceProvider.GetService(typeof(OpenUpMan.Services.IProjectService)) as OpenUpMan.Services.IProjectService;
+        var projectUserService = Program.ServiceProvider.GetService(typeof(OpenUpMan.Services.IProjectUserService)) as OpenUpMan.Services.IProjectUserService;
+
+        if (projectService == null || projectUserService == null)
+        {
+            Console.WriteLine("Error: No se pudieron obtener los servicios necesarios");
+            return;
+        }
+
+        var dialogVm = new ProjectDialogViewModel(projectService, projectUserService, vm.CurrentUser.Id);
         var dialog = new ProjectDialog(dialogVm);
 
         // Suscribirse al evento de proyecto creado
         dialogVm.ProjectCreated += (result) =>
         {
-            if (DataContext is ProjectsPopupViewModel vm)
-            {
-                vm.AddProject(result);
-            }
+            vm.AddProject(result);
         };
 
         // Mostrar el diálogo como modal

@@ -4,13 +4,17 @@ using System.Collections.ObjectModel;
 using System.Collections.Generic;
 using OpenUpMan.Domain;
 using System.Threading.Tasks;
-using System.Threading;
 using System;
+using OpenUpMan.Services;
+using System.Linq;
 
 namespace OpenUpMan.UI.ViewModels;
 
 public partial class ProjectsPopupViewModel : ViewModelBase
 {
+    private readonly IProjectUserService? _projectUserService;
+    private readonly IProjectService? _projectService;
+
     // Event to request the window to close
     public event Action? CloseRequested;
 
@@ -19,9 +23,38 @@ public partial class ProjectsPopupViewModel : ViewModelBase
 
     // Event to request opening the new project dialog
     public event Action? NewProjectDialogRequested;
+    
+    // Current logged in user
+    public User? CurrentUser { get; private set; }
 
-    public ProjectsPopupViewModel(IEnumerable<ProjectListItemViewModel>? initialProjects = null)
+    [ObservableProperty]
+    private bool _isLoadingProjects;
+
+    [ObservableProperty]
+    private string _loadingMessage = "Cargando proyectos...";
+
+    // Constructor para uso en producción con servicios
+    public ProjectsPopupViewModel(User? currentUser, IProjectUserService projectUserService, IProjectService projectService)
     {
+        CurrentUser = currentUser;
+        _projectUserService = projectUserService;
+        _projectService = projectService;
+        Projects = new ObservableCollection<ProjectListItemViewModel>();
+
+        NewProjectCommand = new RelayCommand(OnNewProject);
+        CloseCommand = new RelayCommand(OnClose);
+        OpenProjectCommand = new RelayCommand<ProjectListItemViewModel?>(OnOpenProject);
+        DeleteProjectCommand = new RelayCommand<ProjectListItemViewModel?>(OnDeleteProject);
+        LogoutCommand = new RelayCommand(OnLogout);
+
+        // Cargar proyectos del usuario automáticamente
+        _ = LoadUserProjectsAsync();
+    }
+
+    // Constructor para tests (sin servicios, con proyectos iniciales)
+    public ProjectsPopupViewModel(User? currentUser = null, IEnumerable<ProjectListItemViewModel>? initialProjects = null)
+    {
+        CurrentUser = currentUser;
         Projects = new ObservableCollection<ProjectListItemViewModel>();
 
         // If initial projects are provided (e.g. by tests or a service), populate the collection
@@ -35,9 +68,71 @@ public partial class ProjectsPopupViewModel : ViewModelBase
         CloseCommand = new RelayCommand(OnClose);
         OpenProjectCommand = new RelayCommand<ProjectListItemViewModel?>(OnOpenProject);
         DeleteProjectCommand = new RelayCommand<ProjectListItemViewModel?>(OnDeleteProject);
-
-        // logout command
         LogoutCommand = new RelayCommand(OnLogout);
+    }
+
+    private async Task LoadUserProjectsAsync()
+    {
+        if (CurrentUser == null || _projectUserService == null || _projectService == null)
+            return;
+
+        IsLoadingProjects = true;
+        LoadingMessage = "Cargando tus proyectos...";
+
+        try
+        {
+            // 1. Obtener los ProjectUser del usuario actual
+            var projectUsers = (await _projectUserService.GetUserProjectsAsync(CurrentUser.Id)).ToList();
+
+            if (!projectUsers.Any())
+            {
+                LoadingMessage = "No tienes proyectos asignados";
+                return;
+            }
+
+            // 2. Para cada ProjectUser, obtener el proyecto correspondiente
+            var projectTasks = projectUsers.Select(async pu =>
+            {
+                var projectResult = await _projectService.GetProjectByIdAsync(pu.ProjectId);
+                if (projectResult.Success && projectResult.Project != null)
+                {
+                    return projectResult.Project;
+                }
+                return null;
+            });
+
+            var projects = await Task.WhenAll(projectTasks);
+
+            // 3. Convertir los proyectos a ViewModels y agregarlos a la lista
+            Projects.Clear();
+            foreach (var project in projects.Where(p => p != null))
+            {
+                if (project != null)
+                {
+                    var projectVm = new ProjectListItemViewModel
+                    {
+                        Id = project.Identifier,
+                        Name = project.Name,
+                        LastEdited = project.UpdatedAt?.ToString("dd/MM/yyyy HH:mm") 
+                                     ?? project.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                    };
+                    Projects.Add(projectVm);
+                }
+            }
+
+            LoadingMessage = Projects.Count > 0 
+                ? $"{Projects.Count} proyecto(s) cargado(s)" 
+                : "No tienes proyectos asignados";
+        }
+        catch (Exception ex)
+        {
+            LoadingMessage = $"Error al cargar proyectos: {ex.Message}";
+            Console.WriteLine($"Error loading projects: {ex}");
+        }
+        finally
+        {
+            IsLoadingProjects = false;
+        }
     }
 
     [ObservableProperty]

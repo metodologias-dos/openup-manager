@@ -127,12 +127,18 @@
                   Content="Cancelar" 
                   Command="{Binding CancelCommand}"
                   Classes="dialog-button"
+                  IsEnabled="{Binding !IsSaving}"
                   Margin="0,0,12,0" />
           
           <Button Grid.Column="2" 
-                  Content="Crear Proyecto" 
                   Command="{Binding CreateCommand}"
-                  Classes="dialog-button primary" />
+                  Classes="dialog-button primary"
+                  IsEnabled="{Binding !IsSaving}">
+            <Panel>
+              <TextBlock Text="Crear Proyecto" IsVisible="{Binding !IsSaving}" />
+              <TextBlock Text="Guardando..." IsVisible="{Binding IsSaving}" />
+            </Panel>
+          </Button>
         </Grid>
       </Border>
     </Grid>
