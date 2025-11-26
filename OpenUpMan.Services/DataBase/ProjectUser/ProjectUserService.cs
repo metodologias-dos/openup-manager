@@ -23,7 +23,7 @@ namespace OpenUpMan.Services
             _logger = logger;
         }
 
-        public async Task<ProjectUserServiceResult> AddUserToProjectAsync(Guid projectId, Guid userId, ProjectUserRole role = ProjectUserRole.VIEWER, CancellationToken ct = default)
+        public async Task<ProjectUserServiceResult> AddUserToProjectAsync(Guid projectId, Guid userId, ProjectUserPermission permissions = ProjectUserPermission.VIEWER, ProjectUserRole role = ProjectUserRole.AUTOR, CancellationToken ct = default)
         {
             try
             {
@@ -37,11 +37,11 @@ namespace OpenUpMan.Services
                     );
                 }
 
-                var projectUser = new ProjectUser(projectId, userId, role);
+                var projectUser = new ProjectUser(projectId, userId, permissions, role);
                 await _repo.AddAsync(projectUser, ct);
                 await _repo.SaveChangesAsync(ct);
 
-                _logger.LogInformation("Usuario {UserId} agregado al proyecto {ProjectId} con rol {Role}", userId, projectId, role);
+                _logger.LogInformation("Usuario {UserId} agregado al proyecto {ProjectId} con permisos {Permissions} y rol {Role}", userId, projectId, permissions, role);
 
                 return new ProjectUserServiceResult(
                     Success: true,
@@ -126,6 +126,41 @@ namespace OpenUpMan.Services
                     Success: false,
                     ResultType: ServiceResultType.Error,
                     Message: "Error al cambiar el rol del usuario."
+                );
+            }
+        }
+
+        public async Task<ProjectUserServiceResult> ChangeUserPermissionsAsync(Guid projectId, Guid userId, ProjectUserPermission newPermissions, CancellationToken ct = default)
+        {
+            try
+            {
+                var projectUser = await _repo.GetByIdAsync(projectId, userId, ct);
+                if (projectUser == null)
+                {
+                    return new ProjectUserServiceResult(
+                        Success: false,
+                        ResultType: ServiceResultType.Error,
+                        Message: "El usuario no está asignado al proyecto."
+                    );
+                }
+
+                projectUser.SetPermissions(newPermissions);
+                await _repo.SaveChangesAsync(ct);
+
+                return new ProjectUserServiceResult(
+                    Success: true,
+                    ResultType: ServiceResultType.Success,
+                    Message: "Permisos del usuario actualizados exitosamente.",
+                    ProjectUser: projectUser
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al cambiar permisos del usuario");
+                return new ProjectUserServiceResult(
+                    Success: false,
+                    ResultType: ServiceResultType.Error,
+                    Message: "Error al cambiar los permisos del usuario."
                 );
             }
         }

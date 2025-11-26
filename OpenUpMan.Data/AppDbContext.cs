@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿﻿using Microsoft.EntityFrameworkCore;
 using OpenUpMan.Domain;
 
 namespace OpenUpMan.Data
@@ -51,6 +51,10 @@ namespace OpenUpMan.Data
             modelBuilder.Entity<ProjectUser>(b =>
             {
                 b.HasKey(pu => new { pu.ProjectId, pu.UserId });
+
+                b.Property(pu => pu.Permissions)
+                    .HasConversion<string>()
+                    .IsRequired();
 
                 b.Property(pu => pu.Role)
                     .HasConversion<string>()

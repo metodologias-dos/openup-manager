@@ -37,11 +37,13 @@ CREATE TABLE projects (
 CREATE TABLE project_users (
     project_id  TEXT NOT NULL,     -- FK -> projects.id
     user_id     TEXT NOT NULL,     -- FK -> users.id
-    role        TEXT NOT NULL DEFAULT 'VIEWER', -- VIEWER, EDITOR, OWNER
+    permissions TEXT NOT NULL DEFAULT 'VIEWER', -- VIEWER, EDITOR, OWNER
+    role        TEXT NOT NULL DEFAULT 'AUTOR', -- AUTOR, REVISOR, PO, SM, DESARROLLADOR, TESTER, ADMIN
     PRIMARY KEY (project_id, user_id),
     CONSTRAINT fk_pu_project FOREIGN KEY (project_id) REFERENCES projects(id),
     CONSTRAINT fk_pu_user FOREIGN KEY (user_id) REFERENCES users(id),
-    CONSTRAINT chk_pu_role CHECK (role IN ('VIEWER','EDITOR','OWNER'))
+    CONSTRAINT chk_pu_permissions CHECK (permissions IN ('VIEWER','EDITOR','OWNER')),
+    CONSTRAINT chk_pu_role CHECK (role IN ('AUTOR','REVISOR','PO','SM','DESARROLLADOR','TESTER','ADMIN'))
 );
 
 -- ====================================

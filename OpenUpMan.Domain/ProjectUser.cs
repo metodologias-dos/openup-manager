@@ -1,10 +1,21 @@
 namespace OpenUpMan.Domain
 {
-    public enum ProjectUserRole
+    public enum ProjectUserPermission
     {
         VIEWER,
         EDITOR,
         OWNER
+    }
+
+    public enum ProjectUserRole
+    {
+        AUTOR,
+        REVISOR,
+        PO,
+        SM,
+        DESARROLLADOR,
+        TESTER,
+        ADMIN
     }
 
     public class ProjectUser
@@ -13,12 +24,13 @@ namespace OpenUpMan.Domain
         public Project? Project { get; private set; }
         public Guid UserId { get; private set; }
         public User? User { get; private set; }
+        public ProjectUserPermission Permissions { get; private set; }
         public ProjectUserRole Role { get; private set; }
 
         // Parameterless constructor for EF
         protected ProjectUser() { }
 
-        public ProjectUser(Guid projectId, Guid userId, ProjectUserRole role = ProjectUserRole.VIEWER)
+        public ProjectUser(Guid projectId, Guid userId, ProjectUserPermission permissions = ProjectUserPermission.VIEWER, ProjectUserRole role = ProjectUserRole.AUTOR)
         {
             if (projectId == Guid.Empty)
             {
@@ -32,7 +44,13 @@ namespace OpenUpMan.Domain
 
             ProjectId = projectId;
             UserId = userId;
+            Permissions = permissions;
             Role = role;
+        }
+
+        public void SetPermissions(ProjectUserPermission newPermissions)
+        {
+            Permissions = newPermissions;
         }
 
         public void SetRole(ProjectUserRole newRole)

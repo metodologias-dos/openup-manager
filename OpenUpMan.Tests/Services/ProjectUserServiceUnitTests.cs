@@ -32,7 +32,7 @@ namespace OpenUpMan.Tests.Services
 
             var service = new ProjectUserService(mockRepo.Object, mockProjectRepo, mockUserRepo, CreateMockLogger());
 
-            var result = await service.AddUserToProjectAsync(projectId, userId, ProjectUserRole.VIEWER);
+            var result = await service.AddUserToProjectAsync(projectId, userId, ProjectUserPermission.VIEWER, ProjectUserRole.AUTOR);
 
             Assert.True(result.Success);
             Assert.Equal(ServiceResultType.Success, result.ResultType);
@@ -47,7 +47,7 @@ namespace OpenUpMan.Tests.Services
         {
             var projectId = Guid.NewGuid();
             var userId = Guid.NewGuid();
-            var existingPU = new ProjectUser(projectId, userId, ProjectUserRole.VIEWER);
+            var existingPU = new ProjectUser(projectId, userId, ProjectUserPermission.VIEWER, ProjectUserRole.AUTOR);
 
             var mockRepo = new Mock<IProjectUserRepository>(MockBehavior.Strict);
             mockRepo.Setup(r => r.GetByIdAsync(projectId, userId, default)).ReturnsAsync(existingPU);
@@ -74,7 +74,7 @@ namespace OpenUpMan.Tests.Services
         {
             var projectId = Guid.NewGuid();
             var userId = Guid.NewGuid();
-            var existingPU = new ProjectUser(projectId, userId, ProjectUserRole.VIEWER);
+            var existingPU = new ProjectUser(projectId, userId, ProjectUserPermission.VIEWER, ProjectUserRole.AUTOR);
 
             var mockRepo = new Mock<IProjectUserRepository>(MockBehavior.Strict);
             mockRepo.Setup(r => r.GetByIdAsync(projectId, userId, default)).ReturnsAsync(existingPU);
@@ -120,14 +120,18 @@ namespace OpenUpMan.Tests.Services
         #region ChangeUserRole Tests
 
         [Theory]
-        [InlineData(ProjectUserRole.VIEWER)]
-        [InlineData(ProjectUserRole.EDITOR)]
-        [InlineData(ProjectUserRole.OWNER)]
+        [InlineData(ProjectUserRole.AUTOR)]
+        [InlineData(ProjectUserRole.REVISOR)]
+        [InlineData(ProjectUserRole.PO)]
+        [InlineData(ProjectUserRole.SM)]
+        [InlineData(ProjectUserRole.DESARROLLADOR)]
+        [InlineData(ProjectUserRole.TESTER)]
+        [InlineData(ProjectUserRole.ADMIN)]
         public async Task ChangeUserRole_ReturnsSuccess_WhenUserIsInProject(ProjectUserRole newRole)
         {
             var projectId = Guid.NewGuid();
             var userId = Guid.NewGuid();
-            var existingPU = new ProjectUser(projectId, userId, ProjectUserRole.VIEWER);
+            var existingPU = new ProjectUser(projectId, userId, ProjectUserPermission.VIEWER, ProjectUserRole.AUTOR);
 
             var mockRepo = new Mock<IProjectUserRepository>(MockBehavior.Strict);
             mockRepo.Setup(r => r.GetByIdAsync(projectId, userId, default)).ReturnsAsync(existingPU);
@@ -157,8 +161,8 @@ namespace OpenUpMan.Tests.Services
             var projectId = Guid.NewGuid();
             var users = new List<ProjectUser>
             {
-                new ProjectUser(projectId, Guid.NewGuid(), ProjectUserRole.VIEWER),
-                new ProjectUser(projectId, Guid.NewGuid(), ProjectUserRole.EDITOR)
+                new ProjectUser(projectId, Guid.NewGuid(), ProjectUserPermission.VIEWER, ProjectUserRole.AUTOR),
+                new ProjectUser(projectId, Guid.NewGuid(), ProjectUserPermission.EDITOR, ProjectUserRole.DESARROLLADOR)
             };
 
             var mockRepo = new Mock<IProjectUserRepository>(MockBehavior.Strict);
