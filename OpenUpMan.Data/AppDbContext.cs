@@ -39,6 +39,17 @@ namespace OpenUpMan.Data
                 b.Property(p => p.State)
                     .HasConversion<string>()
                     .IsRequired();
+                
+                // Configurar DateTime para que se trate como UTC
+                b.Property(p => p.CreatedAt)
+                    .HasConversion(
+                        v => v,
+                        v => DateTime.SpecifyKind(v, DateTimeKind.Utc));
+                
+                b.Property(p => p.UpdatedAt)
+                    .HasConversion(
+                        v => v,
+                        v => v.HasValue ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc) : (DateTime?)null);
 
                 b.HasIndex(p => p.Identifier).IsUnique();
 
