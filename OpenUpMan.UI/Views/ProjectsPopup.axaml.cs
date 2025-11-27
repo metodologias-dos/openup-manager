@@ -1,8 +1,10 @@
 ﻿using Avalonia.Controls;
 using OpenUpMan.UI.ViewModels;
 using System;
+using System.Linq;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.VisualTree;
 
 namespace OpenUpMan.UI.Views;
 
@@ -24,6 +26,86 @@ public partial class ProjectsPopup : Window
         
         // Handle window closing (X button) to trigger logout
         this.Closing += OnWindowClosing;
+        
+        // Attach header click handlers after the window is loaded
+        this.Opened += OnWindowOpened;
+    }
+    
+    private void OnWindowOpened(object? sender, EventArgs e)
+    {
+        // Find and attach event handlers to column headers
+        AttachHeaderClickHandlers();
+    }
+    
+    private void AttachHeaderClickHandlers()
+    {
+        if (DataContext is not ProjectsPopupViewModel vm)
+            return;
+            
+        // Find all DataGridColumnHeaders in the visual tree
+        var headers = this.GetVisualDescendants()
+            .OfType<DataGridColumnHeader>()
+            .ToList();
+        
+        for (int i = 0; i < headers.Count; i++)
+        {
+            var header = headers[i];
+            
+            // Get the TextBlock content from the header
+            var textBlock = header.GetVisualDescendants()
+                .OfType<TextBlock>()
+                .FirstOrDefault();
+            
+            if (textBlock == null)
+            {
+                // Try to get text from Content property directly
+                var content = header.Content?.ToString() ?? "";
+                
+                if (content.Contains("ACCIONES"))
+                    continue; // Skip actions column
+                    
+                // Fallback: use column index
+                if (i == 0) // First column = NOMBRE
+                {
+                    header.Tapped += (s, e) => vm.SortByNameCommand.Execute(null);
+                }
+                else if (i == 1) // Second column = ÚLTIMA EDICIÓN
+                {
+                    header.Tapped += (s, e) => vm.SortByDateCommand.Execute(null);
+                }
+                continue;
+            }
+            
+            // Get all text from the TextBlock including Runs
+            var allText = string.Empty;
+            if (textBlock.Inlines != null)
+            {
+                foreach (var inline in textBlock.Inlines)
+                {
+                    if (inline is Avalonia.Controls.Documents.Run run)
+                    {
+                        allText += run.Text;
+                    }
+                }
+            }
+            
+            // If no inlines, try Text property
+            if (string.IsNullOrEmpty(allText))
+            {
+                allText = textBlock.Text ?? "";
+            }
+            
+            // Check the text content to identify which column this is
+            if (allText.Contains("NOMBRE"))
+            {
+                header.Tapped += (s, e) => vm.SortByNameCommand.Execute(null);
+            }
+            else if (allText.Contains("ÚLTIMA EDICIÓN"))
+            {
+                header.Tapped += (s, e) => vm.SortByDateCommand.Execute(null);
+            }
+            // ACCIONES column gets no handler
+        }
     }
     
     private void OnWindowClosing(object? sender, System.ComponentModel.CancelEventArgs e)
