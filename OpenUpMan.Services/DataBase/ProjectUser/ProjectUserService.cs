@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using OpenUpMan.Data;
+using OpenUpMan.Data.Repositories;
 using OpenUpMan.Domain;
 
 namespace OpenUpMan.Services
@@ -7,26 +8,34 @@ namespace OpenUpMan.Services
     public class ProjectUserService : IProjectUserService
     {
         private readonly IProjectUserRepository _repo;
-        private readonly IProjectRepository _projectRepo;
-        private readonly IUserRepository _userRepo;
+        private readonly IRoleRepository _roleRepo;
         private readonly ILogger<ProjectUserService> _logger;
 
         public ProjectUserService(
             IProjectUserRepository repo,
-            IProjectRepository projectRepo,
-            IUserRepository userRepo,
+            IRoleRepository roleRepo,
             ILogger<ProjectUserService> logger)
         {
             _repo = repo;
-            _projectRepo = projectRepo;
-            _userRepo = userRepo;
+            _roleRepo = roleRepo;
             _logger = logger;
         }
 
-        public async Task<ProjectUserServiceResult> AddUserToProjectAsync(Guid projectId, Guid userId, ProjectUserPermission permissions = ProjectUserPermission.VIEWER, ProjectUserRole role = ProjectUserRole.AUTOR, CancellationToken ct = default)
+        public async Task<ProjectUserServiceResult> AddUserToProjectAsync(Guid projectId, Guid userId, Guid roleId, CancellationToken ct = default)
         {
             try
             {
+                // Validar que el rol existe
+                var roleExists = await _roleRepo.ExistsAsync(roleId);
+                if (!roleExists)
+                {
+                    return new ProjectUserServiceResult(
+                        Success: false,
+                        ResultType: ServiceResultType.Error,
+                        Message: "El rol especificado no existe."
+                    );
+                }
+
                 var existing = await _repo.GetByIdAsync(projectId, userId, ct);
                 if (existing != null)
                 {
@@ -37,11 +46,11 @@ namespace OpenUpMan.Services
                     );
                 }
 
-                var projectUser = new ProjectUser(projectId, userId, permissions, role);
+                var projectUser = new ProjectUser(projectId, userId, roleId);
                 await _repo.AddAsync(projectUser, ct);
                 await _repo.SaveChangesAsync(ct);
 
-                _logger.LogInformation("Usuario {UserId} agregado al proyecto {ProjectId} con permisos {Permissions} y rol {Role}", userId, projectId, permissions, role);
+                _logger.LogInformation("Usuario {UserId} agregado al proyecto {ProjectId} con rol {RoleId}", userId, projectId, roleId);
 
                 return new ProjectUserServiceResult(
                     Success: true,
@@ -95,10 +104,21 @@ namespace OpenUpMan.Services
             }
         }
 
-        public async Task<ProjectUserServiceResult> ChangeUserRoleAsync(Guid projectId, Guid userId, ProjectUserRole newRole, CancellationToken ct = default)
+        public async Task<ProjectUserServiceResult> ChangeUserRoleAsync(Guid projectId, Guid userId, Guid newRoleId, CancellationToken ct = default)
         {
             try
             {
+                // Validar que el rol existe
+                var roleExists = await _roleRepo.ExistsAsync(newRoleId);
+                if (!roleExists)
+                {
+                    return new ProjectUserServiceResult(
+                        Success: false,
+                        ResultType: ServiceResultType.Error,
+                        Message: "El rol especificado no existe."
+                    );
+                }
+
                 var projectUser = await _repo.GetByIdAsync(projectId, userId, ct);
                 if (projectUser == null)
                 {
@@ -109,8 +129,10 @@ namespace OpenUpMan.Services
                     );
                 }
 
-                projectUser.SetRole(newRole);
+                projectUser.SetRole(newRoleId);
                 await _repo.SaveChangesAsync(ct);
+
+                _logger.LogInformation("Rol del usuario {UserId} en proyecto {ProjectId} actualizado a {RoleId}", userId, projectId, newRoleId);
 
                 return new ProjectUserServiceResult(
                     Success: true,
@@ -130,40 +152,6 @@ namespace OpenUpMan.Services
             }
         }
 
-        public async Task<ProjectUserServiceResult> ChangeUserPermissionsAsync(Guid projectId, Guid userId, ProjectUserPermission newPermissions, CancellationToken ct = default)
-        {
-            try
-            {
-                var projectUser = await _repo.GetByIdAsync(projectId, userId, ct);
-                if (projectUser == null)
-                {
-                    return new ProjectUserServiceResult(
-                        Success: false,
-                        ResultType: ServiceResultType.Error,
-                        Message: "El usuario no está asignado al proyecto."
-                    );
-                }
-
-                projectUser.SetPermissions(newPermissions);
-                await _repo.SaveChangesAsync(ct);
-
-                return new ProjectUserServiceResult(
-                    Success: true,
-                    ResultType: ServiceResultType.Success,
-                    Message: "Permisos del usuario actualizados exitosamente.",
-                    ProjectUser: projectUser
-                );
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al cambiar permisos del usuario");
-                return new ProjectUserServiceResult(
-                    Success: false,
-                    ResultType: ServiceResultType.Error,
-                    Message: "Error al cambiar los permisos del usuario."
-                );
-            }
-        }
 
         public async Task<IEnumerable<ProjectUser>> GetProjectUsersAsync(Guid projectId, CancellationToken ct = default)
         {

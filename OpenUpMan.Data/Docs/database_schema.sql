@@ -13,6 +13,35 @@ CREATE TABLE users (
 );
 
 -- ====================================
+-- TABLA: rol
+-- ====================================
+CREATE TABLE rol (
+    Id                  TEXT PRIMARY KEY,         -- Guid
+    Name                TEXT NOT NULL,            -- AUTOR, REVISOR, PO, SM, DESARROLLADOR, TESTER, ADMIN
+    Description         TEXT
+);
+
+-- ====================================
+-- TABLA: permission
+-- ====================================
+CREATE TABLE permission (
+    Id                  TEXT PRIMARY KEY,         -- Guid
+    Name                TEXT NOT NULL,            -- BorrarProyecto, RenombrarProyecto, etc.
+    Description         TEXT
+);
+
+-- ====================================
+-- TABLA: rol_permission
+-- ====================================
+CREATE TABLE rol_permission (
+    RoleId              TEXT NOT NULL,            -- FK -> rol.Id
+    PermissionId        TEXT NOT NULL,            -- FK -> permission.Id
+    PRIMARY KEY (RoleId, PermissionId),
+    CONSTRAINT fk_rp_role FOREIGN KEY (RoleId) REFERENCES rol(Id),
+    CONSTRAINT fk_rp_permission FOREIGN KEY (PermissionId) REFERENCES permission(Id)
+);
+
+-- ====================================
 -- TABLA: projects
 -- ====================================
 CREATE TABLE projects (
@@ -37,13 +66,11 @@ CREATE TABLE projects (
 CREATE TABLE project_users (
     ProjectId   TEXT NOT NULL,     -- FK -> projects.Id
     UserId      TEXT NOT NULL,     -- FK -> users.Id
-    Permissions TEXT NOT NULL DEFAULT 'VIEWER', -- VIEWER, EDITOR, OWNER
-    Role        TEXT NOT NULL DEFAULT 'AUTOR', -- AUTOR, REVISOR, PO, SM, DESARROLLADOR, TESTER, ADMIN
+    RoleId      TEXT NOT NULL,     -- FK -> rol.Id
     PRIMARY KEY (ProjectId, UserId),
     CONSTRAINT fk_pu_project FOREIGN KEY (ProjectId) REFERENCES projects(Id),
     CONSTRAINT fk_pu_user FOREIGN KEY (UserId) REFERENCES users(Id),
-    CONSTRAINT chk_pu_permissions CHECK (Permissions IN ('VIEWER','EDITOR','OWNER')),
-    CONSTRAINT chk_pu_role CHECK (Role IN ('AUTOR','REVISOR','PO','SM','DESARROLLADOR','TESTER','ADMIN'))
+    CONSTRAINT fk_pu_role FOREIGN KEY (RoleId) REFERENCES rol(Id)
 );
 
 -- ====================================

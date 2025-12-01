@@ -17,6 +17,7 @@ namespace OpenUpMan.Data
             return await _ctx.ProjectUsers
                 .Include(pu => pu.Project)
                 .Include(pu => pu.User)
+                .Include(pu => pu.Role)
                 .FirstOrDefaultAsync(pu => pu.ProjectId == projectId && pu.UserId == userId, ct);
         }
 
@@ -24,6 +25,7 @@ namespace OpenUpMan.Data
         {
             return await _ctx.ProjectUsers
                 .Include(pu => pu.User)
+                .Include(pu => pu.Role)
                 .Where(pu => pu.ProjectId == projectId)
                 .ToListAsync(ct);
         }
@@ -32,6 +34,7 @@ namespace OpenUpMan.Data
         {
             return await _ctx.ProjectUsers
                 .Include(pu => pu.Project)
+                .Include(pu => pu.Role)
                 .Where(pu => pu.UserId == userId)
                 .ToListAsync(ct);
         }

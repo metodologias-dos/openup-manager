@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Threading.Tasks;
 using OpenUpMan.Services;
+using OpenUpMan.Domain;
 
 namespace OpenUpMan.UI.ViewModels;
 
@@ -149,8 +150,7 @@ public partial class ProjectDialogViewModel : ViewModelBase
             var projectUserResult = await _projectUserService.AddUserToProjectAsync(
                 projectId: projectResult.Project.Id,
                 userId: _currentUserId,
-                permissions: OpenUpMan.Domain.ProjectUserPermission.OWNER,
-                role: OpenUpMan.Domain.ProjectUserRole.ADMIN
+                roleId: RoleIds.Admin
             );
 
             if (!projectUserResult.Success)

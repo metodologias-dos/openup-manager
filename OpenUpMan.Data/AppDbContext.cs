@@ -10,6 +10,9 @@ namespace OpenUpMan.Data
         }
 
         public DbSet<User> Users { get; set; } = null!;
+        public DbSet<Role> Roles { get; set; } = null!;
+        public DbSet<Permission> Permissions { get; set; } = null!;
+        public DbSet<RolePermission> RolePermissions { get; set; } = null!;
         public DbSet<Project> Projects { get; set; } = null!;
         public DbSet<ProjectUser> ProjectUsers { get; set; } = null!;
         public DbSet<ProjectPhase> ProjectPhases { get; set; } = null!;
@@ -34,6 +37,43 @@ namespace OpenUpMan.Data
                 b.Property(u => u.CreatedAt).HasColumnName("CreatedAt").IsRequired();
                 b.Property(u => u.PasswordChangedAt).HasColumnName("PasswordChangedAt");
                 b.HasIndex(u => u.Username).IsUnique();
+            });
+
+            modelBuilder.Entity<Role>(b =>
+            {
+                b.ToTable("rol");
+                b.HasKey(r => r.Id);
+                b.Property(r => r.Id).HasColumnName("Id");
+                b.Property(r => r.Name).HasColumnName("Name").IsRequired();
+                b.Property(r => r.Description).HasColumnName("Description");
+            });
+
+            modelBuilder.Entity<Permission>(b =>
+            {
+                b.ToTable("permission");
+                b.HasKey(p => p.Id);
+                b.Property(p => p.Id).HasColumnName("Id");
+                b.Property(p => p.Name).HasColumnName("Name").IsRequired();
+                b.Property(p => p.Description).HasColumnName("Description");
+            });
+
+            modelBuilder.Entity<RolePermission>(b =>
+            {
+                b.ToTable("rol_permission");
+                b.HasKey(rp => new { rp.RoleId, rp.PermissionId });
+
+                b.Property(rp => rp.RoleId).HasColumnName("RoleId");
+                b.Property(rp => rp.PermissionId).HasColumnName("PermissionId");
+
+                b.HasOne(rp => rp.Role)
+                    .WithMany()
+                    .HasForeignKey(rp => rp.RoleId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                b.HasOne(rp => rp.Permission)
+                    .WithMany()
+                    .HasForeignKey(rp => rp.PermissionId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<Project>(b =>
@@ -77,15 +117,7 @@ namespace OpenUpMan.Data
 
                 b.Property(pu => pu.ProjectId).HasColumnName("ProjectId");
                 b.Property(pu => pu.UserId).HasColumnName("UserId");
-                b.Property(pu => pu.Permissions)
-                    .HasColumnName("Permissions")
-                    .HasConversion<string>()
-                    .IsRequired();
-
-                b.Property(pu => pu.Role)
-                    .HasColumnName("Role")
-                    .HasConversion<string>()
-                    .IsRequired();
+                b.Property(pu => pu.RoleId).HasColumnName("RoleId").IsRequired();
 
                 b.HasOne(pu => pu.Project)
                     .WithMany()
@@ -96,6 +128,11 @@ namespace OpenUpMan.Data
                     .WithMany()
                     .HasForeignKey(pu => pu.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
+
+                b.HasOne(pu => pu.Role)
+                    .WithMany()
+                    .HasForeignKey(pu => pu.RoleId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             modelBuilder.Entity<ProjectPhase>(b =>

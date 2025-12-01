@@ -1,9 +1,9 @@
 using Microsoft.Extensions.Logging;
 using Moq;
 using OpenUpMan.Data;
+using OpenUpMan.Data.Repositories;
 using OpenUpMan.Domain;
 using OpenUpMan.Services;
-using Xunit;
 
 namespace OpenUpMan.Tests.Services
 {
@@ -21,18 +21,19 @@ namespace OpenUpMan.Tests.Services
         {
             var projectId = Guid.NewGuid();
             var userId = Guid.NewGuid();
+            var roleId = Guid.NewGuid();
 
             var mockRepo = new Mock<IProjectUserRepository>(MockBehavior.Strict);
             mockRepo.Setup(r => r.GetByIdAsync(projectId, userId, default)).ReturnsAsync((ProjectUser?)null);
             mockRepo.Setup(r => r.AddAsync(It.IsAny<ProjectUser>(), default)).Returns(Task.CompletedTask);
             mockRepo.Setup(r => r.SaveChangesAsync(default)).Returns(Task.CompletedTask);
 
-            var mockProjectRepo = new Mock<IProjectRepository>().Object;
-            var mockUserRepo = new Mock<IUserRepository>().Object;
+            var mockRoleRepo = new Mock<IRoleRepository>(MockBehavior.Strict);
+            mockRoleRepo.Setup(r => r.ExistsAsync(roleId)).ReturnsAsync(true);
 
-            var service = new ProjectUserService(mockRepo.Object, mockProjectRepo, mockUserRepo, CreateMockLogger());
+            var service = new ProjectUserService(mockRepo.Object, mockRoleRepo.Object, CreateMockLogger());
 
-            var result = await service.AddUserToProjectAsync(projectId, userId, ProjectUserPermission.VIEWER, ProjectUserRole.AUTOR);
+            var result = await service.AddUserToProjectAsync(projectId, userId, roleId);
 
             Assert.True(result.Success);
             Assert.Equal(ServiceResultType.Success, result.ResultType);
@@ -47,21 +48,44 @@ namespace OpenUpMan.Tests.Services
         {
             var projectId = Guid.NewGuid();
             var userId = Guid.NewGuid();
-            var existingPU = new ProjectUser(projectId, userId, ProjectUserPermission.VIEWER, ProjectUserRole.AUTOR);
+            var roleId = Guid.NewGuid();
+            var existingPu = new ProjectUser(projectId, userId, roleId);
 
             var mockRepo = new Mock<IProjectUserRepository>(MockBehavior.Strict);
-            mockRepo.Setup(r => r.GetByIdAsync(projectId, userId, default)).ReturnsAsync(existingPU);
+            mockRepo.Setup(r => r.GetByIdAsync(projectId, userId, default)).ReturnsAsync(existingPu);
 
-            var mockProjectRepo = new Mock<IProjectRepository>().Object;
-            var mockUserRepo = new Mock<IUserRepository>().Object;
+            var mockRoleRepo = new Mock<IRoleRepository>(MockBehavior.Strict);
+            mockRoleRepo.Setup(r => r.ExistsAsync(roleId)).ReturnsAsync(true);
 
-            var service = new ProjectUserService(mockRepo.Object, mockProjectRepo, mockUserRepo, CreateMockLogger());
+            var service = new ProjectUserService(mockRepo.Object, mockRoleRepo.Object, CreateMockLogger());
 
-            var result = await service.AddUserToProjectAsync(projectId, userId);
+            var result = await service.AddUserToProjectAsync(projectId, userId, roleId);
 
             Assert.False(result.Success);
             Assert.Equal(ServiceResultType.Error, result.ResultType);
             Assert.Contains("asignado", result.Message, StringComparison.OrdinalIgnoreCase);
+            mockRepo.Verify(r => r.AddAsync(It.IsAny<ProjectUser>(), default), Times.Never);
+        }
+
+        [Fact]
+        public async Task AddUserToProject_ReturnsError_WhenRoleDoesNotExist()
+        {
+            var projectId = Guid.NewGuid();
+            var userId = Guid.NewGuid();
+            var roleId = Guid.NewGuid();
+
+            var mockRepo = new Mock<IProjectUserRepository>(MockBehavior.Strict);
+            
+            var mockRoleRepo = new Mock<IRoleRepository>(MockBehavior.Strict);
+            mockRoleRepo.Setup(r => r.ExistsAsync(roleId)).ReturnsAsync(false);
+
+            var service = new ProjectUserService(mockRepo.Object, mockRoleRepo.Object, CreateMockLogger());
+
+            var result = await service.AddUserToProjectAsync(projectId, userId, roleId);
+
+            Assert.False(result.Success);
+            Assert.Equal(ServiceResultType.Error, result.ResultType);
+            Assert.Contains("rol", result.Message, StringComparison.OrdinalIgnoreCase);
             mockRepo.Verify(r => r.AddAsync(It.IsAny<ProjectUser>(), default), Times.Never);
         }
 
@@ -74,24 +98,24 @@ namespace OpenUpMan.Tests.Services
         {
             var projectId = Guid.NewGuid();
             var userId = Guid.NewGuid();
-            var existingPU = new ProjectUser(projectId, userId, ProjectUserPermission.VIEWER, ProjectUserRole.AUTOR);
+            var roleId = Guid.NewGuid();
+            var existingPu = new ProjectUser(projectId, userId, roleId);
 
             var mockRepo = new Mock<IProjectUserRepository>(MockBehavior.Strict);
-            mockRepo.Setup(r => r.GetByIdAsync(projectId, userId, default)).ReturnsAsync(existingPU);
-            mockRepo.Setup(r => r.RemoveAsync(existingPU, default)).Returns(Task.CompletedTask);
+            mockRepo.Setup(r => r.GetByIdAsync(projectId, userId, default)).ReturnsAsync(existingPu);
+            mockRepo.Setup(r => r.RemoveAsync(existingPu, default)).Returns(Task.CompletedTask);
             mockRepo.Setup(r => r.SaveChangesAsync(default)).Returns(Task.CompletedTask);
 
-            var mockProjectRepo = new Mock<IProjectRepository>().Object;
-            var mockUserRepo = new Mock<IUserRepository>().Object;
+            var mockRoleRepo = new Mock<IRoleRepository>().Object;
 
-            var service = new ProjectUserService(mockRepo.Object, mockProjectRepo, mockUserRepo, CreateMockLogger());
+            var service = new ProjectUserService(mockRepo.Object, mockRoleRepo, CreateMockLogger());
 
             var result = await service.RemoveUserFromProjectAsync(projectId, userId);
 
             Assert.True(result.Success);
             Assert.Equal(ServiceResultType.Success, result.ResultType);
             Assert.Contains("exitosa", result.Message, StringComparison.OrdinalIgnoreCase);
-            mockRepo.Verify(r => r.RemoveAsync(existingPU, default), Times.Once);
+            mockRepo.Verify(r => r.RemoveAsync(existingPu, default), Times.Once);
         }
 
         [Fact]
@@ -103,10 +127,9 @@ namespace OpenUpMan.Tests.Services
             var mockRepo = new Mock<IProjectUserRepository>(MockBehavior.Strict);
             mockRepo.Setup(r => r.GetByIdAsync(projectId, userId, default)).ReturnsAsync((ProjectUser?)null);
 
-            var mockProjectRepo = new Mock<IProjectRepository>().Object;
-            var mockUserRepo = new Mock<IUserRepository>().Object;
+            var mockRoleRepo = new Mock<IRoleRepository>().Object;
 
-            var service = new ProjectUserService(mockRepo.Object, mockProjectRepo, mockUserRepo, CreateMockLogger());
+            var service = new ProjectUserService(mockRepo.Object, mockRoleRepo, CreateMockLogger());
 
             var result = await service.RemoveUserFromProjectAsync(projectId, userId);
 
@@ -119,36 +142,31 @@ namespace OpenUpMan.Tests.Services
 
         #region ChangeUserRole Tests
 
-        [Theory]
-        [InlineData(ProjectUserRole.AUTOR)]
-        [InlineData(ProjectUserRole.REVISOR)]
-        [InlineData(ProjectUserRole.PO)]
-        [InlineData(ProjectUserRole.SM)]
-        [InlineData(ProjectUserRole.DESARROLLADOR)]
-        [InlineData(ProjectUserRole.TESTER)]
-        [InlineData(ProjectUserRole.ADMIN)]
-        public async Task ChangeUserRole_ReturnsSuccess_WhenUserIsInProject(ProjectUserRole newRole)
+        [Fact]
+        public async Task ChangeUserRole_ReturnsSuccess_WhenUserIsInProject()
         {
             var projectId = Guid.NewGuid();
             var userId = Guid.NewGuid();
-            var existingPU = new ProjectUser(projectId, userId, ProjectUserPermission.VIEWER, ProjectUserRole.AUTOR);
+            var oldRoleId = Guid.NewGuid();
+            var newRoleId = Guid.NewGuid();
+            var existingPu = new ProjectUser(projectId, userId, oldRoleId);
 
             var mockRepo = new Mock<IProjectUserRepository>(MockBehavior.Strict);
-            mockRepo.Setup(r => r.GetByIdAsync(projectId, userId, default)).ReturnsAsync(existingPU);
+            mockRepo.Setup(r => r.GetByIdAsync(projectId, userId, default)).ReturnsAsync(existingPu);
             mockRepo.Setup(r => r.SaveChangesAsync(default)).Returns(Task.CompletedTask);
 
-            var mockProjectRepo = new Mock<IProjectRepository>().Object;
-            var mockUserRepo = new Mock<IUserRepository>().Object;
+            var mockRoleRepo = new Mock<IRoleRepository>(MockBehavior.Strict);
+            mockRoleRepo.Setup(r => r.ExistsAsync(newRoleId)).ReturnsAsync(true);
 
-            var service = new ProjectUserService(mockRepo.Object, mockProjectRepo, mockUserRepo, CreateMockLogger());
+            var service = new ProjectUserService(mockRepo.Object, mockRoleRepo.Object, CreateMockLogger());
 
-            var result = await service.ChangeUserRoleAsync(projectId, userId, newRole);
+            var result = await service.ChangeUserRoleAsync(projectId, userId, newRoleId);
 
             Assert.True(result.Success);
             Assert.Equal(ServiceResultType.Success, result.ResultType);
             Assert.Contains("actualizado", result.Message, StringComparison.OrdinalIgnoreCase);
             Assert.NotNull(result.ProjectUser);
-            Assert.Equal(newRole, result.ProjectUser.Role);
+            Assert.Equal(newRoleId, result.ProjectUser.RoleId);
         }
 
         [Fact]
@@ -156,76 +174,46 @@ namespace OpenUpMan.Tests.Services
         {
             var projectId = Guid.NewGuid();
             var userId = Guid.NewGuid();
+            var newRoleId = Guid.NewGuid();
 
             var mockRepo = new Mock<IProjectUserRepository>(MockBehavior.Strict);
             mockRepo.Setup(r => r.GetByIdAsync(projectId, userId, default)).ReturnsAsync((ProjectUser?)null);
 
-            var mockProjectRepo = new Mock<IProjectRepository>().Object;
-            var mockUserRepo = new Mock<IUserRepository>().Object;
+            var mockRoleRepo = new Mock<IRoleRepository>(MockBehavior.Strict);
+            mockRoleRepo.Setup(r => r.ExistsAsync(newRoleId)).ReturnsAsync(true);
 
-            var service = new ProjectUserService(mockRepo.Object, mockProjectRepo, mockUserRepo, CreateMockLogger());
+            var service = new ProjectUserService(mockRepo.Object, mockRoleRepo.Object, CreateMockLogger());
 
-            var result = await service.ChangeUserRoleAsync(projectId, userId, ProjectUserRole.ADMIN);
+            var result = await service.ChangeUserRoleAsync(projectId, userId, newRoleId);
 
             Assert.False(result.Success);
             Assert.Equal(ServiceResultType.Error, result.ResultType);
             Assert.Contains("asignado", result.Message, StringComparison.OrdinalIgnoreCase);
             Assert.Null(result.ProjectUser);
-        }
-
-        #endregion
-
-        #region ChangeUserPermissions Tests
-
-        [Theory]
-        [InlineData(ProjectUserPermission.VIEWER)]
-        [InlineData(ProjectUserPermission.EDITOR)]
-        [InlineData(ProjectUserPermission.OWNER)]
-        public async Task ChangeUserPermissions_ReturnsSuccess_WhenUserIsInProject(ProjectUserPermission newPermission)
-        {
-            var projectId = Guid.NewGuid();
-            var userId = Guid.NewGuid();
-            var existingPU = new ProjectUser(projectId, userId, ProjectUserPermission.VIEWER, ProjectUserRole.AUTOR);
-
-            var mockRepo = new Mock<IProjectUserRepository>(MockBehavior.Strict);
-            mockRepo.Setup(r => r.GetByIdAsync(projectId, userId, default)).ReturnsAsync(existingPU);
-            mockRepo.Setup(r => r.SaveChangesAsync(default)).Returns(Task.CompletedTask);
-
-            var mockProjectRepo = new Mock<IProjectRepository>().Object;
-            var mockUserRepo = new Mock<IUserRepository>().Object;
-
-            var service = new ProjectUserService(mockRepo.Object, mockProjectRepo, mockUserRepo, CreateMockLogger());
-
-            var result = await service.ChangeUserPermissionsAsync(projectId, userId, newPermission);
-
-            Assert.True(result.Success);
-            Assert.Equal(ServiceResultType.Success, result.ResultType);
-            Assert.Contains("actualizado", result.Message, StringComparison.OrdinalIgnoreCase);
-            Assert.NotNull(result.ProjectUser);
-            Assert.Equal(newPermission, result.ProjectUser.Permissions);
-            mockRepo.Verify(r => r.SaveChangesAsync(default), Times.Once);
         }
 
         [Fact]
-        public async Task ChangeUserPermissions_ReturnsError_WhenUserNotInProject()
+        public async Task ChangeUserRole_ReturnsError_WhenRoleDoesNotExist()
         {
             var projectId = Guid.NewGuid();
             var userId = Guid.NewGuid();
+            var oldRoleId = Guid.NewGuid();
+            var newRoleId = Guid.NewGuid();
+            var existingPu = new ProjectUser(projectId, userId, oldRoleId);
 
             var mockRepo = new Mock<IProjectUserRepository>(MockBehavior.Strict);
-            mockRepo.Setup(r => r.GetByIdAsync(projectId, userId, default)).ReturnsAsync((ProjectUser?)null);
+            mockRepo.Setup(r => r.GetByIdAsync(projectId, userId, default)).ReturnsAsync(existingPu);
 
-            var mockProjectRepo = new Mock<IProjectRepository>().Object;
-            var mockUserRepo = new Mock<IUserRepository>().Object;
+            var mockRoleRepo = new Mock<IRoleRepository>(MockBehavior.Strict);
+            mockRoleRepo.Setup(r => r.ExistsAsync(newRoleId)).ReturnsAsync(false);
 
-            var service = new ProjectUserService(mockRepo.Object, mockProjectRepo, mockUserRepo, CreateMockLogger());
+            var service = new ProjectUserService(mockRepo.Object, mockRoleRepo.Object, CreateMockLogger());
 
-            var result = await service.ChangeUserPermissionsAsync(projectId, userId, ProjectUserPermission.OWNER);
+            var result = await service.ChangeUserRoleAsync(projectId, userId, newRoleId);
 
             Assert.False(result.Success);
             Assert.Equal(ServiceResultType.Error, result.ResultType);
-            Assert.Contains("asignado", result.Message, StringComparison.OrdinalIgnoreCase);
-            Assert.Null(result.ProjectUser);
+            Assert.Contains("rol", result.Message, StringComparison.OrdinalIgnoreCase);
             mockRepo.Verify(r => r.SaveChangesAsync(default), Times.Never);
         }
 
@@ -237,21 +225,71 @@ namespace OpenUpMan.Tests.Services
         public async Task GetProjectUsers_ReturnsUsers_WhenUsersExist()
         {
             var projectId = Guid.NewGuid();
+            var roleId1 = Guid.NewGuid();
+            var roleId2 = Guid.NewGuid();
             var users = new List<ProjectUser>
             {
-                new ProjectUser(projectId, Guid.NewGuid(), ProjectUserPermission.VIEWER, ProjectUserRole.AUTOR),
-                new ProjectUser(projectId, Guid.NewGuid(), ProjectUserPermission.EDITOR, ProjectUserRole.DESARROLLADOR)
+                new ProjectUser(projectId, Guid.NewGuid(), roleId1),
+                new ProjectUser(projectId, Guid.NewGuid(), roleId2)
             };
 
             var mockRepo = new Mock<IProjectUserRepository>(MockBehavior.Strict);
             mockRepo.Setup(r => r.GetByProjectIdAsync(projectId, default)).ReturnsAsync(users);
 
-            var mockProjectRepo = new Mock<IProjectRepository>().Object;
-            var mockUserRepo = new Mock<IUserRepository>().Object;
+            var mockRoleRepo = new Mock<IRoleRepository>().Object;
 
-            var service = new ProjectUserService(mockRepo.Object, mockProjectRepo, mockUserRepo, CreateMockLogger());
+            var service = new ProjectUserService(mockRepo.Object, mockRoleRepo, CreateMockLogger());
 
             var result = await service.GetProjectUsersAsync(projectId);
+
+            Assert.NotNull(result);
+            Assert.Equal(2, result.Count());
+        }
+
+        [Fact]
+        public async Task GetProjectUsers_ReturnsEmpty_WhenNoUsersExist()
+        {
+            var projectId = Guid.NewGuid();
+            var users = new List<ProjectUser>();
+
+            var mockRepo = new Mock<IProjectUserRepository>(MockBehavior.Strict);
+            mockRepo.Setup(r => r.GetByProjectIdAsync(projectId, default)).ReturnsAsync(users);
+
+            var mockRoleRepo = new Mock<IRoleRepository>().Object;
+
+            var service = new ProjectUserService(mockRepo.Object, mockRoleRepo, CreateMockLogger());
+
+            var result = await service.GetProjectUsersAsync(projectId);
+
+            Assert.NotNull(result);
+            Assert.Empty(result);
+        }
+
+        #endregion
+
+        #region GetUserProjects Tests
+
+        [Fact]
+        public async Task GetUserProjects_ReturnsProjects_WhenProjectsExist()
+        {
+            var userId = Guid.NewGuid();
+            var projectId1 = Guid.NewGuid();
+            var projectId2 = Guid.NewGuid();
+            var roleId = Guid.NewGuid();
+            var projects = new List<ProjectUser>
+            {
+                new ProjectUser(projectId1, userId, roleId),
+                new ProjectUser(projectId2, userId, roleId)
+            };
+
+            var mockRepo = new Mock<IProjectUserRepository>(MockBehavior.Strict);
+            mockRepo.Setup(r => r.GetByUserIdAsync(userId, default)).ReturnsAsync(projects);
+
+            var mockRoleRepo = new Mock<IRoleRepository>().Object;
+
+            var service = new ProjectUserService(mockRepo.Object, mockRoleRepo, CreateMockLogger());
+
+            var result = await service.GetUserProjectsAsync(userId);
 
             Assert.NotNull(result);
             Assert.Equal(2, result.Count());

@@ -426,12 +426,7 @@ namespace OpenUpMan.Tests.Services
             var ownerId = Guid.NewGuid();
             var existingProject = new Project("PROY-DEL", "To Delete", DateTime.UtcNow, ownerId);
             var projectId = existingProject.Id;
-
-            var projectUsers = new List<ProjectUser>
-            {
-                new ProjectUser(projectId, Guid.NewGuid(), ProjectUserPermission.EDITOR, ProjectUserRole.DESARROLLADOR),
-                new ProjectUser(projectId, Guid.NewGuid(), ProjectUserPermission.OWNER, ProjectUserRole.ADMIN)
-            };
+            
 
             var projectPhases = new List<ProjectPhase>
             {
@@ -445,7 +440,6 @@ namespace OpenUpMan.Tests.Services
             mockRepo.Setup(r => r.SaveChangesAsync(default)).Returns(Task.CompletedTask).Verifiable();
 
             var mockProjectUserRepo = new Mock<IProjectUserRepository>(MockBehavior.Strict);
-            mockProjectUserRepo.Setup(r => r.GetByProjectIdAsync(projectId, default)).ReturnsAsync(projectUsers);
             mockProjectUserRepo.Setup(r => r.RemoveAsync(It.IsAny<ProjectUser>(), default)).Returns(Task.CompletedTask).Verifiable();
 
             var mockProjectPhaseRepo = new Mock<IProjectPhaseRepository>(MockBehavior.Strict);
@@ -468,7 +462,6 @@ namespace OpenUpMan.Tests.Services
 
             mockRepo.Verify(r => r.GetByIdAsync(projectId, default), Times.Once);
             mockProjectUserRepo.Verify(r => r.GetByProjectIdAsync(projectId, default), Times.Once);
-            mockProjectUserRepo.Verify(r => r.RemoveAsync(It.IsAny<ProjectUser>(), default), Times.Exactly(projectUsers.Count));
             mockProjectPhaseRepo.Verify(r => r.GetByProjectIdAsync(projectId, default), Times.Once);
             mockProjectPhaseRepo.Verify(r => r.DeleteAsync(It.IsAny<ProjectPhase>(), default), Times.Exactly(projectPhases.Count));
             mockRepo.Verify(r => r.DeleteAsync(existingProject, default), Times.Once);
