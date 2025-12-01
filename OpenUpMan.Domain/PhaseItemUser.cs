@@ -3,9 +3,7 @@ namespace OpenUpMan.Domain
     public class PhaseItemUser
     {
         public Guid PhaseItemId { get; private set; }
-        public PhaseItem? PhaseItem { get; private set; }
         public Guid UserId { get; private set; }
-        public User? User { get; private set; }
         public string Role { get; private set; }  // PARTICIPANT, RESPONSIBLE, etc.
 
         // Parameterless constructor for EF

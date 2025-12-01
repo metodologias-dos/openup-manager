@@ -64,7 +64,9 @@ public class DatabaseMigrator
             if (!hasAnyTable)
             {
                 _logger?.LogInformation("Database does not exist. Creating new database with current schema...");
-                await _context.Database.EnsureCreatedAsync();
+                // Don't use EnsureCreatedAsync() as it may close the connection (destroying in-memory databases)
+                // Instead, manually create all tables
+                await CreateMissingTablesAsync(conn, model);
                 _logger?.LogInformation("Database created successfully.");
                 return;
             }
@@ -148,7 +150,8 @@ public class DatabaseMigrator
     private static async Task<bool> TableExistsAsync(DbConnection conn, string tableName)
     {
         using var cmd = conn.CreateCommand();
-        cmd.CommandText = "SELECT name FROM sqlite_master WHERE type='table' AND name=@tableName";
+        // Use COLLATE NOCASE for case-insensitive comparison to handle legacy databases
+        cmd.CommandText = "SELECT name FROM sqlite_master WHERE type='table' AND name=@tableName COLLATE NOCASE";
         var param = cmd.CreateParameter();
         param.ParameterName = "@tableName";
         param.Value = tableName;
@@ -159,7 +162,8 @@ public class DatabaseMigrator
 
     private async Task CreateTableAsync(DbConnection conn, IEntityType entityType, string tableName)
     {
-        var createSql = GenerateCreateTableSql(entityType, tableName);
+        // For normal table creation, physical name = logical name
+        var createSql = GenerateCreateTableSql(entityType, tableName, logicalTableName: tableName);
         
         using var cmd = conn.CreateCommand();
         cmd.CommandText = createSql;
@@ -169,11 +173,15 @@ public class DatabaseMigrator
         await CreateIndexesForTableAsync(conn, entityType, tableName);
     }
 
-    private static string GenerateCreateTableSql(IEntityType entityType, string tableName)
+    private static string GenerateCreateTableSql(IEntityType entityType, string physicalTableName, string? logicalTableName = null)
     {
+        // Use logical table name (from entity config) for column mapping, physical name for SQL statement
+        var tableNameForMapping = logicalTableName ?? physicalTableName;
+        
         var sb = new StringBuilder();
-        sb.AppendLine($"CREATE TABLE {tableName} (");
+        sb.AppendLine($"CREATE TABLE {physicalTableName} (");
 
+        var storeObjectId = StoreObjectIdentifier.Table(tableNameForMapping);
         var properties = entityType.GetProperties().ToList();
         var primaryKey = entityType.FindPrimaryKey();
         var primaryKeyProperties = primaryKey?.Properties.Select(p => p.Name).ToHashSet() ?? new HashSet<string>();
@@ -182,12 +190,15 @@ public class DatabaseMigrator
 
         foreach (var property in properties)
         {
-            var columnName = property.GetColumnName();
+            var columnName = property.GetColumnName(storeObjectId);
+            if (columnName == null) continue; // Skip properties that don't map to this table
+            
             var columnType = GetSqliteType(property);
             var isNullable = property.IsNullable;
             var isPrimaryKey = primaryKeyProperties.Contains(property.Name);
 
-            var columnDef = new StringBuilder($"    {columnName} {columnType}");
+            // Escape column name with double quotes to handle SQL keywords
+            var columnDef = new StringBuilder($"    \"{columnName}\" {columnType}");
 
             if (!isNullable || isPrimaryKey)
             {
@@ -202,12 +213,18 @@ public class DatabaseMigrator
             columnDefinitions.Add(columnDef.ToString());
         }
 
+        // Ensure at least one column is defined
+        if (columnDefinitions.Count == 0)
+        {
+            throw new InvalidOperationException($"Cannot create table '{physicalTableName}' with no columns. Entity type must have at least one property.");
+        }
+
         sb.AppendLine(string.Join(",\n", columnDefinitions));
 
         // Add composite primary key if needed
         if (primaryKey != null && primaryKeyProperties.Count > 1)
         {
-            var pkColumns = string.Join(", ", primaryKey.Properties.Select(p => p.GetColumnName()));
+            var pkColumns = string.Join(", ", primaryKey.Properties.Select(p => p.GetColumnName(storeObjectId)).Where(c => c != null).Select(c => $"\"{c}\""));
             sb.AppendLine($",    PRIMARY KEY ({pkColumns})");
         }
 
@@ -229,6 +246,7 @@ public class DatabaseMigrator
             var tableName = entityType.GetTableName();
             if (tableName == null || !await TableExistsAsync(conn, tableName)) continue;
 
+            var storeObjectId = StoreObjectIdentifier.Table(tableName);
             var existingColumns = await GetTableColumnsInfoAsync(conn, tableName);
             var existingColumnNames = existingColumns.Select(c => c.Name).ToHashSet();
 
@@ -236,26 +254,30 @@ public class DatabaseMigrator
 
             foreach (var property in properties)
             {
-                var columnName = property.GetColumnName();
+                var columnName = property.GetColumnName(storeObjectId);
+                if (columnName == null) continue; // Skip properties that don't map to this table
                 
                 if (!existingColumnNames.Contains(columnName))
                 {
                     _logger?.LogInformation("Adding missing column: {TableName}.{ColumnName}", tableName, columnName);
-                    await AddColumnAsync(conn, tableName, property);
+                    await AddColumnAsync(conn, tableName, property, storeObjectId);
                     _logger?.LogInformation("Column {TableName}.{ColumnName} added successfully.", tableName, columnName);
                 }
             }
         }
     }
 
-    private static async Task AddColumnAsync(DbConnection conn, string tableName, IProperty property)
+    private static async Task AddColumnAsync(DbConnection conn, string tableName, IProperty property, StoreObjectIdentifier storeObjectId)
     {
-        var columnName = property.GetColumnName();
+        var columnName = property.GetColumnName(storeObjectId);
+        if (columnName == null) return; // Skip if no column name
+        
         var columnType = GetSqliteType(property);
         var isNullable = property.IsNullable;
 
         using var cmd = conn.CreateCommand();
-        var sb = new StringBuilder($"ALTER TABLE {tableName} ADD COLUMN {columnName} {columnType}");
+        // Escape column name with double quotes to handle SQL keywords
+        var sb = new StringBuilder($"ALTER TABLE \"{tableName}\" ADD COLUMN \"{columnName}\" {columnType}");
 
         if (!isNullable)
         {
@@ -277,9 +299,11 @@ public class DatabaseMigrator
             var tableName = entityType.GetTableName();
             if (tableName == null || !await TableExistsAsync(conn, tableName)) continue;
 
+            var storeObjectId = StoreObjectIdentifier.Table(tableName);
             var existingColumns = await GetTableColumnsInfoAsync(conn, tableName);
             var expectedColumnNames = entityType.GetProperties()
-                .Select(p => p.GetColumnName())
+                .Select(p => p.GetColumnName(storeObjectId))
+                .Where(c => c != null)
                 .ToHashSet();
 
             var obsoleteColumns = existingColumns
@@ -306,9 +330,11 @@ public class DatabaseMigrator
             var tableName = entityType.GetTableName();
             if (tableName == null || !await TableExistsAsync(conn, tableName)) continue;
 
+            var storeObjectId = StoreObjectIdentifier.Table(tableName);
             var existingColumns = await GetTableColumnsInfoAsync(conn, tableName);
             var expectedColumnNames = entityType.GetProperties()
-                .Select(p => p.GetColumnName())
+                .Select(p => p.GetColumnName(storeObjectId))
+                .Where(c => c != null)
                 .ToHashSet();
 
             var obsoleteColumns = existingColumns
@@ -326,11 +352,33 @@ public class DatabaseMigrator
 
     private async Task RecreateTableWithoutColumnsAsync(DbConnection conn, IEntityType entityType, string tableName)
     {
+        var storeObjectId = StoreObjectIdentifier.Table(tableName);
+        
+        // Check if entity has any properties (columns) to keep
+        var columnsToKeep = entityType.GetProperties()
+            .Select(p => p.GetColumnName(storeObjectId))
+            .Where(c => c != null)
+            .ToList();
+        
+        // If no columns to keep, the entity model has been removed/emptied - just drop the table
+        if (!columnsToKeep.Any())
+        {
+            _logger?.LogWarning("Entity {EntityName} has no columns. Dropping table {TableName}.", 
+                entityType.ClrType.Name, tableName);
+            using (var cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = $"DROP TABLE IF EXISTS \"{tableName}\"";
+                await cmd.ExecuteNonQueryAsync();
+            }
+            return;
+        }
+        
         // SQLite doesn't support DROP COLUMN, so we need to recreate the table
         var tempTableName = $"{tableName}_temp_{Guid.NewGuid():N}";
         
         // Create new table with correct schema
-        var createSql = GenerateCreateTableSql(entityType, tempTableName);
+        // Use original table name for column mapping, but temp name for physical table
+        var createSql = GenerateCreateTableSql(entityType, tempTableName, logicalTableName: tableName);
         using (var cmd = conn.CreateCommand())
         {
             cmd.CommandText = createSql;
@@ -338,28 +386,24 @@ public class DatabaseMigrator
         }
 
         // Copy data from old table to new table
-        var columnsToKeep = entityType.GetProperties()
-            .Select(p => p.GetColumnName())
-            .ToList();
-        var columnList = string.Join(", ", columnsToKeep);
-        
+        var columnList = string.Join(", ", columnsToKeep.Select(c => $"\"{c}\""));
         using (var cmd = conn.CreateCommand())
         {
-            cmd.CommandText = $"INSERT INTO {tempTableName} ({columnList}) SELECT {columnList} FROM {tableName}";
+            cmd.CommandText = $"INSERT INTO \"{tempTableName}\" ({columnList}) SELECT {columnList} FROM \"{tableName}\"";
             await cmd.ExecuteNonQueryAsync();
         }
 
         // Drop old table
         using (var cmd = conn.CreateCommand())
         {
-            cmd.CommandText = $"DROP TABLE {tableName}";
+            cmd.CommandText = $"DROP TABLE \"{tableName}\"";
             await cmd.ExecuteNonQueryAsync();
         }
 
         // Rename new table to original name
         using (var cmd = conn.CreateCommand())
         {
-            cmd.CommandText = $"ALTER TABLE {tempTableName} RENAME TO {tableName}";
+            cmd.CommandText = $"ALTER TABLE \"{tempTableName}\" RENAME TO \"{tableName}\"";
             await cmd.ExecuteNonQueryAsync();
         }
 
@@ -386,6 +430,7 @@ public class DatabaseMigrator
 
     private async Task CreateIndexesForTableAsync(DbConnection conn, IEntityType entityType, string tableName)
     {
+        var storeObjectId = StoreObjectIdentifier.Table(tableName);
         var indexes = entityType.GetIndexes();
 
         foreach (var index in indexes)
@@ -394,7 +439,7 @@ public class DatabaseMigrator
             if (indexName == null) continue; // Skip indexes without names
             
             var isUnique = index.IsUnique;
-            var columns = string.Join(", ", index.Properties.Select(p => p.GetColumnName()));
+            var columns = string.Join(", ", index.Properties.Select(p => p.GetColumnName(storeObjectId)).Where(c => c != null).Select(c => $"\"{c}\""));
 
             // Check if index already exists
             if (await IndexExistsAsync(conn, indexName))
@@ -406,7 +451,7 @@ public class DatabaseMigrator
 
             using var cmd = conn.CreateCommand();
             var uniqueKeyword = isUnique ? "UNIQUE " : "";
-            cmd.CommandText = $"CREATE {uniqueKeyword}INDEX IF NOT EXISTS {indexName} ON {tableName} ({columns})";
+            cmd.CommandText = $"CREATE {uniqueKeyword}INDEX IF NOT EXISTS \"{indexName}\" ON \"{tableName}\" ({columns})";
             await cmd.ExecuteNonQueryAsync();
         }
     }

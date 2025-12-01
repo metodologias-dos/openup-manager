@@ -19,7 +19,6 @@ namespace OpenUpMan.Domain
     {
         public Guid Id { get; private set; }
         public Guid ProjectId { get; private set; }
-        public Project? Project { get; private set; }
         public PhaseCode Code { get; private set; }
         public string Name { get; private set; } = null!;
         public int Order { get; private set; }

@@ -14,9 +14,13 @@ namespace OpenUpMan.Data
 
         public async Task<IEnumerable<Artefact>> GetArtefactsByPhaseIdAsync(Guid phaseId)
         {
-            return await _context.PhaseArtefacts
+            var phaseArtefacts = await _context.PhaseArtefacts
                 .Where(pa => pa.PhaseId == phaseId)
-                .Select(pa => pa.Artefact!)
+                .ToListAsync();
+            
+            var artefactIds = phaseArtefacts.Select(pa => pa.ArtefactId);
+            return await _context.Artefacts
+                .Where(a => artefactIds.Contains(a.Id))
                 .ToListAsync();
         }
 
@@ -24,16 +28,12 @@ namespace OpenUpMan.Data
         {
             return await _context.PhaseArtefacts
                 .Where(pa => pa.PhaseId == phaseId)
-                .Include(pa => pa.Artefact)
-                .Include(pa => pa.Document)
                 .ToListAsync();
         }
 
         public async Task<PhaseArtefact?> GetByIdAsync(Guid phaseId, Guid artefactId)
         {
             return await _context.PhaseArtefacts
-                .Include(pa => pa.Artefact)
-                .Include(pa => pa.Document)
                 .FirstOrDefaultAsync(pa => pa.PhaseId == phaseId && pa.ArtefactId == artefactId);
         }
 

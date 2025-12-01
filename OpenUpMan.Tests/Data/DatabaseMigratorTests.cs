@@ -1,4 +1,4 @@
-﻿using Microsoft.Data.Sqlite;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -60,7 +60,7 @@ public class DatabaseMigratorTests
 
         using var cmd = connection.CreateCommand();
         cmd.CommandText = $@"
-            CREATE TABLE Users (
+            CREATE TABLE users (
                 {string.Join(",\n                ", columns)}
             );
         ";
@@ -126,18 +126,18 @@ public class DatabaseMigratorTests
             await migrator.MigrateAsync();
 
             // Assert - Table should be created
-            var tableExists = await TableExistsAsync(connection, "Users");
+            var tableExists = await TableExistsAsync(connection, "users");
             Assert.True(tableExists);
 
             // Assert - All columns should exist
-            Assert.True(await ColumnExistsAsync(connection, "Users", "Id"));
-            Assert.True(await ColumnExistsAsync(connection, "Users", "Username"));
-            Assert.True(await ColumnExistsAsync(connection, "Users", "PasswordHash"));
-            Assert.True(await ColumnExistsAsync(connection, "Users", "CreatedAt"));
-            Assert.True(await ColumnExistsAsync(connection, "Users", "PasswordChangedAt"));
+            Assert.True(await ColumnExistsAsync(connection, "users", "Id"));
+            Assert.True(await ColumnExistsAsync(connection, "users", "Username"));
+            Assert.True(await ColumnExistsAsync(connection, "users", "PasswordHash"));
+            Assert.True(await ColumnExistsAsync(connection, "users", "CreatedAt"));
+            Assert.True(await ColumnExistsAsync(connection, "users", "PasswordChangedAt"));
 
             // Assert - Indexes should be created
-            Assert.True(await IndexExistsAsync(connection, "IX_Users_Username"));
+            Assert.True(await IndexExistsAsync(connection, "IX_users_Username"));
 
             // Verify logger
             mockLogger.Verify(
@@ -235,7 +235,7 @@ public class DatabaseMigratorTests
         using (legacyContext)
         {
             // Verify old schema doesn't have PasswordChangedAt
-            var columnExistsBefore = await ColumnExistsAsync(connection, "Users", "PasswordChangedAt");
+            var columnExistsBefore = await ColumnExistsAsync(connection, "users", "PasswordChangedAt");
             Assert.False(columnExistsBefore);
 
             // Create migrator with the existing context
@@ -246,7 +246,7 @@ public class DatabaseMigratorTests
             await migrator.MigrateAsync();
 
             // Assert
-            var columnExistsAfter = await ColumnExistsAsync(connection, "Users", "PasswordChangedAt");
+            var columnExistsAfter = await ColumnExistsAsync(connection, "users", "PasswordChangedAt");
             Assert.True(columnExistsAfter);
 
             // Verify logger was called
@@ -283,7 +283,7 @@ public class DatabaseMigratorTests
             using (var cmd = connection.CreateCommand())
             {
                 cmd.CommandText = @"
-                    INSERT INTO Users (Id, Username, PasswordHash, CreatedAt)
+                    INSERT INTO users (Id, Username, PasswordHash, CreatedAt)
                     VALUES (@id, @username, @hash, @created)
                 ";
                 cmd.Parameters.AddWithValue("@id", userId.ToString());
@@ -325,7 +325,7 @@ public class DatabaseMigratorTests
             using (var cmd = connection.CreateCommand())
             {
                 cmd.CommandText = @"
-                    CREATE TABLE Users (
+                    CREATE TABLE users (
                         Id TEXT NOT NULL PRIMARY KEY,
                         Username TEXT NOT NULL
                     );
@@ -345,9 +345,9 @@ public class DatabaseMigratorTests
             await migrator.MigrateAsync();
 
             // Assert - All missing columns should be added
-            Assert.True(await ColumnExistsAsync(connection, "Users", "PasswordHash"));
-            Assert.True(await ColumnExistsAsync(connection, "Users", "CreatedAt"));
-            Assert.True(await ColumnExistsAsync(connection, "Users", "PasswordChangedAt"));
+            Assert.True(await ColumnExistsAsync(connection, "users", "PasswordHash"));
+            Assert.True(await ColumnExistsAsync(connection, "users", "CreatedAt"));
+            Assert.True(await ColumnExistsAsync(connection, "users", "PasswordChangedAt"));
 
             // Verify logger was called for each column
             mockLogger.Verify(
@@ -406,7 +406,7 @@ public class DatabaseMigratorTests
             await migrator.MigrateAsync();
 
             // Assert - Index should exist
-            Assert.True(await IndexExistsAsync(connection, "IX_Users_Username"));
+            Assert.True(await IndexExistsAsync(connection, "IX_users_Username"));
 
             // Verify database was created (EnsureCreatedAsync path)
             mockLogger.Verify(
@@ -432,7 +432,7 @@ public class DatabaseMigratorTests
             using (var cmd = connection.CreateCommand())
             {
                 cmd.CommandText = @"
-                    CREATE TABLE Users (
+                    CREATE TABLE users (
                         Id TEXT NOT NULL PRIMARY KEY,
                         Username TEXT NOT NULL,
                         PasswordHash TEXT NOT NULL,
@@ -452,19 +452,19 @@ public class DatabaseMigratorTests
             var migrator = new DatabaseMigrator(context, mockLogger.Object);
 
             // Verify index doesn't exist
-            Assert.False(await IndexExistsAsync(connection, "IX_Users_Username"));
+            Assert.False(await IndexExistsAsync(connection, "IX_users_Username"));
 
             // Act
             await migrator.MigrateAsync();
 
             // Assert - Index should now exist
-            Assert.True(await IndexExistsAsync(connection, "IX_Users_Username"));
+            Assert.True(await IndexExistsAsync(connection, "IX_users_Username"));
 
             mockLogger.Verify(
                 x => x.Log(
                     LogLevel.Information,
                     It.IsAny<EventId>(),
-                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Creating index: IX_Users_Username")),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Creating index: IX_users_Username")),
                     It.IsAny<Exception>(),
                     It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
                 Times.Once);
@@ -516,7 +516,7 @@ public class DatabaseMigratorTests
             using (var cmd = connection.CreateCommand())
             {
                 cmd.CommandText = @"
-                    CREATE TABLE Users (
+                    CREATE TABLE users (
                         Id TEXT NOT NULL PRIMARY KEY,
                         Username TEXT NOT NULL UNIQUE,
                         PasswordHash TEXT NOT NULL,
@@ -544,13 +544,13 @@ public class DatabaseMigratorTests
                 x => x.Log(
                     LogLevel.Warning,
                     It.IsAny<EventId>(),
-                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Obsolete column detected: Users.ObsoleteColumn")),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Obsolete column detected: users.ObsoleteColumn")),
                     It.IsAny<Exception>(),
                     It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
                 Times.Once);
 
             // Assert - Column should still exist
-            Assert.True(await ColumnExistsAsync(connection, "Users", "ObsoleteColumn"));
+            Assert.True(await ColumnExistsAsync(connection, "users", "ObsoleteColumn"));
         }
     }
 
@@ -566,7 +566,7 @@ public class DatabaseMigratorTests
             using (var cmd = connection.CreateCommand())
             {
                 cmd.CommandText = @"
-                    CREATE TABLE Users (
+                    CREATE TABLE users (
                         Id TEXT NOT NULL PRIMARY KEY,
                         Username TEXT NOT NULL UNIQUE,
                         PasswordHash TEXT NOT NULL,
@@ -583,7 +583,7 @@ public class DatabaseMigratorTests
             using (var cmd = connection.CreateCommand())
             {
                 cmd.CommandText = @"
-                    INSERT INTO Users (Id, Username, PasswordHash, CreatedAt, PasswordChangedAt, ObsoleteColumn1, ObsoleteColumn2)
+                    INSERT INTO users (Id, Username, PasswordHash, CreatedAt, PasswordChangedAt, ObsoleteColumn1, ObsoleteColumn2)
                     VALUES (@id, @username, @hash, @created, NULL, 'obsolete', 42)
                 ";
                 cmd.Parameters.AddWithValue("@id", Guid.NewGuid().ToString());
@@ -605,15 +605,15 @@ public class DatabaseMigratorTests
             await migrator.MigrateAsync();
 
             // Assert - Obsolete columns should be removed
-            Assert.False(await ColumnExistsAsync(connection, "Users", "ObsoleteColumn1"));
-            Assert.False(await ColumnExistsAsync(connection, "Users", "ObsoleteColumn2"));
+            Assert.False(await ColumnExistsAsync(connection, "users", "ObsoleteColumn1"));
+            Assert.False(await ColumnExistsAsync(connection, "users", "ObsoleteColumn2"));
 
             // Assert - Valid columns should still exist
-            Assert.True(await ColumnExistsAsync(connection, "Users", "Id"));
-            Assert.True(await ColumnExistsAsync(connection, "Users", "Username"));
-            Assert.True(await ColumnExistsAsync(connection, "Users", "PasswordHash"));
-            Assert.True(await ColumnExistsAsync(connection, "Users", "CreatedAt"));
-            Assert.True(await ColumnExistsAsync(connection, "Users", "PasswordChangedAt"));
+            Assert.True(await ColumnExistsAsync(connection, "users", "Id"));
+            Assert.True(await ColumnExistsAsync(connection, "users", "Username"));
+            Assert.True(await ColumnExistsAsync(connection, "users", "PasswordHash"));
+            Assert.True(await ColumnExistsAsync(connection, "users", "CreatedAt"));
+            Assert.True(await ColumnExistsAsync(connection, "users", "PasswordChangedAt"));
 
             // Assert - Data should be preserved
             using (var cmd = connection.CreateCommand())
@@ -766,7 +766,7 @@ public class DatabaseMigratorTests
             await migrator.MigrateAsync();
 
             // Assert - Should work without errors
-            var tableExists = await TableExistsAsync(connection, "Users");
+            var tableExists = await TableExistsAsync(connection, "users");
             Assert.True(tableExists);
 
             // Should be able to insert data
@@ -804,7 +804,7 @@ public class DatabaseMigratorTests
             await migrator.MigrateAsync();
 
             // Assert - Verify successful migration
-            Assert.True(await TableExistsAsync(connection, "Users"));
+            Assert.True(await TableExistsAsync(connection, "users"));
 
             mockLogger.Verify(
                 x => x.Log(
@@ -833,8 +833,8 @@ public class DatabaseMigratorTests
             await migrator.MigrateAsync();
 
             // Assert - Database structure
-            Assert.True(await TableExistsAsync(connection, "Users"));
-            var columns = await GetTableColumnsAsync(connection, "Users");
+            Assert.True(await TableExistsAsync(connection, "users"));
+            var columns = await GetTableColumnsAsync(connection, "users");
             Assert.Equal(5, columns.Count);
             Assert.Contains("Id", columns);
             Assert.Contains("Username", columns);
@@ -843,7 +843,7 @@ public class DatabaseMigratorTests
             Assert.Contains("PasswordChangedAt", columns);
 
             // Assert - Indexes
-            Assert.True(await IndexExistsAsync(connection, "IX_Users_Username"));
+            Assert.True(await IndexExistsAsync(connection, "IX_users_Username"));
 
             // Assert - Can perform CRUD operations
             var user = new User("integration_test", "password_hash");
@@ -882,7 +882,7 @@ public class DatabaseMigratorTests
             using (var cmd = connection.CreateCommand())
             {
                 cmd.CommandText = @"
-                    CREATE TABLE Users (
+                    CREATE TABLE users (
                         Id TEXT NOT NULL PRIMARY KEY,
                         Username TEXT NOT NULL UNIQUE,
                         PasswordHash TEXT NOT NULL,
@@ -897,7 +897,7 @@ public class DatabaseMigratorTests
             using (var cmd = connection.CreateCommand())
             {
                 cmd.CommandText = @"
-                    INSERT INTO Users (Id, Username, PasswordHash, CreatedAt)
+                    INSERT INTO users (Id, Username, PasswordHash, CreatedAt)
                     VALUES (@id, @username, @hash, @created)
                 ";
                 cmd.Parameters.AddWithValue("@id", legacyUserId.ToString());
@@ -919,10 +919,10 @@ public class DatabaseMigratorTests
             await migrator.MigrateAsync();
 
             // Assert - New columns added
-            Assert.True(await ColumnExistsAsync(connection, "Users", "PasswordChangedAt"));
+            Assert.True(await ColumnExistsAsync(connection, "users", "PasswordChangedAt"));
 
             // Assert - Indexes created
-            Assert.True(await IndexExistsAsync(connection, "IX_Users_Username"));
+            Assert.True(await IndexExistsAsync(connection, "IX_users_Username"));
 
             // Assert - Legacy data preserved (verify with raw SQL)
             using (var cmd = connection.CreateCommand())
@@ -937,7 +937,7 @@ public class DatabaseMigratorTests
             }
 
             // Verify all columns were added
-            var columns = await GetTableColumnsAsync(connection, "Users");
+            var columns = await GetTableColumnsAsync(connection, "users");
             Assert.Contains("PasswordChangedAt", columns);
 
             // Assert - Can add new users
@@ -990,7 +990,7 @@ public class DatabaseMigratorTests
             var columns = new Dictionary<string, string>();
             using (var cmd = connection.CreateCommand())
             {
-                cmd.CommandText = "PRAGMA table_info(Users)";
+                cmd.CommandText = "PRAGMA table_info(users)";
                 using var reader = await cmd.ExecuteReaderAsync();
                 while (await reader.ReadAsync())
                 {
@@ -1020,11 +1020,11 @@ public class DatabaseMigratorTests
             using (var cmd = connection.CreateCommand())
             {
                 cmd.CommandText = @"
-                    CREATE TABLE Users (
+                    CREATE TABLE users (
                         Id TEXT NOT NULL PRIMARY KEY,
                         Username TEXT NOT NULL
                     );
-                    INSERT INTO Users (Id, Username) VALUES ('test-id', 'testuser');
+                    INSERT INTO users (Id, Username) VALUES ('test-id', 'testuser');
                 ";
                 await cmd.ExecuteNonQueryAsync();
             }
@@ -1040,8 +1040,8 @@ public class DatabaseMigratorTests
             await migrator.MigrateAsync();
 
             // Assert - Verify columns were added with default values
-            Assert.True(await ColumnExistsAsync(connection, "Users", "PasswordHash"));
-            Assert.True(await ColumnExistsAsync(connection, "Users", "CreatedAt"));
+            Assert.True(await ColumnExistsAsync(connection, "users", "PasswordHash"));
+            Assert.True(await ColumnExistsAsync(connection, "users", "CreatedAt"));
 
             // Verify data integrity - existing row should have default values
             using (var cmd = connection.CreateCommand())
@@ -1079,7 +1079,7 @@ public class DatabaseMigratorTests
             await migrator.MigrateAsync();
 
             // Assert - Table should be created via CreateTableAsync
-            Assert.True(await TableExistsAsync(connection, "Users"));
+            Assert.True(await TableExistsAsync(connection, "users"));
 
             // Verify logger called for table creation
             mockLogger.Verify(
@@ -1106,7 +1106,7 @@ public class DatabaseMigratorTests
             // Verify primary key constraint
             using (var cmd = connection.CreateCommand())
             {
-                cmd.CommandText = "PRAGMA table_info(Users)";
+                cmd.CommandText = "PRAGMA table_info(users)";
                 using var reader = await cmd.ExecuteReaderAsync();
 
                 while (await reader.ReadAsync())
@@ -1140,7 +1140,7 @@ public class DatabaseMigratorTests
             using (var cmd = connection.CreateCommand())
             {
                 cmd.CommandText = @"
-                    CREATE TABLE Users (
+                    CREATE TABLE users (
                         Id TEXT NOT NULL PRIMARY KEY,
                         Username TEXT NOT NULL
                     );
@@ -1160,9 +1160,9 @@ public class DatabaseMigratorTests
             await migrator.MigrateAsync();
 
             // Assert - Missing columns should be added
-            Assert.True(await ColumnExistsAsync(connection, "Users", "PasswordHash"));
-            Assert.True(await ColumnExistsAsync(connection, "Users", "CreatedAt"));
-            Assert.True(await ColumnExistsAsync(connection, "Users", "PasswordChangedAt"));
+            Assert.True(await ColumnExistsAsync(connection, "users", "PasswordHash"));
+            Assert.True(await ColumnExistsAsync(connection, "users", "CreatedAt"));
+            Assert.True(await ColumnExistsAsync(connection, "users", "PasswordChangedAt"));
 
             // Verify logged column additions
             mockLogger.Verify(
@@ -1194,14 +1194,14 @@ public class DatabaseMigratorTests
             var migrator = new DatabaseMigrator(context, mockLogger.Object);
 
             // Verify no tables exist
-            Assert.False(await TableExistsAsync(connection, "Users"));
+            Assert.False(await TableExistsAsync(connection, "users"));
 
             // Act
             await migrator.MigrateAsync();
 
             // Assert - Both table and indexes should be created
-            Assert.True(await TableExistsAsync(connection, "Users"));
-            Assert.True(await IndexExistsAsync(connection, "IX_Users_Username"));
+            Assert.True(await TableExistsAsync(connection, "users"));
+            Assert.True(await IndexExistsAsync(connection, "IX_users_Username"));
 
             // Verify migration completed successfully
             mockLogger.Verify(
@@ -1232,7 +1232,7 @@ public class DatabaseMigratorTests
             // Check column constraints
             using (var cmd = connection.CreateCommand())
             {
-                cmd.CommandText = "PRAGMA table_info(Users)";
+                cmd.CommandText = "PRAGMA table_info(users)";
                 using var reader = await cmd.ExecuteReaderAsync();
 
                 var columnConstraints = new Dictionary<string, bool>();
@@ -1268,13 +1268,13 @@ public class DatabaseMigratorTests
             using (var cmd = connection.CreateCommand())
             {
                 cmd.CommandText = @"
-                    CREATE TABLE Users (
+                    CREATE TABLE users (
                         Id TEXT NOT NULL PRIMARY KEY,
                         Username TEXT NOT NULL UNIQUE,
                         PasswordHash TEXT NOT NULL,
                         CreatedAt TEXT NOT NULL
                     );
-                    INSERT INTO Users (Id, Username, PasswordHash, CreatedAt)
+                    INSERT INTO users (Id, Username, PasswordHash, CreatedAt)
                     VALUES ('id1', 'user1', 'hash1', '2024-01-01T00:00:00');
                 ";
                 await cmd.ExecuteNonQueryAsync();
@@ -1291,7 +1291,7 @@ public class DatabaseMigratorTests
             await migrator.MigrateAsync();
 
             // Assert - Nullable column should be added without default
-            Assert.True(await ColumnExistsAsync(connection, "Users", "PasswordChangedAt"));
+            Assert.True(await ColumnExistsAsync(connection, "users", "PasswordChangedAt"));
 
             // Verify existing data has NULL for new nullable column
             using (var cmd = connection.CreateCommand())
@@ -1328,7 +1328,7 @@ public class DatabaseMigratorTests
             await migrator.MigrateAsync();
 
             // Database should be created
-            Assert.True(await TableExistsAsync(connection, "Users"));
+            Assert.True(await TableExistsAsync(connection, "users"));
         }
     }
 
@@ -1345,7 +1345,7 @@ public class DatabaseMigratorTests
             using (var cmd = connection.CreateCommand())
             {
                 cmd.CommandText = @"
-                    CREATE TABLE Users (
+                    CREATE TABLE users (
                         Id TEXT NOT NULL PRIMARY KEY,
                         Username TEXT NOT NULL UNIQUE,
                         PasswordHash TEXT NOT NULL,
@@ -1368,11 +1368,11 @@ public class DatabaseMigratorTests
             await migrator.MigrateAsync();
 
             // Assert - Table should exist and index may have been created (or already existed via UNIQUE constraint)
-            Assert.True(await TableExistsAsync(connection, "Users"));
+            Assert.True(await TableExistsAsync(connection, "users"));
             // Index existence test - SQLite may auto-create index for UNIQUE constraint
-            var hasIndex = await IndexExistsAsync(connection, "IX_Users_Username");
+            var hasIndex = await IndexExistsAsync(connection, "IX_users_Username");
             // Just verify table and columns are correct
-            Assert.True(await ColumnExistsAsync(connection, "Users", "Username"));
+            Assert.True(await ColumnExistsAsync(connection, "users", "Username"));
         }
     }
 
@@ -1389,7 +1389,7 @@ public class DatabaseMigratorTests
             using (var cmd = connection.CreateCommand())
             {
                 cmd.CommandText = @"
-                    CREATE TABLE Users (
+                    CREATE TABLE users (
                         Id TEXT NOT NULL PRIMARY KEY,
                         Username TEXT NOT NULL UNIQUE
                     );
@@ -1406,15 +1406,15 @@ public class DatabaseMigratorTests
             var migrator = new DatabaseMigrator(context, mockLogger.Object);
 
             // Verify columns don't exist
-            Assert.False(await ColumnExistsAsync(connection, "Users", "PasswordHash"));
+            Assert.False(await ColumnExistsAsync(connection, "users", "PasswordHash"));
 
             // Act
             await migrator.MigrateAsync();
 
             // Assert - Missing columns should be added
-            Assert.True(await ColumnExistsAsync(connection, "Users", "PasswordHash"));
-            Assert.True(await ColumnExistsAsync(connection, "Users", "CreatedAt"));
-            Assert.True(await ColumnExistsAsync(connection, "Users", "PasswordChangedAt"));
+            Assert.True(await ColumnExistsAsync(connection, "users", "PasswordHash"));
+            Assert.True(await ColumnExistsAsync(connection, "users", "CreatedAt"));
+            Assert.True(await ColumnExistsAsync(connection, "users", "PasswordChangedAt"));
 
             // Should log column additions
             mockLogger.Verify(
@@ -1441,7 +1441,7 @@ public class DatabaseMigratorTests
             using (var cmd = connection.CreateCommand())
             {
                 cmd.CommandText = @"
-                    CREATE TABLE Users (
+                    CREATE TABLE users (
                         Id TEXT NOT NULL PRIMARY KEY,
                         Username TEXT NOT NULL UNIQUE,
                         PasswordHash TEXT NOT NULL,
@@ -1461,15 +1461,15 @@ public class DatabaseMigratorTests
             var migrator = new DatabaseMigrator(context, autoRemoveObsoleteColumns: true);
 
             // Verify obsolete column exists
-            Assert.True(await ColumnExistsAsync(connection, "Users", "ObsoleteColumn"));
+            Assert.True(await ColumnExistsAsync(connection, "users", "ObsoleteColumn"));
 
             // Act - Should remove obsolete column
             await migrator.MigrateAsync();
 
             // Assert - Obsolete column should be removed
-            Assert.False(await ColumnExistsAsync(connection, "Users", "ObsoleteColumn"));
-            Assert.True(await ColumnExistsAsync(connection, "Users", "Id"));
-            Assert.True(await ColumnExistsAsync(connection, "Users", "Username"));
+            Assert.False(await ColumnExistsAsync(connection, "users", "ObsoleteColumn"));
+            Assert.True(await ColumnExistsAsync(connection, "users", "Id"));
+            Assert.True(await ColumnExistsAsync(connection, "users", "Username"));
         }
     }
 
@@ -1525,7 +1525,7 @@ public class DatabaseMigratorTests
             await migrator.MigrateAsync();
 
             // Assert - Should complete successfully
-            Assert.True(await TableExistsAsync(connection, "Users"));
+            Assert.True(await TableExistsAsync(connection, "users"));
 
             mockLogger.Verify(
                 x => x.Log(
@@ -1553,7 +1553,7 @@ public class DatabaseMigratorTests
             {
                 cmd.CommandText = @"
                     SELECT sql FROM sqlite_master
-                    WHERE type='table' AND name='Users'
+                    WHERE type='table' AND name='users'
                 ";
                 var sql = (string)(await cmd.ExecuteScalarAsync())!;
 
@@ -1568,7 +1568,7 @@ public class DatabaseMigratorTests
             }
 
             // Verify index from AppDbContext exists
-            Assert.True(await IndexExistsAsync(connection, "IX_Users_Username"));
+            Assert.True(await IndexExistsAsync(connection, "IX_users_Username"));
         }
     }
 
@@ -1654,7 +1654,7 @@ public class DatabaseMigratorTests
             // Assert - Verify the table structure matches what Create TableAsync + GenerateCreateTableSql would produce
             using (var cmd = connection.CreateCommand())
             {
-                cmd.CommandText = "SELECT sql FROM sqlite_master WHERE type='table' AND name='Users'";
+                cmd.CommandText = "SELECT sql FROM sqlite_master WHERE type='table' AND name='users'";
                 var createSql = (string)(await cmd.ExecuteScalarAsync())!;
 
                 // Verify SQL contains all expected elements that GenerateCreateTableSql produces
@@ -1668,7 +1668,7 @@ public class DatabaseMigratorTests
             // Verify column structure (what CreateTableAsync creates)
             using (var cmd = connection.CreateCommand())
             {
-                cmd.CommandText = "PRAGMA table_info(Users)";
+                cmd.CommandText = "PRAGMA table_info(users)";
                 using var reader = await cmd.ExecuteReaderAsync();
 
                 var columnInfo = new Dictionary<string, (string type, bool notNull, bool isPk)>();
@@ -1700,7 +1700,7 @@ public class DatabaseMigratorTests
             }
 
             // Verify CreateIndexesForTableAsync was called (part of CreateTableAsync)
-            Assert.True(await IndexExistsAsync(connection, "IX_Users_Username"));
+            Assert.True(await IndexExistsAsync(connection, "IX_users_Username"));
 
             // Note: CreateTableAsync itself has 0% coverage because it's never called in our single-entity scenario.
             // This is by design - it's only used when adding tables to an existing multi-entity database.
@@ -1874,11 +1874,11 @@ public class DatabaseMigratorTests
             using (var cmd = connection.CreateCommand())
             {
                 cmd.CommandText = @"
-                    CREATE TABLE Users (
+                    CREATE TABLE users (
                         Id TEXT NOT NULL PRIMARY KEY,
                         Username TEXT NOT NULL UNIQUE
                     );
-                    INSERT INTO Users (Id, Username) VALUES ('test-guid', 'testuser');
+                    INSERT INTO users (Id, Username) VALUES ('test-guid', 'testuser');
                 ";
                 await cmd.ExecuteNonQueryAsync();
             }
@@ -2021,7 +2021,7 @@ public class DatabaseMigratorTests
             using (var cmd = connection.CreateCommand())
             {
                 cmd.CommandText = @"
-                    CREATE TABLE Users (
+                    CREATE TABLE users (
                         Id TEXT NOT NULL PRIMARY KEY,
                         Username TEXT NOT NULL UNIQUE,
                         PasswordHash TEXT NOT NULL,
@@ -2036,9 +2036,9 @@ public class DatabaseMigratorTests
             await migrator.MigrateAsync();
 
             // Assert - Index should be created or already exist
-            var hasIndex = await IndexExistsAsync(connection, "IX_Users_Username");
+            var hasIndex = await IndexExistsAsync(connection, "IX_users_Username");
             // SQLite may auto-create for UNIQUE constraint, so just verify table is correct
-            Assert.True(await TableExistsAsync(connection, "Users"));
+            Assert.True(await TableExistsAsync(connection, "users"));
         }
     }
 
@@ -2055,7 +2055,7 @@ public class DatabaseMigratorTests
             using (var cmd = connection.CreateCommand())
             {
                 cmd.CommandText = @"
-                    CREATE TABLE Users (
+                    CREATE TABLE users (
                         Id TEXT NOT NULL PRIMARY KEY
                     );
                 ";
@@ -2074,10 +2074,10 @@ public class DatabaseMigratorTests
             await migrator.MigrateAsync();
 
             // Assert - All columns should be added
-            Assert.True(await ColumnExistsAsync(connection, "Users", "Username"));
-            Assert.True(await ColumnExistsAsync(connection, "Users", "PasswordHash"));
-            Assert.True(await ColumnExistsAsync(connection, "Users", "CreatedAt"));
-            Assert.True(await ColumnExistsAsync(connection, "Users", "PasswordChangedAt"));
+            Assert.True(await ColumnExistsAsync(connection, "users", "Username"));
+            Assert.True(await ColumnExistsAsync(connection, "users", "PasswordHash"));
+            Assert.True(await ColumnExistsAsync(connection, "users", "CreatedAt"));
+            Assert.True(await ColumnExistsAsync(connection, "users", "PasswordChangedAt"));
 
             // Verify all were logged
             mockLogger.Verify(
@@ -2104,7 +2104,7 @@ public class DatabaseMigratorTests
             using (var cmd = connection.CreateCommand())
             {
                 cmd.CommandText = @"
-                    CREATE TABLE Users (
+                    CREATE TABLE users (
                         Id TEXT NOT NULL PRIMARY KEY,
                         Username TEXT NOT NULL UNIQUE,
                         PasswordHash TEXT NOT NULL,
@@ -2127,21 +2127,21 @@ public class DatabaseMigratorTests
             var migrator = new DatabaseMigrator(context, mockLogger.Object, autoRemoveObsoleteColumns: true);
 
             // Verify obsolete columns exist
-            Assert.True(await ColumnExistsAsync(connection, "Users", "ObsoleteCol1"));
-            Assert.True(await ColumnExistsAsync(connection, "Users", "ObsoleteCol2"));
-            Assert.True(await ColumnExistsAsync(connection, "Users", "ObsoleteCol3"));
+            Assert.True(await ColumnExistsAsync(connection, "users", "ObsoleteCol1"));
+            Assert.True(await ColumnExistsAsync(connection, "users", "ObsoleteCol2"));
+            Assert.True(await ColumnExistsAsync(connection, "users", "ObsoleteCol3"));
 
             // Act
             await migrator.MigrateAsync();
 
             // Assert - All obsolete columns removed
-            Assert.False(await ColumnExistsAsync(connection, "Users", "ObsoleteCol1"));
-            Assert.False(await ColumnExistsAsync(connection, "Users", "ObsoleteCol2"));
-            Assert.False(await ColumnExistsAsync(connection, "Users", "ObsoleteCol3"));
+            Assert.False(await ColumnExistsAsync(connection, "users", "ObsoleteCol1"));
+            Assert.False(await ColumnExistsAsync(connection, "users", "ObsoleteCol2"));
+            Assert.False(await ColumnExistsAsync(connection, "users", "ObsoleteCol3"));
 
             // Valid columns still exist
-            Assert.True(await ColumnExistsAsync(connection, "Users", "Id"));
-            Assert.True(await ColumnExistsAsync(connection, "Users", "Username"));
+            Assert.True(await ColumnExistsAsync(connection, "users", "Id"));
+            Assert.True(await ColumnExistsAsync(connection, "users", "Username"));
         }
     }
 
@@ -2158,7 +2158,7 @@ public class DatabaseMigratorTests
             using (var cmd = connection.CreateCommand())
             {
                 cmd.CommandText = @"
-                    CREATE TABLE Users (
+                    CREATE TABLE users (
                         Id TEXT NOT NULL PRIMARY KEY,
                         Username TEXT NOT NULL UNIQUE,
                         PasswordHash TEXT NOT NULL,
@@ -2202,8 +2202,8 @@ public class DatabaseMigratorTests
                 Times.Once);
 
             // Columns should still exist (not removed)
-            Assert.True(await ColumnExistsAsync(connection, "Users", "Obsolete1"));
-            Assert.True(await ColumnExistsAsync(connection, "Users", "Obsolete2"));
+            Assert.True(await ColumnExistsAsync(connection, "users", "Obsolete1"));
+            Assert.True(await ColumnExistsAsync(connection, "users", "Obsolete2"));
         }
     }
 
@@ -2247,7 +2247,7 @@ public class DatabaseMigratorTests
                 Times.AtLeastOnce);
 
             // Verify database was created successfully
-            Assert.True(await TableExistsAsync(connection, "Users"), "Users table should be created");
+            Assert.True(await TableExistsAsync(connection, "users"), "Users table should be created");
 
             // Connection should still be open (was open when we started)
             Assert.Equal(System.Data.ConnectionState.Open, connection.State);
@@ -2285,7 +2285,7 @@ public class DatabaseMigratorTests
             using (var cmd = connection.CreateCommand())
             {
                 cmd.CommandText = @"
-                    CREATE TABLE Users (
+                    CREATE TABLE users (
                         Id TEXT NOT NULL PRIMARY KEY,
                         Username TEXT NOT NULL UNIQUE
                     );
@@ -2296,7 +2296,7 @@ public class DatabaseMigratorTests
             await migrator.MigrateAsync();
 
             // Verify columns were added (tests AddMissingColumnsAsync path fully)
-            Assert.True(await ColumnExistsAsync(connection, "Users", "PasswordHash"));
+            Assert.True(await ColumnExistsAsync(connection, "users", "PasswordHash"));
 
             mockLogger.Verify(
                 x => x.Log(

@@ -65,12 +65,12 @@ namespace OpenUpMan.Data
                 b.Property(rp => rp.RoleId).HasColumnName("RoleId");
                 b.Property(rp => rp.PermissionId).HasColumnName("PermissionId");
 
-                b.HasOne(rp => rp.Role)
+                b.HasOne<Role>()
                     .WithMany()
                     .HasForeignKey(rp => rp.RoleId)
                     .OnDelete(DeleteBehavior.Cascade);
 
-                b.HasOne(rp => rp.Permission)
+                b.HasOne<Permission>()
                     .WithMany()
                     .HasForeignKey(rp => rp.PermissionId)
                     .OnDelete(DeleteBehavior.Cascade);
@@ -104,7 +104,7 @@ namespace OpenUpMan.Data
 
                 b.HasIndex(p => p.Identifier).IsUnique();
 
-                b.HasOne(p => p.Owner)
+                b.HasOne<User>()
                     .WithMany()
                     .HasForeignKey(p => p.OwnerId)
                     .OnDelete(DeleteBehavior.Restrict);
@@ -119,17 +119,17 @@ namespace OpenUpMan.Data
                 b.Property(pu => pu.UserId).HasColumnName("UserId");
                 b.Property(pu => pu.RoleId).HasColumnName("RoleId").IsRequired();
 
-                b.HasOne(pu => pu.Project)
+                b.HasOne<Project>()
                     .WithMany()
                     .HasForeignKey(pu => pu.ProjectId)
                     .OnDelete(DeleteBehavior.Cascade);
 
-                b.HasOne(pu => pu.User)
+                b.HasOne<User>()
                     .WithMany()
                     .HasForeignKey(pu => pu.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
 
-                b.HasOne(pu => pu.Role)
+                b.HasOne<Role>()
                     .WithMany()
                     .HasForeignKey(pu => pu.RoleId)
                     .OnDelete(DeleteBehavior.Restrict);
@@ -155,7 +155,7 @@ namespace OpenUpMan.Data
                 b.Property(pp => pp.Name).HasColumnName("Name").IsRequired();
                 b.Property(pp => pp.Order).HasColumnName("Order").IsRequired();
 
-                b.HasOne(pp => pp.Project)
+                b.HasOne<Project>()
                     .WithMany()
                     .HasForeignKey(pp => pp.ProjectId)
                     .OnDelete(DeleteBehavior.Cascade);
@@ -187,17 +187,17 @@ namespace OpenUpMan.Data
                 b.Property(pi => pi.CreatedBy).HasColumnName("CreatedBy").IsRequired();
                 b.Property(pi => pi.CreatedAt).HasColumnName("CreatedAt").IsRequired();
 
-                b.HasOne(pi => pi.ProjectPhase)
+                b.HasOne<ProjectPhase>()
                     .WithMany()
                     .HasForeignKey(pi => pi.ProjectPhaseId)
                     .OnDelete(DeleteBehavior.Cascade);
 
-                b.HasOne(pi => pi.ParentIteration)
+                b.HasOne<PhaseItem>()
                     .WithMany()
                     .HasForeignKey(pi => pi.ParentIterationId)
                     .OnDelete(DeleteBehavior.Restrict);
 
-                b.HasOne(pi => pi.Creator)
+                b.HasOne<User>()
                     .WithMany()
                     .HasForeignKey(pi => pi.CreatedBy)
                     .OnDelete(DeleteBehavior.Restrict);
@@ -212,12 +212,12 @@ namespace OpenUpMan.Data
                 b.Property(piu => piu.UserId).HasColumnName("UserId");
                 b.Property(piu => piu.Role).HasColumnName("Role").IsRequired();
 
-                b.HasOne(piu => piu.PhaseItem)
+                b.HasOne<PhaseItem>()
                     .WithMany()
                     .HasForeignKey(piu => piu.PhaseItemId)
                     .OnDelete(DeleteBehavior.Cascade);
 
-                b.HasOne(piu => piu.User)
+                b.HasOne<User>()
                     .WithMany()
                     .HasForeignKey(piu => piu.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
@@ -232,11 +232,6 @@ namespace OpenUpMan.Data
                 b.Property(d => d.PhaseItemId).HasColumnName("PhaseItemId").IsRequired();
                 b.Property(d => d.Title).HasColumnName("Title").IsRequired();
                 b.Property(d => d.Description).HasColumnName("Description");
-
-                b.HasOne(d => d.PhaseItem)
-                    .WithMany()
-                    .HasForeignKey(d => d.PhaseItemId)
-                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<DocumentVersion>(b =>
@@ -255,12 +250,12 @@ namespace OpenUpMan.Data
 
                 b.HasIndex(dv => new { dv.DocumentId, dv.VersionNumber }).IsUnique();
 
-                b.HasOne(dv => dv.Document)
+                b.HasOne<Document>()
                     .WithMany()
                     .HasForeignKey(dv => dv.DocumentId)
                     .OnDelete(DeleteBehavior.Cascade);
 
-                b.HasOne(dv => dv.Creator)
+                b.HasOne<User>()
                     .WithMany()
                     .HasForeignKey(dv => dv.CreatedBy)
                     .OnDelete(DeleteBehavior.Restrict);
@@ -286,17 +281,17 @@ namespace OpenUpMan.Data
                 b.Property(pa => pa.DocumentId).HasColumnName("DocumentId");
                 b.Property(pa => pa.Registrado).HasColumnName("Registrado").IsRequired();
 
-                b.HasOne(pa => pa.Phase)
+                b.HasOne<ProjectPhase>()
                     .WithMany()
                     .HasForeignKey(pa => pa.PhaseId)
                     .OnDelete(DeleteBehavior.Cascade);
 
-                b.HasOne(pa => pa.Artefact)
+                b.HasOne<Artefact>()
                     .WithMany()
                     .HasForeignKey(pa => pa.ArtefactId)
                     .OnDelete(DeleteBehavior.Cascade);
 
-                b.HasOne(pa => pa.Document)
+                b.HasOne<Document>()
                     .WithMany()
                     .HasForeignKey(pa => pa.DocumentId)
                     .OnDelete(DeleteBehavior.SetNull);

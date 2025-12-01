@@ -15,7 +15,6 @@ namespace OpenUpMan.Data
         public async Task<Document?> GetByIdAsync(Guid id, CancellationToken ct = default)
         {
             return await _ctx.Documents
-                .Include(d => d.PhaseItem)
                 .FirstOrDefaultAsync(d => d.Id == id, ct);
         }
 

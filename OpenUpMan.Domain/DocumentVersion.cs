@@ -4,9 +4,7 @@ namespace OpenUpMan.Domain
     {
         public Guid Id { get; private set; }
         public Guid DocumentId { get; private set; }
-        public Document? Document { get; private set; }
         public Guid CreatedBy { get; private set; }
-        public User? Creator { get; private set; }
         public int VersionNumber { get; private set; }
         public DateTime CreatedAt { get; private set; }
         public string? Observations { get; private set; }

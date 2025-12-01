@@ -14,19 +14,25 @@ namespace OpenUpMan.Data.Repositories
 
         public async Task<IEnumerable<Permission>> GetPermissionsByRoleIdAsync(Guid roleId)
         {
-            return await _context.RolePermissions
+            var rolePermissions = await _context.RolePermissions
                 .Where(rp => rp.RoleId == roleId)
-                .Include(rp => rp.Permission)
-                .Select(rp => rp.Permission!)
+                .ToListAsync();
+            
+            var permissionIds = rolePermissions.Select(rp => rp.PermissionId);
+            return await _context.Permissions
+                .Where(p => permissionIds.Contains(p.Id))
                 .ToListAsync();
         }
 
         public async Task<IEnumerable<Role>> GetRolesByPermissionIdAsync(Guid permissionId)
         {
-            return await _context.RolePermissions
+            var rolePermissions = await _context.RolePermissions
                 .Where(rp => rp.PermissionId == permissionId)
-                .Include(rp => rp.Role)
-                .Select(rp => rp.Role!)
+                .ToListAsync();
+            
+            var roleIds = rolePermissions.Select(rp => rp.RoleId);
+            return await _context.Roles
+                .Where(r => roleIds.Contains(r.Id))
                 .ToListAsync();
         }
 

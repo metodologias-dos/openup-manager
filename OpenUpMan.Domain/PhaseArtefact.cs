@@ -3,11 +3,8 @@ namespace OpenUpMan.Domain
     public class PhaseArtefact
     {
         public Guid PhaseId { get; private set; }
-        public ProjectPhase? Phase { get; private set; }
         public Guid ArtefactId { get; private set; }
-        public Artefact? Artefact { get; private set; }
         public Guid? DocumentId { get; private set; }
-        public Document? Document { get; private set; }
         public bool Registrado { get; private set; }  // 0 = no, 1 = sí
 
         // Parameterless constructor for EF

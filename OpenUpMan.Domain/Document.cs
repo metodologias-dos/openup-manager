@@ -4,7 +4,6 @@ namespace OpenUpMan.Domain
     {
         public Guid Id { get; private set; }
         public Guid PhaseItemId { get; private set; }
-        public PhaseItem? PhaseItem { get; private set; }
         public string Title { get; private set; } = null!;
         public string? Description { get; private set; }
 

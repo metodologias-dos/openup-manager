@@ -440,6 +440,7 @@ namespace OpenUpMan.Tests.Services
             mockRepo.Setup(r => r.SaveChangesAsync(default)).Returns(Task.CompletedTask).Verifiable();
 
             var mockProjectUserRepo = new Mock<IProjectUserRepository>(MockBehavior.Strict);
+            mockProjectUserRepo.Setup(r => r.GetByProjectIdAsync(projectId, default)).ReturnsAsync(new List<ProjectUser>());
             mockProjectUserRepo.Setup(r => r.RemoveAsync(It.IsAny<ProjectUser>(), default)).Returns(Task.CompletedTask).Verifiable();
 
             var mockProjectPhaseRepo = new Mock<IProjectPhaseRepository>(MockBehavior.Strict);
