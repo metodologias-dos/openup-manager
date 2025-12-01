@@ -22,26 +22,27 @@ namespace OpenUpMan.Tests.Services
             var documentId = Guid.NewGuid();
             var phaseItemId = Guid.NewGuid();
             var createdBy = Guid.NewGuid();
-            var document = new Document(phaseItemId, "Test Doc", createdBy);
+            var document = new Document(phaseItemId, "Test Doc");
+            var binario = new byte[] { 1, 2, 3, 4, 5 };
 
             var mockRepo = new Mock<IDocumentVersionRepository>(MockBehavior.Strict);
+            mockRepo.Setup(r => r.GetLatestVersionAsync(documentId, default)).ReturnsAsync((DocumentVersion?)null);
             mockRepo.Setup(r => r.AddAsync(It.IsAny<DocumentVersion>(), default)).Returns(Task.CompletedTask);
             mockRepo.Setup(r => r.SaveChangesAsync(default)).Returns(Task.CompletedTask);
 
             var mockDocRepo = new Mock<IDocumentRepository>(MockBehavior.Strict);
             mockDocRepo.Setup(r => r.GetByIdAsync(documentId, default)).ReturnsAsync(document);
-            mockDocRepo.Setup(r => r.UpdateAsync(It.IsAny<Document>(), default)).Returns(Task.CompletedTask);
 
             var service = new DocumentVersionService(mockRepo.Object, mockDocRepo.Object, CreateMockLogger());
 
-            var result = await service.CreateVersionAsync(documentId, createdBy, "/path/to/file.pdf", "Primera versión");
+            var result = await service.CreateVersionAsync(documentId, createdBy, ".pdf", binario, "Primera versión");
 
             Assert.True(result.Success);
             Assert.Equal(ServiceResultType.Success, result.ResultType);
             Assert.Contains("exitosa", result.Message, StringComparison.OrdinalIgnoreCase);
             Assert.NotNull(result.DocumentVersion);
             Assert.Equal(1, result.DocumentVersion.VersionNumber);
-            Assert.Equal("/path/to/file.pdf", result.DocumentVersion.FilePath);
+            Assert.Equal(".pdf", result.DocumentVersion.Extension);
         }
 
         [Fact]
@@ -49,6 +50,7 @@ namespace OpenUpMan.Tests.Services
         {
             var documentId = Guid.NewGuid();
             var createdBy = Guid.NewGuid();
+            var binario = new byte[] { 1, 2, 3 };
 
             var mockRepo = new Mock<IDocumentVersionRepository>(MockBehavior.Strict);
             
@@ -57,7 +59,7 @@ namespace OpenUpMan.Tests.Services
 
             var service = new DocumentVersionService(mockRepo.Object, mockDocRepo.Object, CreateMockLogger());
 
-            var result = await service.CreateVersionAsync(documentId, createdBy, "/path/to/file.pdf");
+            var result = await service.CreateVersionAsync(documentId, createdBy, ".pdf", binario);
 
             Assert.False(result.Success);
             Assert.Equal(ServiceResultType.Error, result.ResultType);
@@ -70,22 +72,23 @@ namespace OpenUpMan.Tests.Services
             var documentId = Guid.NewGuid();
             var phaseItemId = Guid.NewGuid();
             var createdBy = Guid.NewGuid();
-            var document = new Document(phaseItemId, "Test Doc", createdBy);
+            var document = new Document(phaseItemId, "Test Doc");
+            var binario = new byte[] { 1, 2, 3 };
             
-            // Simular que ya tiene una versión
-            document.IncrementVersion();
+            // Simular que ya existe una versión
+            var existingVersion = new DocumentVersion(documentId, 1, createdBy, ".pdf", new byte[] { 1, 2 });
 
             var mockRepo = new Mock<IDocumentVersionRepository>(MockBehavior.Strict);
+            mockRepo.Setup(r => r.GetLatestVersionAsync(documentId, default)).ReturnsAsync(existingVersion);
             mockRepo.Setup(r => r.AddAsync(It.IsAny<DocumentVersion>(), default)).Returns(Task.CompletedTask);
             mockRepo.Setup(r => r.SaveChangesAsync(default)).Returns(Task.CompletedTask);
 
             var mockDocRepo = new Mock<IDocumentRepository>(MockBehavior.Strict);
             mockDocRepo.Setup(r => r.GetByIdAsync(documentId, default)).ReturnsAsync(document);
-            mockDocRepo.Setup(r => r.UpdateAsync(It.IsAny<Document>(), default)).Returns(Task.CompletedTask);
 
             var service = new DocumentVersionService(mockRepo.Object, mockDocRepo.Object, CreateMockLogger());
 
-            var result = await service.CreateVersionAsync(documentId, createdBy, "/path/to/file2.pdf");
+            var result = await service.CreateVersionAsync(documentId, createdBy, ".pdf", binario);
 
             Assert.True(result.Success);
             Assert.NotNull(result.DocumentVersion);
@@ -101,7 +104,7 @@ namespace OpenUpMan.Tests.Services
         {
             var documentId = Guid.NewGuid();
             var createdBy = Guid.NewGuid();
-            var latestVersion = new DocumentVersion(documentId, 3, createdBy, "/path/v3.pdf");
+            var latestVersion = new DocumentVersion(documentId, 3, createdBy, ".pdf", new byte[] { 1, 2, 3 });
 
             var mockRepo = new Mock<IDocumentVersionRepository>(MockBehavior.Strict);
             mockRepo.Setup(r => r.GetLatestVersionAsync(documentId, default)).ReturnsAsync(latestVersion);
@@ -147,7 +150,7 @@ namespace OpenUpMan.Tests.Services
             var versionId = Guid.NewGuid();
             var documentId = Guid.NewGuid();
             var createdBy = Guid.NewGuid();
-            var version = new DocumentVersion(documentId, 1, createdBy, "/path/v1.pdf");
+            var version = new DocumentVersion(documentId, 1, createdBy, ".pdf", new byte[] { 1, 2, 3 });
 
             var mockRepo = new Mock<IDocumentVersionRepository>(MockBehavior.Strict);
             mockRepo.Setup(r => r.GetByIdAsync(versionId, default)).ReturnsAsync(version);
@@ -177,9 +180,9 @@ namespace OpenUpMan.Tests.Services
             var createdBy = Guid.NewGuid();
             var versions = new List<DocumentVersion>
             {
-                new DocumentVersion(documentId, 1, createdBy, "/path/v1.pdf"),
-                new DocumentVersion(documentId, 2, createdBy, "/path/v2.pdf"),
-                new DocumentVersion(documentId, 3, createdBy, "/path/v3.pdf")
+                new DocumentVersion(documentId, 1, createdBy, ".pdf", new byte[] { 1, 2, 3 }),
+                new DocumentVersion(documentId, 2, createdBy, ".pdf", new byte[] { 4, 5, 6 }),
+                new DocumentVersion(documentId, 3, createdBy, ".pdf", new byte[] { 7, 8, 9 })
             };
 
             var mockRepo = new Mock<IDocumentVersionRepository>(MockBehavior.Strict);

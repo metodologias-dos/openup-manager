@@ -104,20 +104,19 @@ entity "documents" as documents {
     FOREIGN_KEY(PhaseItemId) : TEXT   ' FK -> phase_items.Id (iteración o microincremento)
     Title                    : TEXT
     Description              : TEXT
-    FOREIGN_KEY(CreatedBy)   : TEXT
-    CreatedAt                : TEXT
-    LastVersionNumber        : INTEGER
 }
 
 entity "document_versions" as document_versions {
     PRIMARY_KEY(Id) : TEXT
     --
     FOREIGN_KEY(DocumentId)  : TEXT
+    FOREIGN_KEY(CreatedBy)   : TEXT
+    
     VersionNumber            : INTEGER
     CreatedAt                : TEXT
-    FOREIGN_KEY(CreatedBy)   : TEXT
-    FilePath                 : TEXT
     Observations             : TEXT
+    extension                : TEXT
+    binario                  : BLOB
 }
 
 entity "artefacts" as artefacts{
@@ -164,9 +163,6 @@ users ||--o{ phase_items : creador
 
 ' phase_items - documents
 phase_items ||--o{ documents : documentos
-
-' users - documents (created_by)
-users ||--o{ documents : creador
 
 ' documents - document_versions
 documents ||--o{ document_versions : versiones

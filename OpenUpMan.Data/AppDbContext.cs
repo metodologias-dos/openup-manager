@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿﻿using Microsoft.EntityFrameworkCore;
 using OpenUpMan.Domain;
 
 namespace OpenUpMan.Data
@@ -232,19 +232,11 @@ namespace OpenUpMan.Data
                 b.Property(d => d.PhaseItemId).HasColumnName("PhaseItemId").IsRequired();
                 b.Property(d => d.Title).HasColumnName("Title").IsRequired();
                 b.Property(d => d.Description).HasColumnName("Description");
-                b.Property(d => d.CreatedBy).HasColumnName("CreatedBy").IsRequired();
-                b.Property(d => d.CreatedAt).HasColumnName("CreatedAt").IsRequired();
-                b.Property(d => d.LastVersionNumber).HasColumnName("LastVersionNumber").IsRequired();
 
                 b.HasOne(d => d.PhaseItem)
                     .WithMany()
                     .HasForeignKey(d => d.PhaseItemId)
                     .OnDelete(DeleteBehavior.Cascade);
-
-                b.HasOne(d => d.Creator)
-                    .WithMany()
-                    .HasForeignKey(d => d.CreatedBy)
-                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             modelBuilder.Entity<DocumentVersion>(b =>
@@ -254,11 +246,12 @@ namespace OpenUpMan.Data
 
                 b.Property(dv => dv.Id).HasColumnName("Id");
                 b.Property(dv => dv.DocumentId).HasColumnName("DocumentId").IsRequired();
+                b.Property(dv => dv.CreatedBy).HasColumnName("CreatedBy").IsRequired();
                 b.Property(dv => dv.VersionNumber).HasColumnName("VersionNumber").IsRequired();
                 b.Property(dv => dv.CreatedAt).HasColumnName("CreatedAt").IsRequired();
-                b.Property(dv => dv.CreatedBy).HasColumnName("CreatedBy").IsRequired();
-                b.Property(dv => dv.FilePath).HasColumnName("FilePath").IsRequired();
                 b.Property(dv => dv.Observations).HasColumnName("Observations");
+                b.Property(dv => dv.Extension).HasColumnName("extension").IsRequired();
+                b.Property(dv => dv.Binario).HasColumnName("binario").IsRequired();
 
                 b.HasIndex(dv => new { dv.DocumentId, dv.VersionNumber }).IsUnique();
 

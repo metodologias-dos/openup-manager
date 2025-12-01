@@ -20,7 +20,7 @@ namespace OpenUpMan.Services
             _logger = logger;
         }
 
-        public async Task<DocumentVersionServiceResult> CreateVersionAsync(Guid documentId, Guid createdBy, string filePath, string? observations = null, CancellationToken ct = default)
+        public async Task<DocumentVersionServiceResult> CreateVersionAsync(Guid documentId, Guid createdBy, string extension, byte[] binario, string? observations = null, CancellationToken ct = default)
         {
             try
             {
@@ -34,20 +34,20 @@ namespace OpenUpMan.Services
                     );
                 }
 
-                // Increment version number
-                document.IncrementVersion();
-                var versionNumber = document.LastVersionNumber;
+                // Get next version number
+                var latestVersion = await _repo.GetLatestVersionAsync(documentId, ct);
+                var versionNumber = latestVersion != null ? latestVersion.VersionNumber + 1 : 1;
 
                 var version = new DocumentVersion(
                     documentId,
                     versionNumber,
                     createdBy,
-                    filePath,
+                    extension,
+                    binario,
                     observations
                 );
 
                 await _repo.AddAsync(version, ct);
-                await _documentRepo.UpdateAsync(document, ct);
                 await _repo.SaveChangesAsync(ct);
 
                 _logger.LogInformation("Versión creada: {VersionId} - V{VersionNumber} para documento {DocumentId}", 

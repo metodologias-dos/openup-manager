@@ -5,12 +5,13 @@ namespace OpenUpMan.Domain
         public Guid Id { get; private set; }
         public Guid DocumentId { get; private set; }
         public Document? Document { get; private set; }
-        public int VersionNumber { get; private set; }
-        public DateTime CreatedAt { get; private set; }
         public Guid CreatedBy { get; private set; }
         public User? Creator { get; private set; }
-        public string FilePath { get; private set; } = null!;
+        public int VersionNumber { get; private set; }
+        public DateTime CreatedAt { get; private set; }
         public string? Observations { get; private set; }
+        public string Extension { get; private set; } = null!;
+        public byte[] Binario { get; private set; } = null!;
 
         // Parameterless constructor for EF
         protected DocumentVersion() { }
@@ -19,7 +20,8 @@ namespace OpenUpMan.Domain
             Guid documentId, 
             int versionNumber, 
             Guid createdBy, 
-            string filePath,
+            string extension,
+            byte[] binario,
             string? observations = null)
         {
             if (documentId == Guid.Empty)
@@ -32,9 +34,14 @@ namespace OpenUpMan.Domain
                 throw new ArgumentException("CreatedBy cannot be an empty GUID.", nameof(createdBy));
             }
 
-            if (string.IsNullOrWhiteSpace(filePath))
+            if (string.IsNullOrWhiteSpace(extension))
             {
-                throw new ArgumentException("FilePath cannot be null or empty.", nameof(filePath));
+                throw new ArgumentException("Extension cannot be null or empty.", nameof(extension));
+            }
+
+            if (binario == null || binario.Length == 0)
+            {
+                throw new ArgumentException("Binario cannot be null or empty.", nameof(binario));
             }
 
             if (versionNumber < 1)
@@ -47,7 +54,8 @@ namespace OpenUpMan.Domain
             VersionNumber = versionNumber;
             CreatedBy = createdBy;
             CreatedAt = DateTime.UtcNow;
-            FilePath = filePath;
+            Extension = extension;
+            Binario = binario;
             Observations = observations;
         }
 

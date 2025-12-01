@@ -16,25 +16,13 @@ namespace OpenUpMan.Data
         {
             return await _ctx.Documents
                 .Include(d => d.PhaseItem)
-                .Include(d => d.Creator)
                 .FirstOrDefaultAsync(d => d.Id == id, ct);
         }
 
         public async Task<IEnumerable<Document>> GetByPhaseItemIdAsync(Guid phaseItemId, CancellationToken ct = default)
         {
             return await _ctx.Documents
-                .Include(d => d.Creator)
                 .Where(d => d.PhaseItemId == phaseItemId)
-                .OrderByDescending(d => d.CreatedAt)
-                .ToListAsync(ct);
-        }
-
-        public async Task<IEnumerable<Document>> GetByCreatorIdAsync(Guid creatorId, CancellationToken ct = default)
-        {
-            return await _ctx.Documents
-                .Include(d => d.PhaseItem)
-                .Where(d => d.CreatedBy == creatorId)
-                .OrderByDescending(d => d.CreatedAt)
                 .ToListAsync(ct);
         }
 
