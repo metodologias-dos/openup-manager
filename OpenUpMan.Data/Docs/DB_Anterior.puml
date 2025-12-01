@@ -1,0 +1,193 @@
+﻿@startuml OpenUpMan_DB
+
+left to right direction
+skinparam linetype ortho
+
+!define PRIMARY_KEY(x) <b><color:red>x</color></b>
+!define FOREIGN_KEY(x) <color:blue>x</color>
+
+' ==== ENTIDADES ====
+
+entity "users" as users {
+    PRIMARY_KEY(Id) : TEXT
+    --
+    Username            : TEXT
+    PasswordHash        : TEXT
+    CreatedAt           : TEXT
+    PasswordChangedAt   : TEXT
+}
+
+entity "rol" as rol{
+    PRIMARY_KEY(Id) : TEXT
+    --
+    Name        : TEXT 'AUTOR, REVISOR, PO, SM, DESARROLLADOR, TESTER, ADMIN
+    Description : TEXT
+}
+
+entity "permission" as permission{
+    PRIMARY_KEY(Id) : TEXT
+    --
+    Name        : TEXT  ' BorrarProyecto, RenombrarProyecto, AgregarUsuarios, EliminarUsuarios, ArtefactosMinimos, AvanazarIteracion, AvanzarMicroIteracion, AgregarDocumentosAMicroiteracion
+    Description : TEXT
+}
+
+entity "rol_permission" as rol_permission{
+    PRIMARY_KEY(RolId)
+    PRIMARY_KEY(PermissionId)
+    --
+    FOREIGN_KEY(RolId)        : TEXT
+    FOREIGN_KEY(PermissionId) : TEXT
+}
+
+
+
+entity "projects" as projects {
+    PRIMARY_KEY(Id) : TEXT
+    --
+    Identifier          : TEXT
+    Name                : TEXT
+    Description         : TEXT
+    StartDate           : TEXT
+    FOREIGN_KEY(OwnerId) : TEXT
+    State               : TEXT       ' CREATED, ACTIVE, ARCHIVED, CLOSED
+    CreatedAt           : TEXT
+    UpdatedAt           : TEXT
+}
+
+entity "project_users" as project_users {
+    PRIMARY_KEY(ProjectId)
+    PRIMARY_KEY(UserId)
+    --
+    FOREIGN_KEY(ProjectId) : TEXT
+    FOREIGN_KEY(UserId)    : TEXT
+    FOREIGN_KEY(RoleId)  : TEXT
+}
+
+entity "project_phases" as project_phases {
+    PRIMARY_KEY(Id) : TEXT
+    --
+    FOREIGN_KEY(ProjectId) : TEXT
+    Code                   : TEXT       ' INCEPTION, ELABORATION, CONSTRUCTION, TRANSITION
+    Name                   : TEXT
+    Order                  : INTEGER
+    State                  : TEXT       ' NOT_STARTED, IN_PROGRESS, COMPLETED
+}
+
+entity "phase_items" as phase_items {
+    PRIMARY_KEY(Id) : TEXT
+    --
+    FOREIGN_KEY(ProjectPhaseId)      : TEXT
+    Type                             : TEXT    ' ITERATION, MICROINCREMENT
+    Number                           : INTEGER ' num. iteración o num. microincremento
+    FOREIGN_KEY(ParentIterationId)   : TEXT
+    Name                             : TEXT
+    Description                      : TEXT
+    StartDate                        : TEXT
+    EndDate                          : TEXT
+    State                            : TEXT    ' PLANNED, ACTIVE, DONE, CANCELLED
+    FOREIGN_KEY(CreatedBy)           : TEXT
+    CreatedAt                        : TEXT
+}
+
+entity "phase_item_users" as phase_item_users {
+    PRIMARY_KEY(PhaseItemId)
+    PRIMARY_KEY(UserId)
+    --
+    FOREIGN_KEY(PhaseItemId) : TEXT
+    FOREIGN_KEY(UserId)      : TEXT
+    Role                     : TEXT   ' PARTICIPANT, RESPONSIBLE, etc.
+}
+
+entity "documents" as documents {
+    PRIMARY_KEY(Id) : TEXT
+    --
+    FOREIGN_KEY(PhaseItemId) : TEXT   ' FK -> phase_items.Id (iteración o microincremento)
+    Title                    : TEXT
+    Description              : TEXT
+    FOREIGN_KEY(CreatedBy)   : TEXT
+    CreatedAt                : TEXT
+    LastVersionNumber        : INTEGER
+}
+
+entity "document_versions" as document_versions {
+    PRIMARY_KEY(Id) : TEXT
+    --
+    FOREIGN_KEY(DocumentId)  : TEXT
+    VersionNumber            : INTEGER
+    CreatedAt                : TEXT
+    FOREIGN_KEY(CreatedBy)   : TEXT
+    FilePath                 : TEXT
+    Observations             : TEXT
+}
+
+entity "artefacts" as artefacts{
+    PRIMARY_KEY(Id) : TEXT
+    --
+    Name        : TEXT
+    Description : TEXT
+}
+
+entity "phase_artefacts" as phase_artefacts{
+    PRIMARY_KEY(PhaseId)
+    PRIMARY_KEY(ArtefactId)
+    --
+    FOREIGN_KEY(PhaseId)     : TEXT
+    FOREIGN_KEY(ArtefactId)  : TEXT
+    FOREIGN_KEY(DocumentId)  : TEXT
+    Registrado               : INTEGER ' 0 = no, 1 = sí
+}
+
+' ==== RELACIONES ====
+
+' users - projects (owner)
+users ||--o{ projects : owner
+
+' projects - project_users - users
+projects ||--o{ project_users : proyectos
+users    ||--o{ project_users : usuarios
+
+' projects - project_phases
+projects ||--o{ project_phases : fases
+
+' project_phases - phase_items
+project_phases ||--o{ phase_items : items
+
+' phase_items - self (parent_iteration)
+phase_items ||--o{ phase_items : parent_iteration
+
+' phase_items - phase_item_users - users
+phase_items ||--o{ phase_item_users : asignaciones
+users       ||--o{ phase_item_users : usuarios
+
+' users - phase_items (created_by)
+users ||--o{ phase_items : creador
+
+' phase_items - documents
+phase_items ||--o{ documents : documentos
+
+' users - documents (created_by)
+users ||--o{ documents : creador
+
+' documents - document_versions
+documents ||--o{ document_versions : versiones
+
+' users - document_versions (created_by)
+users ||--o{ document_versions : creador
+
+' artefacts - phase_artefacts
+artefacts ||--o{ phase_artefacts : artefact
+
+' project_phases - phase_artefacts
+project_phases ||--o{ phase_artefacts : phase
+
+' phase_artefacts - documents
+phase_artefacts ||--o| documents : documents
+
+' rol - rol_permission - permission
+rol        ||--o{ rol_permission : roles
+permission ||--o{ rol_permission : permisos
+
+' project_users - rol
+rol ||--o{ project_users : rol
+
+@enduml

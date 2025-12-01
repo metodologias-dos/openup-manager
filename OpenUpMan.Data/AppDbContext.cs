@@ -17,6 +17,8 @@ namespace OpenUpMan.Data
         public DbSet<PhaseItemUser> PhaseItemUsers { get; set; } = null!;
         public DbSet<Document> Documents { get; set; } = null!;
         public DbSet<DocumentVersion> DocumentVersions { get; set; } = null!;
+        public DbSet<Artefact> Artefacts { get; set; } = null!;
+        public DbSet<PhaseArtefact> PhaseArtefacts { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -24,19 +26,28 @@ namespace OpenUpMan.Data
 
             modelBuilder.Entity<User>(b =>
             {
+                b.ToTable("users");
                 b.HasKey(u => u.Id);
-                b.Property(u => u.Username).IsRequired();
-                b.Property(u => u.PasswordHash).IsRequired();
+                b.Property(u => u.Id).HasColumnName("Id");
+                b.Property(u => u.Username).HasColumnName("Username").IsRequired();
+                b.Property(u => u.PasswordHash).HasColumnName("PasswordHash").IsRequired();
+                b.Property(u => u.CreatedAt).HasColumnName("CreatedAt").IsRequired();
+                b.Property(u => u.PasswordChangedAt).HasColumnName("PasswordChangedAt");
                 b.HasIndex(u => u.Username).IsUnique();
             });
 
             modelBuilder.Entity<Project>(b =>
             {
+                b.ToTable("projects");
                 b.HasKey(p => p.Id);
-                b.Property(p => p.Identifier).IsRequired();
-                b.Property(p => p.Name).IsRequired();
-                b.Property(p => p.StartDate).IsRequired();
+                b.Property(p => p.Id).HasColumnName("Id");
+                b.Property(p => p.Identifier).HasColumnName("Identifier").IsRequired();
+                b.Property(p => p.Name).HasColumnName("Name").IsRequired();
+                b.Property(p => p.Description).HasColumnName("Description");
+                b.Property(p => p.StartDate).HasColumnName("StartDate").IsRequired();
+                b.Property(p => p.OwnerId).HasColumnName("OwnerId").IsRequired();
                 b.Property(p => p.State)
+                    .HasColumnName("State")
                     .HasConversion<string>()
                     .IsRequired();
                 
@@ -61,13 +72,18 @@ namespace OpenUpMan.Data
 
             modelBuilder.Entity<ProjectUser>(b =>
             {
+                b.ToTable("project_users");
                 b.HasKey(pu => new { pu.ProjectId, pu.UserId });
 
+                b.Property(pu => pu.ProjectId).HasColumnName("ProjectId");
+                b.Property(pu => pu.UserId).HasColumnName("UserId");
                 b.Property(pu => pu.Permissions)
+                    .HasColumnName("Permissions")
                     .HasConversion<string>()
                     .IsRequired();
 
                 b.Property(pu => pu.Role)
+                    .HasColumnName("Role")
                     .HasConversion<string>()
                     .IsRequired();
 
@@ -84,20 +100,23 @@ namespace OpenUpMan.Data
 
             modelBuilder.Entity<ProjectPhase>(b =>
             {
+                b.ToTable("project_phases");
                 b.HasKey(pp => pp.Id);
 
+                b.Property(pp => pp.Id).HasColumnName("Id");
+                b.Property(pp => pp.ProjectId).HasColumnName("ProjectId").IsRequired();
                 b.Property(pp => pp.Code)
+                    .HasColumnName("Code")
                     .HasConversion<string>()
                     .IsRequired();
 
                 b.Property(pp => pp.State)
+                    .HasColumnName("State")
                     .HasConversion<string>()
                     .IsRequired();
 
-                b.Property(pp => pp.Name).IsRequired();
-                b.Property(pp => pp.Order)
-                    .HasColumnName("DisplayOrder")
-                    .IsRequired();
+                b.Property(pp => pp.Name).HasColumnName("Name").IsRequired();
+                b.Property(pp => pp.Order).HasColumnName("Order").IsRequired();
 
                 b.HasOne(pp => pp.Project)
                     .WithMany()
@@ -107,19 +126,29 @@ namespace OpenUpMan.Data
 
             modelBuilder.Entity<PhaseItem>(b =>
             {
+                b.ToTable("phase_items");
                 b.HasKey(pi => pi.Id);
 
+                b.Property(pi => pi.Id).HasColumnName("Id");
+                b.Property(pi => pi.ProjectPhaseId).HasColumnName("ProjectPhaseId").IsRequired();
                 b.Property(pi => pi.Type)
-                    .HasColumnName("ItemType")
+                    .HasColumnName("Type")
                     .HasConversion<string>()
                     .IsRequired();
 
                 b.Property(pi => pi.State)
+                    .HasColumnName("State")
                     .HasConversion<string>()
                     .IsRequired();
 
-                b.Property(pi => pi.Name).IsRequired();
-                b.Property(pi => pi.Number).IsRequired();
+                b.Property(pi => pi.Name).HasColumnName("Name").IsRequired();
+                b.Property(pi => pi.Number).HasColumnName("Number").IsRequired();
+                b.Property(pi => pi.ParentIterationId).HasColumnName("ParentIterationId");
+                b.Property(pi => pi.Description).HasColumnName("Description");
+                b.Property(pi => pi.StartDate).HasColumnName("StartDate");
+                b.Property(pi => pi.EndDate).HasColumnName("EndDate");
+                b.Property(pi => pi.CreatedBy).HasColumnName("CreatedBy").IsRequired();
+                b.Property(pi => pi.CreatedAt).HasColumnName("CreatedAt").IsRequired();
 
                 b.HasOne(pi => pi.ProjectPhase)
                     .WithMany()
@@ -139,9 +168,12 @@ namespace OpenUpMan.Data
 
             modelBuilder.Entity<PhaseItemUser>(b =>
             {
+                b.ToTable("phase_item_users");
                 b.HasKey(piu => new { piu.PhaseItemId, piu.UserId });
 
-                b.Property(piu => piu.Role).IsRequired();
+                b.Property(piu => piu.PhaseItemId).HasColumnName("PhaseItemId");
+                b.Property(piu => piu.UserId).HasColumnName("UserId");
+                b.Property(piu => piu.Role).HasColumnName("Role").IsRequired();
 
                 b.HasOne(piu => piu.PhaseItem)
                     .WithMany()
@@ -156,10 +188,16 @@ namespace OpenUpMan.Data
 
             modelBuilder.Entity<Document>(b =>
             {
+                b.ToTable("documents");
                 b.HasKey(d => d.Id);
 
-                b.Property(d => d.Title).IsRequired();
-                b.Property(d => d.LastVersionNumber).IsRequired();
+                b.Property(d => d.Id).HasColumnName("Id");
+                b.Property(d => d.PhaseItemId).HasColumnName("PhaseItemId").IsRequired();
+                b.Property(d => d.Title).HasColumnName("Title").IsRequired();
+                b.Property(d => d.Description).HasColumnName("Description");
+                b.Property(d => d.CreatedBy).HasColumnName("CreatedBy").IsRequired();
+                b.Property(d => d.CreatedAt).HasColumnName("CreatedAt").IsRequired();
+                b.Property(d => d.LastVersionNumber).HasColumnName("LastVersionNumber").IsRequired();
 
                 b.HasOne(d => d.PhaseItem)
                     .WithMany()
@@ -174,10 +212,16 @@ namespace OpenUpMan.Data
 
             modelBuilder.Entity<DocumentVersion>(b =>
             {
+                b.ToTable("document_versions");
                 b.HasKey(dv => dv.Id);
 
-                b.Property(dv => dv.VersionNumber).IsRequired();
-                b.Property(dv => dv.FilePath).IsRequired();
+                b.Property(dv => dv.Id).HasColumnName("Id");
+                b.Property(dv => dv.DocumentId).HasColumnName("DocumentId").IsRequired();
+                b.Property(dv => dv.VersionNumber).HasColumnName("VersionNumber").IsRequired();
+                b.Property(dv => dv.CreatedAt).HasColumnName("CreatedAt").IsRequired();
+                b.Property(dv => dv.CreatedBy).HasColumnName("CreatedBy").IsRequired();
+                b.Property(dv => dv.FilePath).HasColumnName("FilePath").IsRequired();
+                b.Property(dv => dv.Observations).HasColumnName("Observations");
 
                 b.HasIndex(dv => new { dv.DocumentId, dv.VersionNumber }).IsUnique();
 
@@ -190,6 +234,42 @@ namespace OpenUpMan.Data
                     .WithMany()
                     .HasForeignKey(dv => dv.CreatedBy)
                     .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<Artefact>(b =>
+            {
+                b.ToTable("artefacts");
+                b.HasKey(a => a.Id);
+
+                b.Property(a => a.Id).HasColumnName("Id");
+                b.Property(a => a.Name).HasColumnName("Name").IsRequired();
+                b.Property(a => a.Description).HasColumnName("Description");
+            });
+
+            modelBuilder.Entity<PhaseArtefact>(b =>
+            {
+                b.ToTable("phase_artefacts");
+                b.HasKey(pa => new { pa.PhaseId, pa.ArtefactId });
+
+                b.Property(pa => pa.PhaseId).HasColumnName("PhaseId");
+                b.Property(pa => pa.ArtefactId).HasColumnName("ArtefactId");
+                b.Property(pa => pa.DocumentId).HasColumnName("DocumentId");
+                b.Property(pa => pa.Registrado).HasColumnName("Registrado").IsRequired();
+
+                b.HasOne(pa => pa.Phase)
+                    .WithMany()
+                    .HasForeignKey(pa => pa.PhaseId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                b.HasOne(pa => pa.Artefact)
+                    .WithMany()
+                    .HasForeignKey(pa => pa.ArtefactId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                b.HasOne(pa => pa.Document)
+                    .WithMany()
+                    .HasForeignKey(pa => pa.DocumentId)
+                    .OnDelete(DeleteBehavior.SetNull);
             });
         }
     }
