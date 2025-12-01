@@ -1,0 +1,249 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:OpenUpMan.UI.ViewModels"
+             x:Class="OpenUpMan.UI.Views.ProjectView"
+             x:DataType="vm:ProjectViewModel"
+             mc:Ignorable="d">
+
+  <Border Padding="16" Background="{DynamicResource SystemControlBackgroundAltHighBrush}">
+    <StackPanel Orientation="Vertical" Spacing="12">
+      <!-- Header: Project name + buttons -->
+      <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center" Margin="0,0,0,8">
+        <StackPanel Orientation="Horizontal" Spacing="8" Grid.Column="0">
+          <TextBox Width="300" 
+                   Watermark="Nombre Proyecto Actual" 
+                   Text="{Binding ProjectName}"
+                   Theme="{StaticResource FluentTextBoxTheme}"/>
+          <Button Content="Guardar" 
+                  Command="{Binding SaveCommand}"
+                  Theme="{StaticResource FluentAccentButtonTheme}"/>
+          <Button Content="Abrir" 
+                  Command="{Binding OpenCommand}"/>
+          <Button Content="Agregar usuario" 
+                  Command="{Binding AddUserCommand}"/>
+          <TextBlock VerticalAlignment="Center" 
+                     Margin="16,0,0,0"
+                     Text="{Binding ProjectPercentage, StringFormat='Porcentaje: {0}%'}"/>
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal" Spacing="8" Grid.Column="2" HorizontalAlignment="Right">
+          <Button Content="Volver" 
+                  Command="{Binding BackCommand}"
+                  Theme="{StaticResource FluentAccentButtonTheme}"/>
+        </StackPanel>
+      </Grid>
+
+      <!-- Stage buttons (notebook-like) -->
+      <StackPanel Orientation="Horizontal" Spacing="8">
+        <Button Content="Incepción" Theme="{StaticResource FluentButtonTheme}"/>
+        <Button Content="Elaboración" Theme="{StaticResource FluentButtonTheme}"/>
+        <Button Content="Construcción" Theme="{StaticResource FluentButtonTheme}"/>
+        <Button Content="Transición" Theme="{StaticResource FluentButtonTheme}"/>
+      </StackPanel>
+
+      <!-- Main content area -->
+      <Grid ColumnDefinitions="2*,1*" RowDefinitions="Auto" Height="600">
+        <!-- Left large panel -->
+        <Border BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" 
+                BorderThickness="1" 
+                Margin="4"
+                Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+                CornerRadius="4">
+          <StackPanel Margin="12">
+            <!-- Placeholder for phase details and artifacts -->
+            <TextBlock FontWeight="SemiBold" 
+                       FontSize="16" 
+                       Margin="0,0,0,12">Detalles de fase</TextBlock>
+            <WrapPanel>
+              <StackPanel Width="300" Spacing="4">
+                <TextBlock>Fecha de Inicio:</TextBlock>
+                <TextBlock>Fecha de Fin:</TextBlock>
+                <TextBlock>Objetivo general:</TextBlock>
+                <TextBlock>Alcance:</TextBlock>
+              </StackPanel>
+
+              <StackPanel Margin="16,0,0,0" Spacing="4">
+                <TextBlock>Porcentaje de fase: 50%</TextBlock>
+                <TextBlock Margin="0,8,0,4">Estado de la fase:</TextBlock>
+                <ComboBox Width="150">
+                  <ComboBoxItem Content="No iniciada"/>
+                  <ComboBoxItem Content="En progreso"/>
+                  <ComboBoxItem Content="Finalizada"/>
+                </ComboBox>
+
+                <TextBlock Margin="0,8,0,0">Acceso: Edición</TextBlock>
+              </StackPanel>
+
+              <StackPanel Margin="16,0,0,0" Width="250" Spacing="4">
+                <TextBlock>Observaciones de fase:</TextBlock>
+                <TextBox Height="60" 
+                         AcceptsReturn="True"
+                         TextWrapping="Wrap"/>
+                <Button Content="Manejar artefactos" Margin="0,8,0,0"/>
+              </StackPanel>
+
+            </WrapPanel>
+
+            <TextBlock FontWeight="SemiBold" 
+                       FontSize="16" 
+                       Margin="0,20,0,12">Iteraciones y microincrementos</TextBlock>
+            <!-- Table placeholder -->
+            <Border BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" 
+                    BorderThickness="1" 
+                    Padding="8" 
+                    Margin="0,0,0,0"
+                    Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+                    CornerRadius="4">
+              <StackPanel>
+                <Grid ColumnDefinitions="80,80,2*,90,90,80,2*" 
+                      Margin="0,0,0,8"
+                      Height="30">
+                  <TextBlock Text="Tipo" 
+                             FontWeight="Bold" 
+                             VerticalAlignment="Center"
+                             Margin="4,0"/>
+                  <TextBlock Grid.Column="1" 
+                             Text="Iteración" 
+                             FontWeight="Bold" 
+                             VerticalAlignment="Center"
+                             Margin="4,0"/>
+                  <TextBlock Grid.Column="2" 
+                             Text="Nombre" 
+                             FontWeight="Bold" 
+                             VerticalAlignment="Center"
+                             Margin="4,0"/>
+                  <TextBlock Grid.Column="3" 
+                             Text="Inicio" 
+                             FontWeight="Bold" 
+                             VerticalAlignment="Center"
+                             Margin="4,0"/>
+                  <TextBlock Grid.Column="4" 
+                             Text="Fin" 
+                             FontWeight="Bold" 
+                             VerticalAlignment="Center"
+                             Margin="4,0"/>
+                  <TextBlock Grid.Column="5" 
+                             Text="Estado" 
+                             FontWeight="Bold" 
+                             VerticalAlignment="Center"
+                             Margin="4,0"/>
+                  <TextBlock Grid.Column="6" 
+                             Text="Descripción" 
+                             FontWeight="Bold" 
+                             VerticalAlignment="Center"
+                             Margin="4,0"/>
+                </Grid>
+                <ListBox Height="200">
+                  <!-- visual-only sample rows -->
+                  <ListBoxItem>
+                    <Grid ColumnDefinitions="80,80,2*,90,90,80,2*">
+                      <TextBlock Text="Iteración" VerticalAlignment="Center" Margin="4,0"/>
+                      <TextBlock Grid.Column="1" Text="1" VerticalAlignment="Center" Margin="4,0"/>
+                      <TextBlock Grid.Column="2" Text="It1-Definiciones" VerticalAlignment="Center" Margin="4,0"/>
+                      <TextBlock Grid.Column="3" Text="01/01/2025" VerticalAlignment="Center" Margin="4,0"/>
+                      <TextBlock Grid.Column="4" Text="10/01/2025" VerticalAlignment="Center" Margin="4,0"/>
+                      <TextBlock Grid.Column="5" Text="Activo" VerticalAlignment="Center" Margin="4,0"/>
+                      <TextBlock Grid.Column="6" Text="Definición de puntos a tratar" VerticalAlignment="Center" Margin="4,0"/>
+                    </Grid>
+                  </ListBoxItem>
+                </ListBox>
+              </StackPanel>
+            </Border>
+          </StackPanel>
+        </Border>
+
+        <!-- Right panel divided in two -->
+        <Grid Grid.Column="1" ColumnDefinitions="*,*" RowDefinitions="Auto, *">
+          <StackPanel Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Left" Margin="8">
+            <StackPanel Spacing="4">
+              <TextBlock>Iteración: 1</TextBlock>
+              <TextBlock>Microincremento: 2</TextBlock>
+              <Button Content="Nuevo documento" 
+                      Margin="0,8,0,0"
+                      Theme="{StaticResource FluentAccentButtonTheme}"/>
+            </StackPanel>
+          </StackPanel>
+
+          <Border Grid.Row="1" 
+                  Grid.ColumnSpan="2" 
+                  BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" 
+                  BorderThickness="1" 
+                  Margin="4"
+                  Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+                  CornerRadius="4">
+            <StackPanel Margin="12">
+              <TextBlock FontWeight="SemiBold" 
+                         FontSize="16" 
+                         Margin="0,0,0,12">Documentos</TextBlock>
+              <Border BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" 
+                      BorderThickness="1" 
+                      Padding="8" 
+                      Margin="0,0,0,0"
+                      Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+                      CornerRadius="4">
+                <StackPanel>
+                  <Grid ColumnDefinitions="1.5*,80,90,1.5*,70,Auto" 
+                        Margin="0,0,0,8"
+                        Height="30">
+                    <TextBlock Text="Documento" 
+                               FontWeight="Bold" 
+                               VerticalAlignment="Center"
+                               Margin="4,0"/>
+                    <TextBlock Grid.Column="1" 
+                               Text="Autor" 
+                               FontWeight="Bold" 
+                               VerticalAlignment="Center"
+                               Margin="4,0"/>
+                    <TextBlock Grid.Column="2" 
+                               Text="Creación" 
+                               FontWeight="Bold" 
+                               VerticalAlignment="Center"
+                               Margin="4,0"/>
+                    <TextBlock Grid.Column="3" 
+                               Text="Notas" 
+                               FontWeight="Bold" 
+                               VerticalAlignment="Center"
+                               Margin="4,0"/>
+                    <TextBlock Grid.Column="4" 
+                               Text="Req." 
+                               FontWeight="Bold" 
+                               VerticalAlignment="Center"
+                               Margin="4,0"/>
+                    <TextBlock Grid.Column="5" 
+                               Text="Versión" 
+                               FontWeight="Bold" 
+                               VerticalAlignment="Center"
+                               Margin="4,0"/>
+                  </Grid>
+                  <ListBox Height="260">
+                    <ListBoxItem>
+                      <Grid ColumnDefinitions="1.5*,80,90,1.5*,70,Auto">
+                        <TextBlock Text="Vision" VerticalAlignment="Center" Margin="4,0"/>
+                        <TextBlock Grid.Column="1" Text="Mary" VerticalAlignment="Center" Margin="4,0"/>
+                        <TextBlock Grid.Column="2" Text="15/12/2025" VerticalAlignment="Center" Margin="4,0"/>
+                        <TextBlock Grid.Column="3" 
+                                   Text="Añadiendo comentarios" 
+                                   VerticalAlignment="Center" 
+                                   Margin="4,0"
+                                   TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Grid.Column="4" Text="X" VerticalAlignment="Center" Margin="4,0"/>
+                        <StackPanel Grid.Column="5" Orientation="Horizontal" VerticalAlignment="Center">
+                          <Button Content="3" Width="30" Margin="4,0"/>
+                          <Button Content="Historial" Margin="4,0"/>
+                        </StackPanel>
+                      </Grid>
+                    </ListBoxItem>
+                  </ListBox>
+                </StackPanel>
+              </Border>
+            </StackPanel>
+          </Border>
+        </Grid>
+
+      </Grid>
+    </StackPanel>
+  </Border>
+</UserControl>
+

@@ -23,6 +23,7 @@ public partial class ProjectsPopup : Window
         vm.CloseRequested += OnCloseRequested;
         vm.LogoutRequested += OnLogoutRequested;
         vm.NewProjectDialogRequested += OnNewProjectDialogRequested;
+        vm.OpenProjectRequested += OnOpenProjectRequested;
         
         // Handle window closing (X button) to trigger logout
         this.Closing += OnWindowClosing;
@@ -219,5 +220,72 @@ public partial class ProjectsPopup : Window
                 return;
             }
         });
+    }
+
+    private async void OnOpenProjectRequested(string? identifier)
+    {
+        if (string.IsNullOrEmpty(identifier)) return;
+
+        // Try to get project name from service (optional)
+        var projectService = Program.ServiceProvider.GetService(typeof(OpenUpMan.Services.IProjectService)) as OpenUpMan.Services.IProjectService;
+        string title = identifier;
+        if (projectService != null)
+        {
+            try
+            {
+                var result = await projectService.GetProjectByIdentifierAsync(identifier);
+                if (result.Success && result.Project != null)
+                    title = result.Project.Name ?? identifier;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to load project '{identifier}': {ex.Message}");
+            }
+        }
+
+        // Create ViewModel and View (visual only)
+        var projectVm = new OpenUpMan.UI.ViewModels.ProjectViewModel();
+        projectVm.ProjectName = title;
+
+        var view = new OpenUpMan.UI.Views.ProjectView
+        {
+            DataContext = projectVm
+        };
+
+        // Create a window to host the view
+        var wnd = new Window
+        {
+            Title = title,
+            Width = 1000,
+            Height = 700,
+            Content = view,
+            WindowStartupLocation = WindowStartupLocation.CenterScreen
+        };
+
+        // Subscribe to BackRequested event to close project window and show ProjectsPopup again
+        projectVm.BackRequested += () =>
+        {
+            wnd.Close();
+            this.Show();
+        };
+
+        // Handle window closing to show ProjectsPopup again
+        wnd.Closing += (s, e) =>
+        {
+            this.Show();
+        };
+
+        try
+        {
+            // Show as independent window
+            wnd.Show();
+            // Hide ProjectsPopup after project window is shown
+            this.Hide();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Failed to open project window: " + ex.Message);
+            this.Show();
+        }
     }
 }
