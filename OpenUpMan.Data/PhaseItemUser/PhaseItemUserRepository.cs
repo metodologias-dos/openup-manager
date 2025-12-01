@@ -15,15 +15,12 @@ namespace OpenUpMan.Data
         public async Task<PhaseItemUser?> GetByIdAsync(Guid phaseItemId, Guid userId, CancellationToken ct = default)
         {
             return await _ctx.PhaseItemUsers
-                .Include(piu => piu.PhaseItem)
-                .Include(piu => piu.User)
                 .FirstOrDefaultAsync(piu => piu.PhaseItemId == phaseItemId && piu.UserId == userId, ct);
         }
 
         public async Task<IEnumerable<PhaseItemUser>> GetByPhaseItemIdAsync(Guid phaseItemId, CancellationToken ct = default)
         {
             return await _ctx.PhaseItemUsers
-                .Include(piu => piu.User)
                 .Where(piu => piu.PhaseItemId == phaseItemId)
                 .ToListAsync(ct);
         }
@@ -31,7 +28,6 @@ namespace OpenUpMan.Data
         public async Task<IEnumerable<PhaseItemUser>> GetByUserIdAsync(Guid userId, CancellationToken ct = default)
         {
             return await _ctx.PhaseItemUsers
-                .Include(piu => piu.PhaseItem)
                 .Where(piu => piu.UserId == userId)
                 .ToListAsync(ct);
         }

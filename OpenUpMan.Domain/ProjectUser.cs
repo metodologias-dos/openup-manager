@@ -1,36 +1,15 @@
 namespace OpenUpMan.Domain
 {
-    public enum ProjectUserPermission
-    {
-        VIEWER,
-        EDITOR,
-        OWNER
-    }
-
-    public enum ProjectUserRole
-    {
-        AUTOR,
-        REVISOR,
-        PO,
-        SM,
-        DESARROLLADOR,
-        TESTER,
-        ADMIN
-    }
-
     public class ProjectUser
     {
         public Guid ProjectId { get; private set; }
-        public Project? Project { get; private set; }
         public Guid UserId { get; private set; }
-        public User? User { get; private set; }
-        public ProjectUserPermission Permissions { get; private set; }
-        public ProjectUserRole Role { get; private set; }
+        public Guid RoleId { get; private set; }
 
         // Parameterless constructor for EF
         protected ProjectUser() { }
 
-        public ProjectUser(Guid projectId, Guid userId, ProjectUserPermission permissions = ProjectUserPermission.VIEWER, ProjectUserRole role = ProjectUserRole.AUTOR)
+        public ProjectUser(Guid projectId, Guid userId, Guid roleId)
         {
             if (projectId == Guid.Empty)
             {
@@ -42,20 +21,24 @@ namespace OpenUpMan.Domain
                 throw new ArgumentException("UserId cannot be an empty GUID.", nameof(userId));
             }
 
+            if (roleId == Guid.Empty)
+            {
+                throw new ArgumentException("RoleId cannot be an empty GUID.", nameof(roleId));
+            }
+
             ProjectId = projectId;
             UserId = userId;
-            Permissions = permissions;
-            Role = role;
+            RoleId = roleId;
         }
 
-        public void SetPermissions(ProjectUserPermission newPermissions)
+        public void SetRole(Guid newRoleId)
         {
-            Permissions = newPermissions;
-        }
+            if (newRoleId == Guid.Empty)
+            {
+                throw new ArgumentException("RoleId cannot be an empty GUID.", nameof(newRoleId));
+            }
 
-        public void SetRole(ProjectUserRole newRole)
-        {
-            Role = newRole;
+            RoleId = newRoleId;
         }
     }
 }

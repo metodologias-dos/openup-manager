@@ -20,7 +20,6 @@ namespace OpenUpMan.Tests.Services
         public async Task CreateDocument_ReturnsSuccess_WhenValidData()
         {
             var phaseItemId = Guid.NewGuid();
-            var createdBy = Guid.NewGuid();
 
             var mockRepo = new Mock<IDocumentRepository>(MockBehavior.Strict);
             mockRepo.Setup(r => r.AddAsync(It.IsAny<Document>(), default)).Returns(Task.CompletedTask);
@@ -30,14 +29,13 @@ namespace OpenUpMan.Tests.Services
 
             var service = new DocumentService(mockRepo.Object, mockItemRepo, CreateMockLogger());
 
-            var result = await service.CreateDocumentAsync(phaseItemId, "Documento Test", createdBy, "Descripción");
+            var result = await service.CreateDocumentAsync(phaseItemId, "Documento Test", "Descripción");
 
             Assert.True(result.Success);
             Assert.Equal(ServiceResultType.Success, result.ResultType);
             Assert.Contains("exitosa", result.Message, StringComparison.OrdinalIgnoreCase);
             Assert.NotNull(result.Document);
             Assert.Equal("Documento Test", result.Document.Title);
-            Assert.Equal(0, result.Document.LastVersionNumber);
         }
 
         [Theory]
@@ -47,14 +45,13 @@ namespace OpenUpMan.Tests.Services
         public async Task CreateDocument_ReturnsError_WhenTitleIsEmpty(string? title)
         {
             var phaseItemId = Guid.NewGuid();
-            var createdBy = Guid.NewGuid();
 
             var mockRepo = new Mock<IDocumentRepository>(MockBehavior.Strict);
             var mockItemRepo = new Mock<IPhaseItemRepository>().Object;
 
             var service = new DocumentService(mockRepo.Object, mockItemRepo, CreateMockLogger());
 
-            var result = await service.CreateDocumentAsync(phaseItemId, title!, createdBy);
+            var result = await service.CreateDocumentAsync(phaseItemId, title!);
 
             Assert.False(result.Success);
             Assert.Equal(ServiceResultType.Error, result.ResultType);
@@ -70,8 +67,7 @@ namespace OpenUpMan.Tests.Services
         {
             var documentId = Guid.NewGuid();
             var phaseItemId = Guid.NewGuid();
-            var createdBy = Guid.NewGuid();
-            var document = new Document(phaseItemId, "Test Doc", createdBy);
+            var document = new Document(phaseItemId, "Test Doc");
 
             var mockRepo = new Mock<IDocumentRepository>(MockBehavior.Strict);
             mockRepo.Setup(r => r.GetByIdAsync(documentId, default)).ReturnsAsync(document);
@@ -115,8 +111,7 @@ namespace OpenUpMan.Tests.Services
         {
             var documentId = Guid.NewGuid();
             var phaseItemId = Guid.NewGuid();
-            var createdBy = Guid.NewGuid();
-            var document = new Document(phaseItemId, "Old Title", createdBy);
+            var document = new Document(phaseItemId, "Old Title");
 
             var mockRepo = new Mock<IDocumentRepository>(MockBehavior.Strict);
             mockRepo.Setup(r => r.GetByIdAsync(documentId, default)).ReturnsAsync(document);
@@ -143,11 +138,10 @@ namespace OpenUpMan.Tests.Services
         public async Task GetDocumentsByPhaseItem_ReturnsDocuments()
         {
             var phaseItemId = Guid.NewGuid();
-            var createdBy = Guid.NewGuid();
             var documents = new List<Document>
             {
-                new Document(phaseItemId, "Doc 1", createdBy),
-                new Document(phaseItemId, "Doc 2", createdBy)
+                new Document(phaseItemId, "Doc 1"),
+                new Document(phaseItemId, "Doc 2")
             };
 
             var mockRepo = new Mock<IDocumentRepository>(MockBehavior.Strict);

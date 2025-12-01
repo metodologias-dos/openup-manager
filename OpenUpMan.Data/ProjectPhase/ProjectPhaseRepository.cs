@@ -15,7 +15,6 @@ namespace OpenUpMan.Data
         public async Task<ProjectPhase?> GetByIdAsync(Guid id, CancellationToken ct = default)
         {
             return await _ctx.ProjectPhases
-                .Include(pp => pp.Project)
                 .FirstOrDefaultAsync(pp => pp.Id == id, ct);
         }
 

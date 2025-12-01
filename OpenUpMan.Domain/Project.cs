@@ -16,7 +16,6 @@ namespace OpenUpMan.Domain
         public string? Description { get; private set; }
         public DateTime StartDate { get; private set; }
         public Guid OwnerId { get; private set; }
-        public User? Owner { get; private set; }
         public ProjectState State { get; private set; }
         public DateTime CreatedAt { get; private set; }
         public DateTime? UpdatedAt { get; private set; }

@@ -15,16 +15,12 @@ namespace OpenUpMan.Data
         public async Task<PhaseItem?> GetByIdAsync(Guid id, CancellationToken ct = default)
         {
             return await _ctx.PhaseItems
-                .Include(pi => pi.ProjectPhase)
-                .Include(pi => pi.ParentIteration)
-                .Include(pi => pi.Creator)
                 .FirstOrDefaultAsync(pi => pi.Id == id, ct);
         }
 
         public async Task<IEnumerable<PhaseItem>> GetByPhaseIdAsync(Guid projectPhaseId, CancellationToken ct = default)
         {
             return await _ctx.PhaseItems
-                .Include(pi => pi.ParentIteration)
                 .Where(pi => pi.ProjectPhaseId == projectPhaseId)
                 .OrderBy(pi => pi.Number)
                 .ToListAsync(ct);

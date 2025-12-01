@@ -20,7 +20,6 @@ namespace OpenUpMan.Data
         public async Task<Project?> GetByIdAsync(Guid id, CancellationToken ct = default)
         {
             return await _ctx.Set<Project>()
-                .Include(p => p.Owner)
                 .FirstOrDefaultAsync(p => p.Id == id, ct);
         }
 

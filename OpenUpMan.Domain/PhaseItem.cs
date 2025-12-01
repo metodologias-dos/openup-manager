@@ -18,18 +18,15 @@ namespace OpenUpMan.Domain
     {
         public Guid Id { get; private set; }
         public Guid ProjectPhaseId { get; private set; }
-        public ProjectPhase? ProjectPhase { get; private set; }
         public PhaseItemType Type { get; private set; }
         public int Number { get; private set; }
         public Guid? ParentIterationId { get; private set; }
-        public PhaseItem? ParentIteration { get; private set; }
         public string Name { get; private set; } = null!;
         public string? Description { get; private set; }
         public DateTime? StartDate { get; private set; }
         public DateTime? EndDate { get; private set; }
         public PhaseItemState State { get; private set; }
         public Guid CreatedBy { get; private set; }
-        public User? Creator { get; private set; }
         public DateTime CreatedAt { get; private set; }
 
         // Parameterless constructor for EF

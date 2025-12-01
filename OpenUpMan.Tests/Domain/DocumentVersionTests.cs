@@ -11,16 +11,18 @@ namespace OpenUpMan.Tests.Domain
             var documentId = Guid.NewGuid();
             var versionNumber = 1;
             var createdBy = Guid.NewGuid();
-            var filePath = "/path/to/file.pdf";
+            var extension = ".pdf";
+            var binario = new byte[] { 1, 2, 3, 4, 5 };
             var observations = "Primera versión del documento";
 
-            var version = new DocumentVersion(documentId, versionNumber, createdBy, filePath, observations);
+            var version = new DocumentVersion(documentId, versionNumber, createdBy, extension, binario, observations);
 
             Assert.NotEqual(Guid.Empty, version.Id);
             Assert.Equal(documentId, version.DocumentId);
             Assert.Equal(versionNumber, version.VersionNumber);
             Assert.Equal(createdBy, version.CreatedBy);
-            Assert.Equal(filePath, version.FilePath);
+            Assert.Equal(extension, version.Extension);
+            Assert.Equal(binario, version.Binario);
             Assert.Equal(observations, version.Observations);
             Assert.True((DateTime.UtcNow - version.CreatedAt).TotalSeconds < 2);
         }
@@ -30,18 +32,20 @@ namespace OpenUpMan.Tests.Domain
         {
             var documentId = Guid.NewGuid();
             var createdBy = Guid.NewGuid();
-            var filePath = "/path/to/file.pdf";
+            var extension = ".pdf";
+            var binario = new byte[] { 1, 2, 3 };
 
-            var version = new DocumentVersion(documentId, 1, createdBy, filePath);
+            var version = new DocumentVersion(documentId, 1, createdBy, extension, binario);
 
             Assert.Null(version.Observations);
-            Assert.Equal(filePath, version.FilePath);
+            Assert.Equal(extension, version.Extension);
+            Assert.Equal(binario, version.Binario);
         }
 
         [Fact]
         public void UpdateObservations_ShouldUpdateObservations()
         {
-            var version = new DocumentVersion(Guid.NewGuid(), 1, Guid.NewGuid(), "/path/file.pdf", "Old observations");
+            var version = new DocumentVersion(Guid.NewGuid(), 1, Guid.NewGuid(), ".pdf", new byte[] { 1, 2, 3 }, "Old observations");
 
             version.UpdateObservations("New observations");
 
@@ -51,7 +55,7 @@ namespace OpenUpMan.Tests.Domain
         [Fact]
         public void UpdateObservations_ShouldAllowNullObservations()
         {
-            var version = new DocumentVersion(Guid.NewGuid(), 1, Guid.NewGuid(), "/path/file.pdf", "Observations");
+            var version = new DocumentVersion(Guid.NewGuid(), 1, Guid.NewGuid(), ".pdf", new byte[] { 1, 2, 3 }, "Observations");
 
             version.UpdateObservations(null);
 
@@ -64,7 +68,7 @@ namespace OpenUpMan.Tests.Domain
             var createdBy = Guid.NewGuid();
 
             Assert.Throws<ArgumentException>(() => 
-                new DocumentVersion(Guid.Empty, 1, createdBy, "/path/file.pdf"));
+                new DocumentVersion(Guid.Empty, 1, createdBy, ".pdf", new byte[] { 1, 2, 3 }));
         }
 
         [Fact]
@@ -74,7 +78,7 @@ namespace OpenUpMan.Tests.Domain
             var createdBy = Guid.NewGuid();
 
             Assert.Throws<ArgumentException>(() => 
-                new DocumentVersion(documentId, 0, createdBy, "/path/file.pdf"));
+                new DocumentVersion(documentId, 0, createdBy, ".pdf", new byte[] { 1, 2, 3 }));
         }
 
         [Fact]
@@ -84,7 +88,7 @@ namespace OpenUpMan.Tests.Domain
             var createdBy = Guid.NewGuid();
 
             Assert.Throws<ArgumentException>(() => 
-                new DocumentVersion(documentId, -1, createdBy, "/path/file.pdf"));
+                new DocumentVersion(documentId, -1, createdBy, ".pdf", new byte[] { 1, 2, 3 }));
         }
 
         [Fact]
@@ -93,20 +97,40 @@ namespace OpenUpMan.Tests.Domain
             var documentId = Guid.NewGuid();
 
             Assert.Throws<ArgumentException>(() => 
-                new DocumentVersion(documentId, 1, Guid.Empty, "/path/file.pdf"));
+                new DocumentVersion(documentId, 1, Guid.Empty, ".pdf", new byte[] { 1, 2, 3 }));
         }
 
         [Theory]
         [InlineData("")]
         [InlineData("   ")]
         [InlineData(null)]
-        public void Constructor_ShouldThrow_WhenFilePathIsInvalid(string? filePath)
+        public void Constructor_ShouldThrow_WhenExtensionIsInvalid(string? extension)
         {
             var documentId = Guid.NewGuid();
             var createdBy = Guid.NewGuid();
 
             Assert.Throws<ArgumentException>(() => 
-                new DocumentVersion(documentId, 1, createdBy, filePath!));
+                new DocumentVersion(documentId, 1, createdBy, extension!, new byte[] { 1, 2, 3 }));
+        }
+
+        [Fact]
+        public void Constructor_ShouldThrow_WhenBinarioIsNull()
+        {
+            var documentId = Guid.NewGuid();
+            var createdBy = Guid.NewGuid();
+
+            Assert.Throws<ArgumentException>(() => 
+                new DocumentVersion(documentId, 1, createdBy, ".pdf", null!));
+        }
+
+        [Fact]
+        public void Constructor_ShouldThrow_WhenBinarioIsEmpty()
+        {
+            var documentId = Guid.NewGuid();
+            var createdBy = Guid.NewGuid();
+
+            Assert.Throws<ArgumentException>(() => 
+                new DocumentVersion(documentId, 1, createdBy, ".pdf", new byte[0]));
         }
 
         [Theory]
@@ -119,7 +143,7 @@ namespace OpenUpMan.Tests.Domain
             var documentId = Guid.NewGuid();
             var createdBy = Guid.NewGuid();
 
-            var version = new DocumentVersion(documentId, versionNumber, createdBy, "/path/file.pdf");
+            var version = new DocumentVersion(documentId, versionNumber, createdBy, ".pdf", new byte[] { 1, 2, 3 });
 
             Assert.Equal(versionNumber, version.VersionNumber);
         }

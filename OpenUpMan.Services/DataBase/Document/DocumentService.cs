@@ -20,7 +20,7 @@ namespace OpenUpMan.Services
             _logger = logger;
         }
 
-        public async Task<DocumentServiceResult> CreateDocumentAsync(Guid phaseItemId, string title, Guid createdBy, string? description = null, CancellationToken ct = default)
+        public async Task<DocumentServiceResult> CreateDocumentAsync(Guid phaseItemId, string title, string? description = null, CancellationToken ct = default)
         {
             try
             {
@@ -33,7 +33,7 @@ namespace OpenUpMan.Services
                     );
                 }
 
-                var document = new Document(phaseItemId, title, createdBy, description);
+                var document = new Document(phaseItemId, title, description);
                 await _repo.AddAsync(document, ct);
                 await _repo.SaveChangesAsync(ct);
 
@@ -94,10 +94,6 @@ namespace OpenUpMan.Services
             return await _repo.GetByPhaseItemIdAsync(phaseItemId, ct);
         }
 
-        public async Task<IEnumerable<Document>> GetDocumentsByCreatorAsync(Guid creatorId, CancellationToken ct = default)
-        {
-            return await _repo.GetByCreatorIdAsync(creatorId, ct);
-        }
 
         public async Task<DocumentServiceResult> UpdateDocumentAsync(Guid id, string title, string? description, CancellationToken ct = default)
         {
