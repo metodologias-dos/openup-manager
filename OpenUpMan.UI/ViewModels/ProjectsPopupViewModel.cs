@@ -37,6 +37,18 @@ public partial class ProjectsPopupViewModel : ViewModelBase
     [ObservableProperty]
     private string _loadingMessage = "Cargando proyectos...";
 
+    // Sorting state
+    private enum SortState { None, Ascending, Descending }
+    private SortState _nameSortState = SortState.None;
+    private SortState _dateSortState = SortState.None;
+    private List<ProjectListItemViewModel> _originalProjectsList = new();
+
+    [ObservableProperty]
+    private string _nameSortIndicator = "";
+
+    [ObservableProperty]
+    private string _dateSortIndicator = "";
+
     // Constructor para uso en producción con servicios
     public ProjectsPopupViewModel(User? currentUser, IProjectUserService projectUserService, IProjectService projectService)
     {
@@ -50,6 +62,8 @@ public partial class ProjectsPopupViewModel : ViewModelBase
         OpenProjectCommand = new RelayCommand<ProjectListItemViewModel?>(OnOpenProject);
         DeleteProjectCommand = new AsyncRelayCommand<ProjectListItemViewModel?>(OnDeleteProjectAsync);
         LogoutCommand = new RelayCommand(OnLogout);
+        SortByNameCommand = new RelayCommand(SortByName);
+        SortByDateCommand = new RelayCommand(SortByDate);
 
         // Cargar proyectos del usuario automáticamente
         _ = LoadUserProjectsAsync();
@@ -73,6 +87,8 @@ public partial class ProjectsPopupViewModel : ViewModelBase
         OpenProjectCommand = new RelayCommand<ProjectListItemViewModel?>(OnOpenProject);
         DeleteProjectCommand = new AsyncRelayCommand<ProjectListItemViewModel?>(OnDeleteProjectAsync);
         LogoutCommand = new RelayCommand(OnLogout);
+        SortByNameCommand = new RelayCommand(SortByName);
+        SortByDateCommand = new RelayCommand(SortByDate);
     }
 
     private async Task LoadUserProjectsAsync()
@@ -111,12 +127,15 @@ public partial class ProjectsPopupViewModel : ViewModelBase
             Projects.Clear();
             foreach (var project in projects.Where(p => p != null))
             {
+                // Convertir UTC a hora local para mostrar
+                var lastEditedDate = project!.UpdatedAt ?? project.CreatedAt;
+                var lastEditedLocal = DateTime.SpecifyKind(lastEditedDate, DateTimeKind.Utc).ToLocalTime();
+                
                 var projectVm = new ProjectListItemViewModel
                 {
-                    Id = project!.Identifier,
+                    Id = project.Identifier,
                     Name = project.Name,
-                    LastEdited = project.UpdatedAt?.ToString("dd/MM/yyyy HH:mm") 
-                                 ?? project.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                    LastEdited = lastEditedLocal.ToString("dd/MM/yyyy HH:mm")
                 };
                 Projects.Add(projectVm);
             }
@@ -124,6 +143,9 @@ public partial class ProjectsPopupViewModel : ViewModelBase
             LoadingMessage = Projects.Count > 0 
                 ? $"{Projects.Count} proyecto(s) cargado(s)" 
                 : "No tienes proyectos asignados";
+            
+            // Inicializar la lista original con los proyectos cargados
+            _originalProjectsList = Projects.ToList();
         }
         catch (Exception ex)
         {
@@ -143,9 +165,9 @@ public partial class ProjectsPopupViewModel : ViewModelBase
     public IRelayCommand CloseCommand { get; }
     public IRelayCommand<ProjectListItemViewModel?> OpenProjectCommand { get; }
     public IAsyncRelayCommand<ProjectListItemViewModel?> DeleteProjectCommand { get; }
-
-    // Command to trigger logout
     public IRelayCommand LogoutCommand { get; }
+    public IRelayCommand SortByNameCommand { get; }
+    public IRelayCommand SortByDateCommand { get; }
 
     private void OnNewProject()
     {
@@ -216,9 +238,136 @@ public partial class ProjectsPopupViewModel : ViewModelBase
         {
             Id = result.Identifier,
             Name = result.Name,
-            LastEdited = DateTime.Now.ToString("dd/MM/yyyy HH:mm")
+            LastEdited = DateTime.Now.ToString("dd/MM/yyyy HH:mm") // Ya es hora local
         };
-        Projects.Add(newProject);
+        
+        // Agregar a la lista original primero
+        _originalProjectsList.Add(newProject);
+        
+        // Si hay sorting activo, aplicarlo; si no, simplemente agregar al final
+        if (_nameSortState != SortState.None || _dateSortState != SortState.None)
+        {
+            // Re-aplicar el sorting actual
+            ApplySorting();
+        }
+        else
+        {
+            // No hay sorting activo, agregar al final
+            Projects.Add(newProject);
+        }
+    }
+
+    private void SortByName()
+    {
+        // Guardar la lista original si es la primera vez
+        if (_originalProjectsList.Count == 0)
+        {
+            _originalProjectsList = Projects.ToList();
+        }
+
+        // Ciclar entre: Ascending → Descending → None → Ascending
+        _nameSortState = _nameSortState switch
+        {
+            SortState.None => SortState.Ascending,      // A-Z
+            SortState.Ascending => SortState.Descending, // Z-A
+            SortState.Descending => SortState.None,      // Sin orden
+            _ => SortState.Ascending
+        };
+
+        // Reset date sort
+        _dateSortState = SortState.None;
+        DateSortIndicator = "";
+
+        // Update sort indicator
+        NameSortIndicator = _nameSortState switch
+        {
+            SortState.Ascending => " ▲",    // A-Z
+            SortState.Descending => " ▼",   // Z-A
+            _ => ""                          // Sin orden
+        };
+
+        ApplySorting();
+    }
+
+    private void SortByDate()
+    {
+        // Guardar la lista original si es la primera vez
+        if (_originalProjectsList.Count == 0)
+        {
+            _originalProjectsList = Projects.ToList();
+        }
+
+        // Ciclar entre: Descending (Recent) → Ascending (Oldest) → None → Descending
+        _dateSortState = _dateSortState switch
+        {
+            SortState.None => SortState.Descending,      // Más reciente primero
+            SortState.Descending => SortState.Ascending, // Más antiguo primero
+            SortState.Ascending => SortState.None,       // Sin orden
+            _ => SortState.Descending
+        };
+
+        // Reset name sort
+        _nameSortState = SortState.None;
+        NameSortIndicator = "";
+
+        // Update sort indicator
+        DateSortIndicator = _dateSortState switch
+        {
+            SortState.Descending => " ▲",   // Más reciente primero (up = recent/nuevo)
+            SortState.Ascending => " ▼",    // Más antiguo primero (down = old/viejo)
+            _ => ""                          // Sin orden
+        };
+
+        ApplySorting();
+    }
+
+    private void ApplySorting()
+    {
+        List<ProjectListItemViewModel> sortedList;
+
+        if (_nameSortState == SortState.Ascending)
+        {
+            sortedList = _originalProjectsList.OrderBy(p => p.Name).ToList();
+        }
+        else if (_nameSortState == SortState.Descending)
+        {
+            sortedList = _originalProjectsList.OrderByDescending(p => p.Name).ToList();
+        }
+        else if (_dateSortState == SortState.Descending)
+        {
+            // Más reciente primero
+            sortedList = _originalProjectsList.OrderByDescending(p => ParseDate(p.LastEdited)).ToList();
+        }
+        else if (_dateSortState == SortState.Ascending)
+        {
+            // Más antiguo primero
+            sortedList = _originalProjectsList.OrderBy(p => ParseDate(p.LastEdited)).ToList();
+        }
+        else
+        {
+            // Restaurar orden original
+            sortedList = _originalProjectsList.ToList();
+        }
+
+        // Actualizar la colección
+        Projects.Clear();
+        foreach (var project in sortedList)
+        {
+            Projects.Add(project);
+        }
+    }
+
+    private DateTime ParseDate(string dateString)
+    {
+        // Parsear la fecha en formato "dd/MM/yyyy HH:mm"
+        if (DateTime.TryParseExact(dateString, "dd/MM/yyyy HH:mm", 
+            System.Globalization.CultureInfo.InvariantCulture, 
+            System.Globalization.DateTimeStyles.None, 
+            out var date))
+        {
+            return date;
+        }
+        return DateTime.MinValue;
     }
 }
 

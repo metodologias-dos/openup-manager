@@ -70,7 +70,8 @@ sealed class Program
             builder.SetMinimumLevel(LogLevel.Information);
         });
 
-        services.AddDbContext<AppDbContext>(options => options.UseSqlite(connString));
+        services.AddDbContext<AppDbContext>(options => 
+            options.UseSqlite(connString, o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
 
         // Repositories and services
         services.AddScoped<IUserRepository, UserRepository>();
