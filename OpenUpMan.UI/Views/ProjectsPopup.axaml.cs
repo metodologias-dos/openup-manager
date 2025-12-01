@@ -177,17 +177,33 @@ public partial class ProjectsPopup : Window
             Width = 1000,
             Height = 700,
             Content = view,
-            WindowStartupLocation = WindowStartupLocation.CenterOwner
+            WindowStartupLocation = WindowStartupLocation.CenterScreen
+        };
+
+        // Subscribe to BackRequested event to close project window and show ProjectsPopup again
+        projectVm.BackRequested += () =>
+        {
+            wnd.Close();
+            this.Show();
+        };
+
+        // Handle window closing to show ProjectsPopup again
+        wnd.Closing += (s, e) =>
+        {
+            this.Show();
         };
 
         try
         {
-            // Show as owned window so it centers over ProjectsPopup
-            wnd.Show(this);
+            // Show as independent window
+            wnd.Show();
+            // Hide ProjectsPopup after project window is shown
+            this.Hide();
         }
         catch (Exception ex)
         {
             Console.WriteLine("Failed to open project window: " + ex.Message);
+            this.Show();
         }
     }
 }
