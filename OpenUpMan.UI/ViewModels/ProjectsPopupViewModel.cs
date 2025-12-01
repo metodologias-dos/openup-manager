@@ -1,4 +1,4 @@
-﻿﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
 using System.Collections.Generic;
@@ -24,6 +24,9 @@ public partial class ProjectsPopupViewModel : ViewModelBase
     // Event to request opening the new project dialog
     public event Action? NewProjectDialogRequested;
     
+    // Event to request opening a specific project view/tab (passes project identifier)
+    public event Action<string?>? OpenProjectRequested;
+
     // Current logged in user
     public User? CurrentUser { get; private set; }
     
@@ -160,7 +163,8 @@ public partial class ProjectsPopupViewModel : ViewModelBase
     private void OnOpenProject(ProjectListItemViewModel? project)
     {
         if (project == null) return;
-        // TODO: open the project in a new Window
+        // Raise an event so the UI can open the project in a new tab/window
+        OpenProjectRequested?.Invoke(project.Id);
     }
 
     private async Task OnDeleteProjectAsync(ProjectListItemViewModel? project)
