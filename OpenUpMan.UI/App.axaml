@@ -33,6 +33,7 @@
                                        ListMedium="#ff333333" RegionColor="Black" />
             </FluentTheme.Palettes>
         </FluentTheme>
+        <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
         <StyleInclude Source="avares://OpenUpMan.UI/Assets/Styles/Controls.axaml"/>
     </Application.Styles>
 </Application>

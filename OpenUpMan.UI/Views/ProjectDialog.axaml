@@ -3,9 +3,9 @@
         xmlns:vm="using:OpenUpMan.UI.ViewModels"
         x:Class="OpenUpMan.UI.Views.ProjectDialog"
         x:DataType="vm:ProjectDialogViewModel"
-        Width="650" Height="680"
-        MinWidth="600" MinHeight="650"
-        MaxWidth="750" MaxHeight="800"
+        Width="650" Height="750"
+        MinWidth="600" MinHeight="720"
+        MaxWidth="750" MaxHeight="850"
         Icon="/Assets/avalonia-logo.ico"
         Title="Nuevo Proyecto - OpenUpMan"
         WindowStartupLocation="CenterOwner"
@@ -194,6 +194,27 @@
               </StackPanel>
             </Border>
 
+            <!-- Código del Proyecto -->
+            <Border Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"
+                    CornerRadius="8"
+                    Padding="16"
+                    Classes="field-container">
+              <StackPanel Spacing="10">
+                <TextBlock Classes="label-text">
+                  <Run Text="Código del Proyecto" />
+                  <Run Text=" (Opcional)" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontWeight="Normal" />
+                </TextBlock>
+                <TextBox Text="{Binding Code}" 
+                         Classes="field-input"
+                         Watermark="Ej: PROY-2025-001"
+                         MaxLength="50" />
+                <TextBlock FontSize="11" 
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                           Text="Identificador único del proyecto. Si no se proporciona, se generará automáticamente." />
+              </StackPanel>
+            </Border>
+
+            <!-- Descripción -->
             <!-- Descripción -->
             <Border Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"
                     CornerRadius="8"

@@ -120,5 +120,39 @@ namespace OpenUpMan.Services
                 );
             }
         }
+
+        public async Task<ServiceResult> GetUserByIdAsync(int userId, CancellationToken ct = default)
+        {
+            try
+            {
+                var user = await _repo.GetByIdAsync(userId, ct);
+                if (user == null)
+                {
+                    return new ServiceResult(
+                        Success: false,
+                        ResultType: ServiceResultType.Error,
+                        Message: "Usuario no encontrado.",
+                        User: null
+                    );
+                }
+
+                return new ServiceResult(
+                    Success: true,
+                    ResultType: ServiceResultType.Success,
+                    Message: "Usuario encontrado",
+                    User: user
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting user by ID: {UserId}", userId);
+                return new ServiceResult(
+                    Success: false,
+                    ResultType: ServiceResultType.Error,
+                    Message: "Error al obtener el usuario.",
+                    User: null
+                );
+            }
+        }
     }
 }

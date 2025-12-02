@@ -12,6 +12,11 @@ namespace OpenUpMan.Data
             _ctx = ctx;
         }
 
+        public async Task<User?> GetByIdAsync(int id, CancellationToken ct = default)
+        {
+            return await _ctx.Users.FindAsync(new object[] { id }, ct);
+        }
+
         public async Task AddAsync(User user, CancellationToken ct = default)
         {
             await _ctx.Users.AddAsync(user, ct);

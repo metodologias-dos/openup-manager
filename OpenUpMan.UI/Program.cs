@@ -1,12 +1,14 @@
-﻿﻿using Avalonia;
+﻿using Avalonia;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Globalization;
+using System.Linq;
 using System.Threading;
 using OpenUpMan.Data;
 using OpenUpMan.Services;
 using Microsoft.EntityFrameworkCore;
+using OpenUpMan.Domain;
 
 namespace OpenUpMan.UI;
 
@@ -70,7 +72,8 @@ sealed class Program
             builder.SetMinimumLevel(LogLevel.Information);
         });
 
-        services.AddDbContext<AppDbContext>(options => options.UseSqlite(connString));
+        services.AddDbContext<AppDbContext>(options => 
+            options.UseSqlite(connString, o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
 
         // Repositories and services
         services.AddScoped<IUserRepository, UserRepository>();
@@ -82,8 +85,30 @@ sealed class Program
         services.AddScoped<IProjectUserRepository, ProjectUserRepository>();
         services.AddScoped<IProjectUserService, ProjectUserService>();
         
-        services.AddScoped<IProjectPhaseRepository, ProjectPhaseRepository>();
-        services.AddScoped<IProjectPhaseService, ProjectPhaseService>();
+        // New schema repositories and services
+        services.AddScoped<IPhaseRepository, PhaseRepository>();
+        services.AddScoped<IPhaseService, PhaseService>();
+        
+        services.AddScoped<IIterationRepository, IterationRepository>();
+        services.AddScoped<IIterationService, IterationService>();
+        
+        services.AddScoped<IMicroincrementRepository, MicroincrementRepository>();
+        services.AddScoped<IMicroincrementService, MicroincrementService>();
+        
+        services.AddScoped<IArtifactRepository, ArtifactRepository>();
+        services.AddScoped<IArtifactService, ArtifactService>();
+        
+        services.AddScoped<IArtifactVersionService, ArtifactVersionService>();
+        
+        // Role repositories and services
+        services.AddScoped<IRoleRepository, RoleRepository>();
+        services.AddScoped<IRoleService, RoleService>();
+        
+        services.AddScoped<IPermissionRepository, PermissionRepository>();
+        services.AddScoped<IPermissionService, PermissionService>();
+        
+        services.AddScoped<IRolePermissionRepository, RolePermissionRepository>();
+        services.AddScoped<IRolePermissionService, RolePermissionService>();
 
         // ViewModels
         services.AddTransient<OpenUpMan.UI.ViewModels.MainWindowViewModel>();
@@ -95,12 +120,15 @@ sealed class Program
         {
             using var scope = ServiceProvider.CreateScope();
             var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            var logger = scope.ServiceProvider.GetRequiredService<ILogger<OpenUpMan.Data.Migrations.DatabaseMigrator>>();
+            var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
             
-            // Use DatabaseMigrator to handle schema updates automatically
-            // autoRemoveObsoleteColumns=true will automatically remove columns that no longer exist in entities
-            var migrator = new OpenUpMan.Data.Migrations.DatabaseMigrator(ctx, logger, autoRemoveObsoleteColumns: true);
-            migrator.MigrateAsync().Wait();
+            // Apply EF Core migrations automatically on startup
+            logger.LogInformation("Applying database migrations...");
+            ctx.Database.Migrate();
+            logger.LogInformation("Database migrations applied successfully.");
+
+            // Seed predefined roles
+            SeedRoles(ctx, logger);
 
             // Enable Write-Ahead Logging (WAL) for better concurrency (readers won't block writers)
             var conn = ctx.Database.GetDbConnection();
@@ -112,6 +140,7 @@ sealed class Program
                 using var cmd = conn.CreateCommand();
                 cmd.CommandText = "PRAGMA journal_mode=WAL;";
                 cmd.ExecuteNonQuery();
+                logger.LogInformation("SQLite WAL mode enabled.");
             }
             finally
             {
@@ -129,5 +158,42 @@ sealed class Program
             .UsePlatformDetect()
             .WithInterFont()
             .LogToTrace();
+    }
+
+    private static void SeedRoles(AppDbContext context, ILogger logger)
+    {
+        try
+        {
+            // Verificar si ya existen roles
+            if (context.Roles.Any())
+            {
+                logger.LogInformation("Roles already exist in database. Skipping seed.");
+                return;
+            }
+
+            logger.LogInformation("Seeding predefined roles...");
+
+            var roles = new[]
+            {
+                new Role(RoleIds.Admin, "Administrador", "Acceso completo al sistema"),
+                new Role(RoleIds.ProductOwner, "Product Owner", "Gestión del producto"),
+                new Role(RoleIds.ScrumMaster, "Scrum Master", "Facilitador del equipo"),
+                new Role(RoleIds.Desarrollador, "Desarrollador", "Desarrollo de software"),
+                new Role(RoleIds.Tester, "Tester", "Pruebas y QA"),
+                new Role(RoleIds.Revisor, "Revisor", "Revisión de documentos y código"),
+                new Role(RoleIds.Autor, "Autor", "Creación de contenido"),
+                new Role(RoleIds.Viewer, "Viewer", "Solo lectura")
+            };
+
+            context.Roles.AddRange(roles);
+            context.SaveChanges();
+
+            logger.LogInformation("Successfully seeded {Count} predefined roles.", roles.Length);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error seeding predefined roles");
+            throw;
+        }
     }
 }

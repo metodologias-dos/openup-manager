@@ -10,6 +10,8 @@
         Background="{DynamicResource ApplicationPageBackgroundThemeBrush}"
         TransparencyLevelHint="AcrylicBlur">
 
+
+
   <Window.Styles>
     <!-- Estilo para botones pequeños de acción -->
     <Style Selector="Button.action-button">
@@ -107,99 +109,202 @@
             Classes="card"
             Padding="0">
       
-      <Grid RowDefinitions="Auto,*">
-        <!-- Column Headers -->
-        <Border Grid.Row="0" 
-                Classes="card-header"
-                CornerRadius="8,8,0,0"
-                Margin="-16,-16,-16,0">
-          <Grid ColumnDefinitions="3*,1.5*,2*,Auto,Auto">
-            <TextBlock Grid.Column="0" 
-                       Text="NOMBRE DEL PROYECTO" 
-                       Classes="column-header"
-                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-            <TextBlock Grid.Column="1" 
-                       Text="ID" 
-                       Classes="column-header" 
-                       HorizontalAlignment="Center"
-                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-            <TextBlock Grid.Column="2" 
-                       Text="ÚLTIMA EDICIÓN" 
-                       Classes="column-header" 
-                       HorizontalAlignment="Center"
-                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-            <TextBlock Grid.Column="3" 
-                       Text="ACCIONES" 
-                       Classes="column-header" 
-                       HorizontalAlignment="Center" 
-                       Margin="0,0,80,8"
-                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-          </Grid>
-        </Border>
+      <Grid RowDefinitions="*">
+        <!-- Projects DataGrid -->
+        <DataGrid Grid.Row="0"
+                  ItemsSource="{Binding Projects}"
+                  IsVisible="{Binding !IsLoadingProjects}"
+                  AutoGenerateColumns="False"
+                  CanUserReorderColumns="False"
+                  CanUserResizeColumns="True"
+                  CanUserSortColumns="False"
+                  GridLinesVisibility="None"
+                  HeadersVisibility="Column"
+                  SelectionMode="Single"
+                  IsReadOnly="True"
+                  RowHeight="72"
+                  Margin="0,8,0,0"
+                  BorderThickness="0"
+                  Background="Transparent"
+                  HorizontalScrollBarVisibility="Auto"
+                  VerticalScrollBarVisibility="Auto"
+                  x:Name="ProjectsDataGrid">
 
-        <!-- Projects List with Scroll -->
-        <ScrollViewer Grid.Row="1"
-                      HorizontalScrollBarVisibility="Disabled" 
-                      VerticalScrollBarVisibility="Auto"
-                      Padding="0"
-                      IsVisible="{Binding !IsLoadingProjects}">
-          <ItemsControl ItemsSource="{Binding Projects}" Margin="0,16,0,0">
-            <ItemsControl.ItemTemplate>
-              <DataTemplate DataType="vm:ProjectListItemViewModel">
-                <Border Classes="list-item">
-                  <Grid ColumnDefinitions="3*,1.5*,2*,Auto,Auto">
-                    <!-- Nombre con icono -->
-                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="14" VerticalAlignment="Center">
-                      <Border Background="{DynamicResource AccentFillColorDefaultBrush}"
-                              Width="44" Height="44"
-                              CornerRadius="8"
-                              VerticalAlignment="Center"
-                              HorizontalAlignment="Center">
-                        <Viewbox Width="22" Height="22"
-                                 VerticalAlignment="Top"
-                                 HorizontalAlignment="Center">
-                          <Canvas Width="24" Height="24">
-                            <Path Fill="White" Data="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
-                          </Canvas>
-                        </Viewbox>
-                      </Border>
-                      <StackPanel VerticalAlignment="Center" Spacing="2">
-                        <TextBlock Text="{Binding Name}" 
-                                   FontSize="15"
-                                   VerticalAlignment="Center"
-                                   FontWeight="SemiBold" />
-                        <TextBlock Text="{Binding Id}" 
-                                   FontSize="12"
-                                   VerticalAlignment="Center"
-                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                   FontFamily="Consolas, Courier New" />
-                      </StackPanel>
+          <!-- Estilos para filas alternadas y hover -->
+          <DataGrid.Styles>
+            <!-- Estilo base de las celdas -->
+            <Style Selector="DataGridCell">
+              <Setter Property="BorderThickness" Value="0" />
+              <Setter Property="Padding" Value="12,8" />
+              <Setter Property="Background" Value="Transparent" />
+            </Style>
+            
+            <!-- TextBlock dentro de celdas - forzar color blanco -->
+            <Style Selector="DataGridCell TextBlock">
+              <Setter Property="Foreground" Value="White" />
+              <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+            
+            <!-- Filas normales -->
+            <Style Selector="DataGridRow">
+              <Setter Property="Background" Value="Transparent" />
+              <Setter Property="CornerRadius" Value="4" />
+              <Setter Property="Margin" Value="0,1" />
+            </Style>
+            
+            <!-- Filas alternadas con color sutil -->
+            <Style Selector="DataGridRow:nth-child(2n)">
+              <Setter Property="Background" Value="#08FFFFFF" />
+            </Style>
+            
+            <!-- Hover en filas -->
+            <Style Selector="DataGridRow:pointerover /template/ Rectangle#BackgroundRectangle">
+              <Setter Property="Fill" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+              <Setter Property="Opacity" Value="0.6" />
+            </Style>
+            
+            <!-- Fila seleccionada -->
+            <Style Selector="DataGridRow:selected /template/ Rectangle#BackgroundRectangle">
+              <Setter Property="Fill" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+              <Setter Property="Opacity" Value="0.2" />
+            </Style>
+            
+            <!-- Texto en fila seleccionada - mantener blanco -->
+            <Style Selector="DataGridRow:selected DataGridCell TextBlock">
+              <Setter Property="Foreground" Value="White" />
+            </Style>
+            
+            <!-- Headers con estilo Fluent -->
+            <Style Selector="DataGridColumnHeader">
+              <Setter Property="Background" Value="Transparent" />
+              <Setter Property="Foreground" Value="White" />
+              <Setter Property="FontWeight" Value="SemiBold" />
+              <Setter Property="FontSize" Value="13" />
+              <Setter Property="Padding" Value="12,16,12,12" />
+              <Setter Property="Height" Value="44" />
+              <Setter Property="BorderBrush" Value="{DynamicResource DividerStrokeColorDefaultBrush}" />
+              <Setter Property="BorderThickness" Value="0,0,0,1" />
+              <Setter Property="Cursor" Value="Hand" />
+            </Style>
+            
+            <!-- Hover en headers -->
+            <Style Selector="DataGridColumnHeader:pointerover">
+              <Setter Property="Background" Value="#10FFFFFF" />
+            </Style>
+          </DataGrid.Styles>
+
+          <DataGrid.Columns>
+            <!-- Columna de Nombre con icono - 50% -->
+            <DataGridTemplateColumn Width="2*" MinWidth="280" CanUserSort="False">
+              <DataGridTemplateColumn.Header>
+                <TextBlock HorizontalAlignment="Left">
+                  <Run Text="NOMBRE" />
+                  <Run Text="{Binding NameSortIndicator}" FontWeight="Bold" />
+                </TextBlock>
+              </DataGridTemplateColumn.Header>
+              <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate DataType="vm:ProjectListItemViewModel">
+                  <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                    <Border Background="{DynamicResource AccentFillColorDefaultBrush}"
+                            Width="40" Height="40"
+                            CornerRadius="6"
+                            VerticalAlignment="Center">
+                      <Viewbox Width="20" Height="20">
+                        <Canvas Width="24" Height="24">
+                          <Path Fill="White" Data="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
+                        </Canvas>
+                      </Viewbox>
+                    </Border>
+                    <StackPanel VerticalAlignment="Center" Spacing="3">
+                      <TextBlock Text="{Binding Name}" 
+                                 FontSize="14"
+                                 FontWeight="SemiBold"
+                                 TextTrimming="CharacterEllipsis"
+                                 Foreground="White" />
+                      <TextBlock Text="{Binding Code}" 
+                                 FontSize="11"
+                                 Foreground="#B0B0B0"
+                                 FontFamily="Consolas, Courier New" />
                     </StackPanel>
+                  </StackPanel>
+                </DataTemplate>
+              </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
 
-                    <!-- ID (hidden now, shown in name section) -->
-                    <TextBlock Grid.Column="1" 
-                               VerticalAlignment="Center" 
-                               HorizontalAlignment="Center"
+            <!-- Columna de Propietario - 20% -->
+            <DataGridTemplateColumn Width="0.8*" MinWidth="140" CanUserSort="False">
+              <DataGridTemplateColumn.Header>
+                <TextBlock HorizontalAlignment="Center" Text="PROPIETARIO" />
+              </DataGridTemplateColumn.Header>
+              <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate DataType="vm:ProjectListItemViewModel">
+                  <TextBlock Text="{Binding CreatedByUsername}" 
+                             FontSize="13"
+                             Foreground="White"
+                             HorizontalAlignment="Center"
+                             VerticalAlignment="Center" />
+                </DataTemplate>
+              </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+
+            <!-- Columna de Estado - 15% -->
+            <DataGridTemplateColumn Width="0.6*" MinWidth="100" CanUserSort="False">
+              <DataGridTemplateColumn.Header>
+                <TextBlock HorizontalAlignment="Center" Text="ESTADO" />
+              </DataGridTemplateColumn.Header>
+              <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate DataType="vm:ProjectListItemViewModel">
+                  <TextBlock Text="{Binding Status}" 
+                             FontSize="13"
+                             FontWeight="SemiBold"
+                             HorizontalAlignment="Center"
+                             VerticalAlignment="Center" />
+                </DataTemplate>
+              </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+
+            <!-- Columna de Última Edición - 20% -->
+            <DataGridTemplateColumn Width="0.8*" MinWidth="160" CanUserSort="False">
+              <DataGridTemplateColumn.Header>
+                <TextBlock HorizontalAlignment="Center">
+                  <Run Text="ÚLTIMA EDICIÓN" />
+                  <Run Text="{Binding DateSortIndicator}"  FontWeight="Bold" />
+                </TextBlock>
+              </DataGridTemplateColumn.Header>
+              <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate DataType="vm:ProjectListItemViewModel">
+                  <StackPanel Orientation="Horizontal" 
+                              Spacing="6" 
+                              HorizontalAlignment="Center"
+                              VerticalAlignment="Center">
+                    <Viewbox Width="14" Height="14">
+                      <Canvas Width="24" Height="24">
+                        <Path Fill="#B0B0B0" 
+                              Data="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.2 3.2.8-1.3-4.5-2.7V7z"/>
+                      </Canvas>
+                    </Viewbox>
+                    <TextBlock Text="{Binding LastEdited}" 
                                FontSize="13"
-                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                               Foreground="White"
+                               VerticalAlignment="Center" />
+                  </StackPanel>
+                </DataTemplate>
+              </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
 
-                    <!-- Fecha -->
-                    <TextBlock Grid.Column="2" 
-                               Text="{Binding LastEdited}" 
-                               VerticalAlignment="Center" 
-                               HorizontalAlignment="Center"
-                               FontSize="13"
-                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-
+            <!-- Columna de Acciones - 25% -->
+            <DataGridTemplateColumn Header="ACCIONES" Width="1*" MinWidth="200" CanUserSort="False">
+              <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate DataType="vm:ProjectListItemViewModel">
+                  <StackPanel Orientation="Horizontal" 
+                              Spacing="8"
+                              HorizontalAlignment="Center"
+                              VerticalAlignment="Center">
                     <!-- Botón Abrir -->
-                    <Button Grid.Column="3" 
-                            Command="{Binding $parent[Window].((vm:ProjectsPopupViewModel)DataContext).OpenProjectCommand}" 
+                    <Button Command="{Binding $parent[Window].((vm:ProjectsPopupViewModel)DataContext).OpenProjectCommand}" 
                             CommandParameter="{Binding}"
-                            Classes="primary action-button"
-                            VerticalAlignment="Center"
-                            HorizontalContentAlignment="Center"
-                            VerticalContentAlignment="Center">
-                      <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            Classes="primary action-button">
+                      <StackPanel Orientation="Horizontal" Spacing="6">
                         <Viewbox Width="14" Height="14" VerticalAlignment="Center">
                           <Canvas Width="24" Height="24">
                             <Path Fill="White" Data="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/>
@@ -209,17 +314,14 @@
                       </StackPanel>
                     </Button>
 
-                    <!-- Botón Borrar -->
-                    <Button Grid.Column="4" 
-                            Command="{Binding $parent[Window].((vm:ProjectsPopupViewModel)DataContext).DeleteProjectCommand}" 
+                    <!-- Botón Borrar (solo visible para el owner) -->
+                    <Button Command="{Binding $parent[Window].((vm:ProjectsPopupViewModel)DataContext).DeleteProjectCommand}" 
                             CommandParameter="{Binding}"
                             Classes="action-button"
                             Background="#E81123"
                             Foreground="White"
-                            VerticalAlignment="Center"
-                            HorizontalContentAlignment="Center"
-                            VerticalContentAlignment="Center">
-                      <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            IsVisible="{Binding IsOwner}">
+                      <StackPanel Orientation="Horizontal" Spacing="6">
                         <Viewbox Width="14" Height="14" VerticalAlignment="Center">
                           <Canvas Width="24" Height="24">
                             <Path Fill="White" Data="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
@@ -236,15 +338,15 @@
                         </Style>
                       </Button.Styles>
                     </Button>
-                  </Grid>
-                </Border>
-              </DataTemplate>
-            </ItemsControl.ItemTemplate>
-          </ItemsControl>
-        </ScrollViewer>
+                  </StackPanel>
+                </DataTemplate>
+              </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+          </DataGrid.Columns>
+        </DataGrid>
         
         <!-- Overlay de carga -->
-        <Border Grid.Row="1"
+        <Border Grid.Row="0"
                 Background="{DynamicResource LayerFillColorDefaultBrush}"
                 IsVisible="{Binding IsLoadingProjects}">
           <StackPanel HorizontalAlignment="Center" 
