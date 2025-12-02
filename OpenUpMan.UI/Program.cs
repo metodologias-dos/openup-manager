@@ -6,7 +6,6 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 using OpenUpMan.Data;
-using OpenUpMan.Data.Repositories;
 using OpenUpMan.Services;
 using Microsoft.EntityFrameworkCore;
 using OpenUpMan.Domain;
@@ -86,8 +85,20 @@ sealed class Program
         services.AddScoped<IProjectUserRepository, ProjectUserRepository>();
         services.AddScoped<IProjectUserService, ProjectUserService>();
         
-        services.AddScoped<IProjectPhaseRepository, ProjectPhaseRepository>();
-        services.AddScoped<IProjectPhaseService, ProjectPhaseService>();
+        // New schema repositories and services
+        services.AddScoped<IPhaseRepository, PhaseRepository>();
+        services.AddScoped<IPhaseService, PhaseService>();
+        
+        services.AddScoped<IIterationRepository, IterationRepository>();
+        services.AddScoped<IIterationService, IterationService>();
+        
+        services.AddScoped<IMicroincrementRepository, MicroincrementRepository>();
+        services.AddScoped<IMicroincrementService, MicroincrementService>();
+        
+        services.AddScoped<IArtifactRepository, ArtifactRepository>();
+        services.AddScoped<IArtifactService, ArtifactService>();
+        
+        services.AddScoped<IArtifactVersionService, ArtifactVersionService>();
         
         // Role repositories and services
         services.AddScoped<IRoleRepository, RoleRepository>();
@@ -109,12 +120,12 @@ sealed class Program
         {
             using var scope = ServiceProvider.CreateScope();
             var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            var logger = scope.ServiceProvider.GetRequiredService<ILogger<OpenUpMan.Data.Migrations.DatabaseMigrator>>();
+            var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
             
-            // Use DatabaseMigrator to handle schema updates automatically
-            // autoRemoveObsoleteColumns=true will automatically remove columns that no longer exist in entities
-            var migrator = new OpenUpMan.Data.Migrations.DatabaseMigrator(ctx, logger, autoRemoveObsoleteColumns: true);
-            migrator.MigrateAsync().Wait();
+            // Apply EF Core migrations automatically on startup
+            logger.LogInformation("Applying database migrations...");
+            ctx.Database.Migrate();
+            logger.LogInformation("Database migrations applied successfully.");
 
             // Seed predefined roles
             SeedRoles(ctx, logger);
@@ -129,6 +140,7 @@ sealed class Program
                 using var cmd = conn.CreateCommand();
                 cmd.CommandText = "PRAGMA journal_mode=WAL;";
                 cmd.ExecuteNonQuery();
+                logger.LogInformation("SQLite WAL mode enabled.");
             }
             finally
             {

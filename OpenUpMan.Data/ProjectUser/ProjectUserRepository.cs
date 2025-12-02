@@ -12,23 +12,30 @@ namespace OpenUpMan.Data
             _ctx = ctx;
         }
 
-        public async Task<ProjectUser?> GetByIdAsync(Guid projectId, Guid userId, CancellationToken ct = default)
+        public async Task<ProjectUser?> GetByIdAsync(int id, CancellationToken ct = default)
+        {
+            return await _ctx.ProjectUsers.FindAsync(new object[] { id }, ct);
+        }
+
+        public async Task<ProjectUser?> GetByProjectAndUserAsync(int projectId, int userId, CancellationToken ct = default)
         {
             return await _ctx.ProjectUsers
                 .FirstOrDefaultAsync(pu => pu.ProjectId == projectId && pu.UserId == userId, ct);
         }
 
-        public async Task<IEnumerable<ProjectUser>> GetByProjectIdAsync(Guid projectId, CancellationToken ct = default)
+        public async Task<IEnumerable<ProjectUser>> GetByProjectIdAsync(int projectId, CancellationToken ct = default)
         {
             return await _ctx.ProjectUsers
                 .Where(pu => pu.ProjectId == projectId)
+                .OrderBy(pu => pu.AddedAt)
                 .ToListAsync(ct);
         }
 
-        public async Task<IEnumerable<ProjectUser>> GetByUserIdAsync(Guid userId, CancellationToken ct = default)
+        public async Task<IEnumerable<ProjectUser>> GetByUserIdAsync(int userId, CancellationToken ct = default)
         {
             return await _ctx.ProjectUsers
                 .Where(pu => pu.UserId == userId)
+                .OrderBy(pu => pu.AddedAt)
                 .ToListAsync(ct);
         }
 
@@ -37,10 +44,19 @@ namespace OpenUpMan.Data
             await _ctx.ProjectUsers.AddAsync(projectUser, ct);
         }
 
-        public async Task RemoveAsync(ProjectUser projectUser, CancellationToken ct = default)
+        public Task UpdateAsync(ProjectUser projectUser, CancellationToken ct = default)
         {
-            _ctx.ProjectUsers.Remove(projectUser);
-            await Task.CompletedTask;
+            _ctx.ProjectUsers.Update(projectUser);
+            return Task.CompletedTask;
+        }
+
+        public async Task RemoveAsync(int id, CancellationToken ct = default)
+        {
+            var projectUser = await GetByIdAsync(id, ct);
+            if (projectUser != null)
+            {
+                _ctx.ProjectUsers.Remove(projectUser);
+            }
         }
 
         public async Task SaveChangesAsync(CancellationToken ct = default)

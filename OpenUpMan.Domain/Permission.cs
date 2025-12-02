@@ -2,7 +2,7 @@ namespace OpenUpMan.Domain
 {
     public class Permission
     {
-        public Guid Id { get; private set; }
+        public int Id { get; private set; }
         public string Name { get; private set; } = null!;
         public string? Description { get; private set; }
 
@@ -16,7 +16,6 @@ namespace OpenUpMan.Domain
                 throw new ArgumentException("Name cannot be null or empty.", nameof(name));
             }
 
-            Id = Guid.NewGuid();
             Name = name;
             Description = description;
         }

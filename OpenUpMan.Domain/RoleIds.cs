@@ -9,42 +9,42 @@ namespace OpenUpMan.Domain
         /// <summary>
         /// Rol de Administrador - Acceso completo al sistema
         /// </summary>
-        public static readonly Guid Admin = Guid.Parse("00000000-0000-0000-0000-000000000001");
+        public const int Admin = 1;
 
         /// <summary>
         /// Rol de Product Owner - Gestión del producto
         /// </summary>
-        public static readonly Guid ProductOwner = Guid.Parse("00000000-0000-0000-0000-000000000002");
+        public const int ProductOwner = 2;
 
         /// <summary>
         /// Rol de Scrum Master - Facilitador del equipo
         /// </summary>
-        public static readonly Guid ScrumMaster = Guid.Parse("00000000-0000-0000-0000-000000000003");
+        public const int ScrumMaster = 3;
 
         /// <summary>
         /// Rol de Desarrollador - Desarrollo de software
         /// </summary>
-        public static readonly Guid Desarrollador = Guid.Parse("00000000-0000-0000-0000-000000000004");
+        public const int Desarrollador = 4;
 
         /// <summary>
         /// Rol de Tester - Pruebas y QA
         /// </summary>
-        public static readonly Guid Tester = Guid.Parse("00000000-0000-0000-0000-000000000005");
+        public const int Tester = 5;
 
         /// <summary>
         /// Rol de Revisor - Revisión de documentos y código
         /// </summary>
-        public static readonly Guid Revisor = Guid.Parse("00000000-0000-0000-0000-000000000006");
+        public const int Revisor = 6;
 
         /// <summary>
         /// Rol de Autor - Creación de contenido
         /// </summary>
-        public static readonly Guid Autor = Guid.Parse("00000000-0000-0000-0000-000000000007");
+        public const int Autor = 7;
 
         /// <summary>
         /// Rol de Viewer - Solo lectura
         /// </summary>
-        public static readonly Guid Viewer = Guid.Parse("00000000-0000-0000-0000-000000000008");
+        public const int Viewer = 8;
     }
 }
 

@@ -1,5 +1,5 @@
 using Microsoft.Extensions.Logging;
-using OpenUpMan.Data.Repositories;
+using OpenUpMan.Data;
 using OpenUpMan.Domain;
 
 namespace OpenUpMan.Services
@@ -64,11 +64,11 @@ namespace OpenUpMan.Services
             }
         }
 
-        public async Task<ServiceResult<Role>> GetRoleByIdAsync(Guid id, CancellationToken ct = default)
+        public async Task<ServiceResult<Role>> GetRoleByIdAsync(int id, CancellationToken ct = default)
         {
             try
             {
-                if (id == Guid.Empty)
+                if (id <= 0)
                 {
                     return new ServiceResult<Role>(
                         Success: false,
@@ -176,11 +176,11 @@ namespace OpenUpMan.Services
             }
         }
 
-        public async Task<ServiceResult<Role>> UpdateRoleAsync(Guid id, string name, string? description = null, CancellationToken ct = default)
+        public async Task<ServiceResult<Role>> UpdateRoleAsync(int id, string name, string? description = null, CancellationToken ct = default)
         {
             try
             {
-                if (id == Guid.Empty)
+                if (id <= 0)
                 {
                     return new ServiceResult<Role>(
                         Success: false,
@@ -235,11 +235,11 @@ namespace OpenUpMan.Services
             }
         }
 
-        public async Task<ServiceResult<bool>> DeleteRoleAsync(Guid id, CancellationToken ct = default)
+        public async Task<ServiceResult<bool>> DeleteRoleAsync(int id, CancellationToken ct = default)
         {
             try
             {
-                if (id == Guid.Empty)
+                if (id <= 0)
                 {
                     return new ServiceResult<bool>(
                         Success: false,

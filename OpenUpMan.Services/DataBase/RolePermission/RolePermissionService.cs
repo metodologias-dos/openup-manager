@@ -1,5 +1,5 @@
 using Microsoft.Extensions.Logging;
-using OpenUpMan.Data.Repositories;
+using OpenUpMan.Data;
 using OpenUpMan.Domain;
 
 namespace OpenUpMan.Services
@@ -15,11 +15,11 @@ namespace OpenUpMan.Services
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public async Task<ServiceResult<RolePermission>> AssignPermissionToRoleAsync(Guid roleId, Guid permissionId, CancellationToken ct = default)
+        public async Task<ServiceResult<RolePermission>> AssignPermissionToRoleAsync(int roleId, int permissionId, CancellationToken ct = default)
         {
             try
             {
-                if (roleId == Guid.Empty)
+                if (roleId <= 0)
                 {
                     return new ServiceResult<RolePermission>(
                         Success: false,
@@ -29,7 +29,7 @@ namespace OpenUpMan.Services
                     );
                 }
 
-                if (permissionId == Guid.Empty)
+                if (permissionId <= 0)
                 {
                     return new ServiceResult<RolePermission>(
                         Success: false,
@@ -74,11 +74,11 @@ namespace OpenUpMan.Services
             }
         }
 
-        public async Task<ServiceResult<IEnumerable<Permission>>> GetPermissionsByRoleIdAsync(Guid roleId, CancellationToken ct = default)
+        public async Task<ServiceResult<IEnumerable<Permission>>> GetPermissionsByRoleIdAsync(int roleId, CancellationToken ct = default)
         {
             try
             {
-                if (roleId == Guid.Empty)
+                if (roleId <= 0)
                 {
                     return new ServiceResult<IEnumerable<Permission>>(
                         Success: false,
@@ -108,11 +108,11 @@ namespace OpenUpMan.Services
             }
         }
 
-        public async Task<ServiceResult<IEnumerable<Role>>> GetRolesByPermissionIdAsync(Guid permissionId, CancellationToken ct = default)
+        public async Task<ServiceResult<IEnumerable<Role>>> GetRolesByPermissionIdAsync(int permissionId, CancellationToken ct = default)
         {
             try
             {
-                if (permissionId == Guid.Empty)
+                if (permissionId <= 0)
                 {
                     return new ServiceResult<IEnumerable<Role>>(
                         Success: false,
@@ -142,11 +142,11 @@ namespace OpenUpMan.Services
             }
         }
 
-        public async Task<ServiceResult<bool>> RemovePermissionFromRoleAsync(Guid roleId, Guid permissionId, CancellationToken ct = default)
+        public async Task<ServiceResult<bool>> RemovePermissionFromRoleAsync(int roleId, int permissionId, CancellationToken ct = default)
         {
             try
             {
-                if (roleId == Guid.Empty)
+                if (roleId <= 0)
                 {
                     return new ServiceResult<bool>(
                         Success: false,
@@ -156,7 +156,7 @@ namespace OpenUpMan.Services
                     );
                 }
 
-                if (permissionId == Guid.Empty)
+                if (permissionId <= 0)
                 {
                     return new ServiceResult<bool>(
                         Success: false,
@@ -200,11 +200,11 @@ namespace OpenUpMan.Services
             }
         }
 
-        public async Task<ServiceResult<bool>> RoleHasPermissionAsync(Guid roleId, Guid permissionId, CancellationToken ct = default)
+        public async Task<ServiceResult<bool>> RoleHasPermissionAsync(int roleId, int permissionId, CancellationToken ct = default)
         {
             try
             {
-                if (roleId == Guid.Empty || permissionId == Guid.Empty)
+                if (roleId <= 0 || permissionId <= 0)
                 {
                     return new ServiceResult<bool>(
                         Success: false,
