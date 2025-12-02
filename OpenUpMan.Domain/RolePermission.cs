@@ -2,12 +2,12 @@ namespace OpenUpMan.Domain
 {
     public class RolePermission
     {
-        public int Id { get; private set; }
-        public int RoleId { get; private set; }
-        public int PermissionId { get; private set; }
+        public int Id { get; set; }
+        public int RoleId { get; set; }
+        public int PermissionId { get; set; }
 
-        // Parameterless constructor for EF
-        protected RolePermission() { }
+        // Parameterless constructor for EF and seed data
+        public RolePermission() { }
 
         public RolePermission(int roleId, int permissionId)
         {
