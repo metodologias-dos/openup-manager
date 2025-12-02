@@ -222,24 +222,24 @@ public partial class ProjectsPopup : Window
         });
     }
 
-    private async void OnOpenProjectRequested(string? identifier)
+    private async void OnOpenProjectRequested(string? code)
     {
-        if (string.IsNullOrEmpty(identifier)) return;
+        if (string.IsNullOrEmpty(code)) return;
 
         // Try to get project name from service (optional)
         var projectService = Program.ServiceProvider.GetService(typeof(OpenUpMan.Services.IProjectService)) as OpenUpMan.Services.IProjectService;
-        string title = identifier;
+        string title = code;
         if (projectService != null)
         {
             try
             {
-                var result = await projectService.GetProjectByIdentifierAsync(identifier);
+                var result = await projectService.GetProjectByCodeAsync(code);
                 if (result.Success && result.Project != null)
-                    title = result.Project.Name ?? identifier;
+                    title = result.Project.Name ?? code;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to load project '{identifier}': {ex.Message}");
+                Console.WriteLine($"Failed to load project '{code}': {ex.Message}");
             }
         }
 

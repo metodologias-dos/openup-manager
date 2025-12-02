@@ -11,13 +11,16 @@ public partial class ProjectDialogViewModel : ViewModelBase
 {
     private readonly IProjectService _projectService;
     private readonly IProjectUserService _projectUserService;
-    private readonly Guid _currentUserId;
+    private readonly int _currentUserId;
 
     public event Action? CloseRequested;
     public event Action<ProjectDialogResult>? ProjectCreated;
 
     [ObservableProperty]
     private string _name = string.Empty;
+
+    [ObservableProperty]
+    private string? _code;
 
     [ObservableProperty]
     private string? _description;
@@ -50,7 +53,7 @@ public partial class ProjectDialogViewModel : ViewModelBase
     public IRelayCommand CreateCommand { get; }
     public IRelayCommand CancelCommand { get; }
 
-    public ProjectDialogViewModel(IProjectService projectService, IProjectUserService projectUserService, Guid currentUserId)
+    public ProjectDialogViewModel(IProjectService projectService, IProjectUserService projectUserService, int currentUserId)
     {
         _projectService = projectService;
         _projectUserService = projectUserService;
@@ -131,12 +134,14 @@ public partial class ProjectDialogViewModel : ViewModelBase
 
         try
         {
-            // Crear el proyecto en la base de datos (el identificador se autogenera)
+            // Crear el proyecto en la base de datos (el código se autogenerará si no se proporciona)
             var projectResult = await _projectService.CreateProjectAsync(
                 name: Name.Trim(),
+                createdBy: _currentUserId,
+                code: string.IsNullOrWhiteSpace(Code) ? null : Code.Trim(), // null = autogenerar
+                description: string.IsNullOrWhiteSpace(Description) ? null : Description.Trim(),
                 startDate: StartDate!.Value,
-                ownerId: _currentUserId,
-                description: string.IsNullOrWhiteSpace(Description) ? null : Description.Trim()
+                createPhases: true
             );
 
             if (!projectResult.Success || projectResult.Project == null)
@@ -146,7 +151,7 @@ public partial class ProjectDialogViewModel : ViewModelBase
                 return;
             }
 
-            // Agregar el usuario creador al proyecto con permisos de OWNER y rol ADMIN
+            // Agregar el usuario creador al proyecto con rol ADMIN
             var projectUserResult = await _projectUserService.AddUserToProjectAsync(
                 projectId: projectResult.Project.Id,
                 userId: _currentUserId,
@@ -163,7 +168,8 @@ public partial class ProjectDialogViewModel : ViewModelBase
             // Crear resultado para la UI
             var result = new ProjectDialogResult
             {
-                Identifier = projectResult.Project.Identifier,
+                Id = projectResult.Project.Id,
+                Code = projectResult.Project.Code ?? "",
                 Name = projectResult.Project.Name,
                 Description = projectResult.Project.Description,
                 StartDate = projectResult.Project.StartDate
@@ -208,9 +214,10 @@ public partial class ProjectDialogViewModel : ViewModelBase
 /// </summary>
 public class ProjectDialogResult
 {
-    public string Identifier { get; set; } = string.Empty;
+    public int Id { get; set; }
+    public string Code { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
-    public DateTime StartDate { get; set; }
+    public DateTime? StartDate { get; set; }
 }
 

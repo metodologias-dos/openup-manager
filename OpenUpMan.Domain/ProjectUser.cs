@@ -2,40 +2,43 @@ namespace OpenUpMan.Domain
 {
     public class ProjectUser
     {
-        public Guid ProjectId { get; private set; }
-        public Guid UserId { get; private set; }
-        public Guid RoleId { get; private set; }
+        public int Id { get; private set; }
+        public int ProjectId { get; private set; }
+        public int UserId { get; private set; }
+        public int RoleId { get; private set; }
+        public DateTime AddedAt { get; private set; }
 
         // Parameterless constructor for EF
         protected ProjectUser() { }
 
-        public ProjectUser(Guid projectId, Guid userId, Guid roleId)
+        public ProjectUser(int projectId, int userId, int roleId)
         {
-            if (projectId == Guid.Empty)
+            if (projectId <= 0)
             {
-                throw new ArgumentException("ProjectId cannot be an empty GUID.", nameof(projectId));
+                throw new ArgumentException("ProjectId must be positive.", nameof(projectId));
             }
 
-            if (userId == Guid.Empty)
+            if (userId <= 0)
             {
-                throw new ArgumentException("UserId cannot be an empty GUID.", nameof(userId));
+                throw new ArgumentException("UserId must be positive.", nameof(userId));
             }
 
-            if (roleId == Guid.Empty)
+            if (roleId <= 0)
             {
-                throw new ArgumentException("RoleId cannot be an empty GUID.", nameof(roleId));
+                throw new ArgumentException("RoleId must be positive.", nameof(roleId));
             }
 
             ProjectId = projectId;
             UserId = userId;
             RoleId = roleId;
+            AddedAt = DateTime.UtcNow;
         }
 
-        public void SetRole(Guid newRoleId)
+        public void SetRole(int newRoleId)
         {
-            if (newRoleId == Guid.Empty)
+            if (newRoleId <= 0)
             {
-                throw new ArgumentException("RoleId cannot be an empty GUID.", nameof(newRoleId));
+                throw new ArgumentException("RoleId must be positive.", nameof(newRoleId));
             }
 
             RoleId = newRoleId;

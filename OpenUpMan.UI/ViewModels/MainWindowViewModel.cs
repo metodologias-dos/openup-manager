@@ -45,5 +45,15 @@ public partial class MainWindowViewModel : ViewModelBase
                 User: null
             ));
         }
+
+        public Task<ServiceResult> GetUserByIdAsync(int userId, CancellationToken ct = default)
+        {
+            return Task.FromResult(new ServiceResult(
+                Success: false,
+                ResultType: ServiceResultType.Error,
+                Message: "No backend configured.",
+                User: null
+            ));
+        }
     }
 }

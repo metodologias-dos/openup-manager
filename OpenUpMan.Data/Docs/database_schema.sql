@@ -50,7 +50,7 @@ CREATE TABLE projects (
                           code TEXT UNIQUE,
                           description TEXT,
                           start_date TEXT,
-                          status TEXT DEFAULT 'CREATED', -- CREATED, ACTIVE, ARCHIVED, CLOSED
+                          status TEXT DEFAULT 'CREATED', -- CREATED, ACTIVE, CLOSED
                           created_by INTEGER,
                           created_at TEXT DEFAULT (datetime('now')),
                           updated_at TEXT,
@@ -113,3 +113,32 @@ CREATE TABLE artifacts (
                            description TEXT,
                            current_state TEXT DEFAULT 'PENDING' -- PENDING, DELIVERED
 );
+
+-- Versiones de artefacto
+CREATE TABLE artifact_versions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    artifact_id INTEGER NOT NULL,
+    version_number INTEGER NOT NULL DEFAULT 0, -- will be set by trigger when 0
+    created_by INTEGER,
+    created_at TEXT DEFAULT (datetime('now')),
+    notes TEXT,
+    file_blob BLOB,
+    file_mime TEXT,
+    build_info TEXT,
+    FOREIGN KEY(artifact_id) REFERENCES artifacts(id),
+    FOREIGN KEY(created_by) REFERENCES users(id),
+    UNIQUE(artifact_id, version_number)
+);
+
+CREATE TRIGGER artifact_versions_set_version_number
+AFTER INSERT ON artifact_versions
+BEGIN
+    UPDATE artifact_versions
+    SET version_number =
+        (SELECT COALESCE(MAX(version_number), 0) + 1
+         FROM artifact_versions
+         WHERE artifact_id = NEW.artifact_id
+           AND id <> NEW.id)
+    WHERE id = NEW.id
+      AND (NEW.version_number IS NULL OR NEW.version_number = 0);
+END;

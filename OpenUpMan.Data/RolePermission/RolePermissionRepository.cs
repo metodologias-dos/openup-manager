@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using OpenUpMan.Domain;
 
-namespace OpenUpMan.Data.Repositories
+namespace OpenUpMan.Data
 {
     public class RolePermissionRepository : IRolePermissionRepository
     {
@@ -12,55 +12,65 @@ namespace OpenUpMan.Data.Repositories
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        public async Task<IEnumerable<Permission>> GetPermissionsByRoleIdAsync(Guid roleId)
+        public async Task<IEnumerable<Permission>> GetPermissionsByRoleIdAsync(int roleId, CancellationToken ct = default)
         {
             var rolePermissions = await _context.RolePermissions
                 .Where(rp => rp.RoleId == roleId)
-                .ToListAsync();
+                .ToListAsync(ct);
             
             var permissionIds = rolePermissions.Select(rp => rp.PermissionId);
             return await _context.Permissions
                 .Where(p => permissionIds.Contains(p.Id))
-                .ToListAsync();
+                .OrderBy(p => p.Name)
+                .ToListAsync(ct);
         }
 
-        public async Task<IEnumerable<Role>> GetRolesByPermissionIdAsync(Guid permissionId)
+        public async Task<IEnumerable<Role>> GetRolesByPermissionIdAsync(int permissionId, CancellationToken ct = default)
         {
             var rolePermissions = await _context.RolePermissions
                 .Where(rp => rp.PermissionId == permissionId)
-                .ToListAsync();
+                .ToListAsync(ct);
             
             var roleIds = rolePermissions.Select(rp => rp.RoleId);
             return await _context.Roles
                 .Where(r => roleIds.Contains(r.Id))
-                .ToListAsync();
+                .OrderBy(r => r.Name)
+                .ToListAsync(ct);
         }
 
-        public async Task AddAsync(RolePermission rolePermission)
+        public async Task<IEnumerable<RolePermission>> GetAllAsync(CancellationToken ct = default)
+        {
+            return await _context.RolePermissions.ToListAsync(ct);
+        }
+
+        public async Task AddAsync(RolePermission rolePermission, CancellationToken ct = default)
         {
             if (rolePermission == null)
                 throw new ArgumentNullException(nameof(rolePermission));
 
-            await _context.RolePermissions.AddAsync(rolePermission);
-            await _context.SaveChangesAsync();
+            await _context.RolePermissions.AddAsync(rolePermission, ct);
         }
 
-        public async Task DeleteAsync(Guid roleId, Guid permissionId)
+        public async Task DeleteAsync(int roleId, int permissionId, CancellationToken ct = default)
         {
             var rolePermission = await _context.RolePermissions
-                .FirstOrDefaultAsync(rp => rp.RoleId == roleId && rp.PermissionId == permissionId);
+                .FirstOrDefaultAsync(rp => rp.RoleId == roleId && rp.PermissionId == permissionId, ct);
 
             if (rolePermission != null)
             {
                 _context.RolePermissions.Remove(rolePermission);
-                await _context.SaveChangesAsync();
             }
         }
 
-        public async Task<bool> ExistsAsync(Guid roleId, Guid permissionId)
+        public async Task<bool> ExistsAsync(int roleId, int permissionId, CancellationToken ct = default)
         {
             return await _context.RolePermissions
-                .AnyAsync(rp => rp.RoleId == roleId && rp.PermissionId == permissionId);
+                .AnyAsync(rp => rp.RoleId == roleId && rp.PermissionId == permissionId, ct);
+        }
+
+        public async Task SaveChangesAsync(CancellationToken ct = default)
+        {
+            await _context.SaveChangesAsync(ct);
         }
     }
 }

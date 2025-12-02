@@ -2,22 +2,23 @@ namespace OpenUpMan.Domain
 {
     public class RolePermission
     {
-        public Guid RoleId { get; private set; }
-        public Guid PermissionId { get; private set; }
+        public int Id { get; private set; }
+        public int RoleId { get; private set; }
+        public int PermissionId { get; private set; }
 
         // Parameterless constructor for EF
         protected RolePermission() { }
 
-        public RolePermission(Guid roleId, Guid permissionId)
+        public RolePermission(int roleId, int permissionId)
         {
-            if (roleId == Guid.Empty)
+            if (roleId <= 0)
             {
-                throw new ArgumentException("RoleId cannot be an empty GUID.", nameof(roleId));
+                throw new ArgumentException("RoleId must be positive.", nameof(roleId));
             }
 
-            if (permissionId == Guid.Empty)
+            if (permissionId <= 0)
             {
-                throw new ArgumentException("PermissionId cannot be an empty GUID.", nameof(permissionId));
+                throw new ArgumentException("PermissionId must be positive.", nameof(permissionId));
             }
 
             RoleId = roleId;

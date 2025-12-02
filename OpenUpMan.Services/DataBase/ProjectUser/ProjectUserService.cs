@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Logging;
 using OpenUpMan.Data;
-using OpenUpMan.Data.Repositories;
 using OpenUpMan.Domain;
 
 namespace OpenUpMan.Services
@@ -21,7 +20,7 @@ namespace OpenUpMan.Services
             _logger = logger;
         }
 
-        public async Task<ProjectUserServiceResult> AddUserToProjectAsync(Guid projectId, Guid userId, Guid roleId, CancellationToken ct = default)
+        public async Task<ProjectUserServiceResult> AddUserToProjectAsync(int projectId, int userId, int roleId, CancellationToken ct = default)
         {
             try
             {
@@ -36,7 +35,7 @@ namespace OpenUpMan.Services
                     );
                 }
 
-                var existing = await _repo.GetByIdAsync(projectId, userId, ct);
+                var existing = await _repo.GetByProjectAndUserAsync(projectId, userId, ct);
                 if (existing != null)
                 {
                     return new ProjectUserServiceResult(
@@ -70,11 +69,11 @@ namespace OpenUpMan.Services
             }
         }
 
-        public async Task<ProjectUserServiceResult> RemoveUserFromProjectAsync(Guid projectId, Guid userId, CancellationToken ct = default)
+        public async Task<ProjectUserServiceResult> RemoveUserFromProjectAsync(int projectId, int userId, CancellationToken ct = default)
         {
             try
             {
-                var projectUser = await _repo.GetByIdAsync(projectId, userId, ct);
+                var projectUser = await _repo.GetByProjectAndUserAsync(projectId, userId, ct);
                 if (projectUser == null)
                 {
                     return new ProjectUserServiceResult(
@@ -84,7 +83,7 @@ namespace OpenUpMan.Services
                     );
                 }
 
-                await _repo.RemoveAsync(projectUser, ct);
+                await _repo.RemoveAsync(projectUser.Id, ct);
                 await _repo.SaveChangesAsync(ct);
 
                 return new ProjectUserServiceResult(
@@ -104,7 +103,7 @@ namespace OpenUpMan.Services
             }
         }
 
-        public async Task<ProjectUserServiceResult> ChangeUserRoleAsync(Guid projectId, Guid userId, Guid newRoleId, CancellationToken ct = default)
+        public async Task<ProjectUserServiceResult> ChangeUserRoleAsync(int projectId, int userId, int newRoleId, CancellationToken ct = default)
         {
             try
             {
@@ -119,7 +118,7 @@ namespace OpenUpMan.Services
                     );
                 }
 
-                var projectUser = await _repo.GetByIdAsync(projectId, userId, ct);
+                var projectUser = await _repo.GetByProjectAndUserAsync(projectId, userId, ct);
                 if (projectUser == null)
                 {
                     return new ProjectUserServiceResult(
@@ -130,6 +129,7 @@ namespace OpenUpMan.Services
                 }
 
                 projectUser.SetRole(newRoleId);
+                await _repo.UpdateAsync(projectUser, ct);
                 await _repo.SaveChangesAsync(ct);
 
                 _logger.LogInformation("Rol del usuario {UserId} en proyecto {ProjectId} actualizado a {RoleId}", userId, projectId, newRoleId);
@@ -153,12 +153,12 @@ namespace OpenUpMan.Services
         }
 
 
-        public async Task<IEnumerable<ProjectUser>> GetProjectUsersAsync(Guid projectId, CancellationToken ct = default)
+        public async Task<IEnumerable<ProjectUser>> GetProjectUsersAsync(int projectId, CancellationToken ct = default)
         {
             return await _repo.GetByProjectIdAsync(projectId, ct);
         }
 
-        public async Task<IEnumerable<ProjectUser>> GetUserProjectsAsync(Guid userId, CancellationToken ct = default)
+        public async Task<IEnumerable<ProjectUser>> GetUserProjectsAsync(int userId, CancellationToken ct = default)
         {
             return await _repo.GetByUserIdAsync(userId, ct);
         }

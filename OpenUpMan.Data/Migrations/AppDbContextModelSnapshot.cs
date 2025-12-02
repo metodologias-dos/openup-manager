@@ -17,336 +17,336 @@ namespace OpenUpMan.Data.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.0");
 
-            modelBuilder.Entity("OpenUpMan.Domain.Artefact", b =>
+            modelBuilder.Entity("OpenUpMan.Domain.Artifact", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("id");
+
+                    b.Property<string>("ArtifactType")
                         .HasColumnType("TEXT")
-                        .HasColumnName("Id");
+                        .HasColumnName("artifact_type");
+
+                    b.Property<string>("CurrentState")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("current_state");
 
                     b.Property<string>("Description")
                         .HasColumnType("TEXT")
-                        .HasColumnName("Description");
+                        .HasColumnName("description");
+
+                    b.Property<int>("Mandatory")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("mandatory");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT")
-                        .HasColumnName("Name");
+                        .HasColumnName("name");
+
+                    b.Property<int>("PhaseId")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("phase_id");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("project_id");
 
                     b.HasKey("Id");
 
-                    b.ToTable("artefacts", (string)null);
+                    b.HasIndex("PhaseId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("artifacts", (string)null);
                 });
 
-            modelBuilder.Entity("OpenUpMan.Domain.Document", b =>
+            modelBuilder.Entity("OpenUpMan.Domain.ArtifactVersion", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("id");
+
+                    b.Property<int>("ArtifactId")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("artifact_id");
+
+                    b.Property<string>("BuildInfo")
                         .HasColumnType("TEXT")
-                        .HasColumnName("Id");
+                        .HasColumnName("build_info");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("created_by");
+
+                    b.Property<byte[]>("FileBlob")
+                        .HasColumnType("BLOB")
+                        .HasColumnName("file_blob");
+
+                    b.Property<string>("FileMime")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("file_mime");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("notes");
+
+                    b.Property<int>("VersionNumber")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("version_number");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("ArtifactId", "VersionNumber")
+                        .IsUnique();
+
+                    b.ToTable("artifact_versions", (string)null);
+                });
+
+            modelBuilder.Entity("OpenUpMan.Domain.Iteration", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("id");
+
+                    b.Property<int>("CompletionPercentage")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("completion_percentage");
+
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("end_date");
+
+                    b.Property<string>("Goal")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("goal");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("name");
+
+                    b.Property<int>("PhaseId")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("phase_id");
+
+                    b.Property<DateTime?>("StartDate")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("start_date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PhaseId");
+
+                    b.ToTable("iterations", (string)null);
+                });
+
+            modelBuilder.Entity("OpenUpMan.Domain.Microincrement", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("id");
+
+                    b.Property<int?>("ArtifactId")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("artifact_id");
+
+                    b.Property<int?>("AuthorId")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("author_id");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("date");
 
                     b.Property<string>("Description")
                         .HasColumnType("TEXT")
-                        .HasColumnName("Description");
+                        .HasColumnName("description");
 
-                    b.Property<Guid>("PhaseItemId")
+                    b.Property<string>("EvidenceUrl")
                         .HasColumnType("TEXT")
-                        .HasColumnName("PhaseItemId");
+                        .HasColumnName("evidence_url");
+
+                    b.Property<int>("IterationId")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("iteration_id");
 
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("TEXT")
-                        .HasColumnName("Title");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("documents", (string)null);
-                });
-
-            modelBuilder.Entity("OpenUpMan.Domain.DocumentVersion", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT")
-                        .HasColumnName("Id");
-
-                    b.Property<byte[]>("Binario")
-                        .IsRequired()
-                        .HasColumnType("BLOB")
-                        .HasColumnName("binario");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("CreatedAt");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("CreatedBy");
-
-                    b.Property<Guid>("DocumentId")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("DocumentId");
-
-                    b.Property<string>("Extension")
-                        .IsRequired()
-                        .HasColumnType("TEXT")
-                        .HasColumnName("extension");
-
-                    b.Property<string>("Observations")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("Observations");
-
-                    b.Property<int>("VersionNumber")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("VersionNumber");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatedBy");
-
-                    b.HasIndex("DocumentId", "VersionNumber")
-                        .IsUnique();
-
-                    b.ToTable("document_versions", (string)null);
-                });
-
-            modelBuilder.Entity("OpenUpMan.Domain.Permission", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT")
-                        .HasColumnName("Id");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("Description");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("TEXT")
-                        .HasColumnName("Name");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("permission", (string)null);
-                });
-
-            modelBuilder.Entity("OpenUpMan.Domain.PhaseArtefact", b =>
-                {
-                    b.Property<Guid>("PhaseId")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("PhaseId");
-
-                    b.Property<Guid>("ArtefactId")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("ArtefactId");
-
-                    b.Property<Guid?>("DocumentId")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("DocumentId");
-
-                    b.Property<bool>("Registrado")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("Registrado");
-
-                    b.HasKey("PhaseId", "ArtefactId");
-
-                    b.HasIndex("ArtefactId");
-
-                    b.HasIndex("DocumentId");
-
-                    b.ToTable("phase_artefacts", (string)null);
-                });
-
-            modelBuilder.Entity("OpenUpMan.Domain.PhaseItem", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT")
-                        .HasColumnName("Id");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("CreatedAt");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("CreatedBy");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("Description");
-
-                    b.Property<DateTime?>("EndDate")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("EndDate");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("TEXT")
-                        .HasColumnName("Name");
-
-                    b.Property<int>("Number")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("Number");
-
-                    b.Property<Guid?>("ParentIterationId")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("ParentIterationId");
-
-                    b.Property<Guid>("ProjectPhaseId")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("ProjectPhaseId");
-
-                    b.Property<DateTime?>("StartDate")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("StartDate");
-
-                    b.Property<string>("State")
-                        .IsRequired()
-                        .HasColumnType("TEXT")
-                        .HasColumnName("State");
+                        .HasColumnName("title");
 
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasColumnType("TEXT")
-                        .HasColumnName("Type");
+                        .HasColumnName("type");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CreatedBy");
+                    b.HasIndex("ArtifactId");
 
-                    b.HasIndex("ParentIterationId");
+                    b.HasIndex("AuthorId");
 
-                    b.HasIndex("ProjectPhaseId");
+                    b.HasIndex("IterationId");
 
-                    b.ToTable("phase_items", (string)null);
+                    b.ToTable("microincrements", (string)null);
                 });
 
-            modelBuilder.Entity("OpenUpMan.Domain.PhaseItemUser", b =>
+            modelBuilder.Entity("OpenUpMan.Domain.Permission", b =>
                 {
-                    b.Property<Guid>("PhaseItemId")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("PhaseItemId");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("UserId");
-
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasColumnType("TEXT")
-                        .HasColumnName("Role");
-
-                    b.HasKey("PhaseItemId", "UserId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("phase_item_users", (string)null);
-                });
-
-            modelBuilder.Entity("OpenUpMan.Domain.Project", b =>
-                {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT")
-                        .HasColumnName("Id");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("id");
 
                     b.Property<string>("Description")
                         .HasColumnType("TEXT")
-                        .HasColumnName("Description");
-
-                    b.Property<string>("Identifier")
-                        .IsRequired()
-                        .HasColumnType("TEXT")
-                        .HasColumnName("Identifier");
+                        .HasColumnName("description");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT")
-                        .HasColumnName("Name");
-
-                    b.Property<Guid>("OwnerId")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("OwnerId");
-
-                    b.Property<DateTime>("StartDate")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("StartDate");
-
-                    b.Property<string>("State")
-                        .IsRequired()
-                        .HasColumnType("TEXT")
-                        .HasColumnName("State");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnName("name");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Identifier")
+                    b.HasIndex("Name")
                         .IsUnique();
 
-                    b.HasIndex("OwnerId");
-
-                    b.ToTable("projects", (string)null);
+                    b.ToTable("permissions", (string)null);
                 });
 
-            modelBuilder.Entity("OpenUpMan.Domain.ProjectPhase", b =>
+            modelBuilder.Entity("OpenUpMan.Domain.Phase", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT")
-                        .HasColumnName("Id");
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("id");
 
-                    b.Property<string>("Code")
-                        .IsRequired()
+                    b.Property<DateTime?>("EndDate")
                         .HasColumnType("TEXT")
-                        .HasColumnName("Code");
+                        .HasColumnName("end_date");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT")
-                        .HasColumnName("Name");
+                        .HasColumnName("name");
 
-                    b.Property<int>("Order")
+                    b.Property<int?>("OrderIndex")
                         .HasColumnType("INTEGER")
-                        .HasColumnName("Order");
+                        .HasColumnName("order_index");
 
-                    b.Property<Guid>("ProjectId")
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("project_id");
+
+                    b.Property<DateTime?>("StartDate")
                         .HasColumnType("TEXT")
-                        .HasColumnName("ProjectId");
+                        .HasColumnName("start_date");
 
-                    b.Property<string>("State")
+                    b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("TEXT")
-                        .HasColumnName("State");
+                        .HasColumnName("status");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ProjectId");
 
-                    b.ToTable("project_phases", (string)null);
+                    b.ToTable("phases", (string)null);
+                });
+
+            modelBuilder.Entity("OpenUpMan.Domain.Project", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Code")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("code");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("description");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("name");
+
+                    b.Property<DateTime?>("StartDate")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("start_date");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.HasIndex("CreatedBy");
+
+                    b.ToTable("projects", (string)null);
                 });
 
             modelBuilder.Entity("OpenUpMan.Domain.ProjectUser", b =>
                 {
-                    b.Property<Guid>("ProjectId")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("ProjectId");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("id");
 
-                    b.Property<Guid>("UserId")
+                    b.Property<DateTime>("AddedAt")
                         .HasColumnType("TEXT")
-                        .HasColumnName("UserId");
+                        .HasColumnName("added_at");
 
-                    b.Property<Guid>("RoleId")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("RoleId");
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("project_id");
 
-                    b.HasKey("ProjectId", "UserId");
+                    b.Property<int>("RoleId")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("role_id");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId");
 
                     b.HasIndex("RoleId");
 
@@ -357,66 +357,72 @@ namespace OpenUpMan.Data.Migrations
 
             modelBuilder.Entity("OpenUpMan.Domain.Role", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT")
-                        .HasColumnName("Id");
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("id");
 
                     b.Property<string>("Description")
                         .HasColumnType("TEXT")
-                        .HasColumnName("Description");
+                        .HasColumnName("description");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT")
-                        .HasColumnName("Name");
+                        .HasColumnName("name");
 
                     b.HasKey("Id");
 
-                    b.ToTable("rol", (string)null);
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("roles", (string)null);
                 });
 
             modelBuilder.Entity("OpenUpMan.Domain.RolePermission", b =>
                 {
-                    b.Property<Guid>("RoleId")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("RoleId");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("id");
 
-                    b.Property<Guid>("PermissionId")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("PermissionId");
+                    b.Property<int>("PermissionId")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("permission_id");
 
-                    b.HasKey("RoleId", "PermissionId");
+                    b.Property<int>("RoleId")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("role_id");
+
+                    b.HasKey("Id");
 
                     b.HasIndex("PermissionId");
 
-                    b.ToTable("rol_permission", (string)null);
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("role_permissions", (string)null);
                 });
 
             modelBuilder.Entity("OpenUpMan.Domain.User", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT")
-                        .HasColumnName("Id");
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("id");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT")
-                        .HasColumnName("CreatedAt");
-
-                    b.Property<DateTime?>("PasswordChangedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("PasswordChangedAt");
+                        .HasColumnName("created_at");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("TEXT")
-                        .HasColumnName("PasswordHash");
+                        .HasColumnName("password_hash");
 
                     b.Property<string>("Username")
                         .IsRequired()
                         .HasColumnType("TEXT")
-                        .HasColumnName("Username");
+                        .HasColumnName("username");
 
                     b.HasKey("Id");
 
@@ -426,72 +432,68 @@ namespace OpenUpMan.Data.Migrations
                     b.ToTable("users", (string)null);
                 });
 
-            modelBuilder.Entity("OpenUpMan.Domain.DocumentVersion", b =>
+            modelBuilder.Entity("OpenUpMan.Domain.Artifact", b =>
                 {
-                    b.HasOne("OpenUpMan.Domain.User", null)
+                    b.HasOne("OpenUpMan.Domain.Phase", null)
                         .WithMany()
-                        .HasForeignKey("CreatedBy")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasForeignKey("PhaseId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("OpenUpMan.Domain.Document", null)
+                    b.HasOne("OpenUpMan.Domain.Project", null)
                         .WithMany()
-                        .HasForeignKey("DocumentId")
+                        .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("OpenUpMan.Domain.PhaseArtefact", b =>
+            modelBuilder.Entity("OpenUpMan.Domain.ArtifactVersion", b =>
                 {
-                    b.HasOne("OpenUpMan.Domain.Artefact", null)
+                    b.HasOne("OpenUpMan.Domain.Artifact", null)
                         .WithMany()
-                        .HasForeignKey("ArtefactId")
+                        .HasForeignKey("ArtifactId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("OpenUpMan.Domain.Document", null)
+                    b.HasOne("OpenUpMan.Domain.User", null)
                         .WithMany()
-                        .HasForeignKey("DocumentId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
 
-                    b.HasOne("OpenUpMan.Domain.ProjectPhase", null)
+            modelBuilder.Entity("OpenUpMan.Domain.Iteration", b =>
+                {
+                    b.HasOne("OpenUpMan.Domain.Phase", null)
                         .WithMany()
                         .HasForeignKey("PhaseId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("OpenUpMan.Domain.PhaseItem", b =>
+            modelBuilder.Entity("OpenUpMan.Domain.Microincrement", b =>
                 {
+                    b.HasOne("OpenUpMan.Domain.Artifact", null)
+                        .WithMany()
+                        .HasForeignKey("ArtifactId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("OpenUpMan.Domain.User", null)
                         .WithMany()
-                        .HasForeignKey("CreatedBy")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("OpenUpMan.Domain.PhaseItem", null)
-                        .WithMany()
-                        .HasForeignKey("ParentIterationId")
+                        .HasForeignKey("AuthorId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("OpenUpMan.Domain.ProjectPhase", null)
+                    b.HasOne("OpenUpMan.Domain.Iteration", null)
                         .WithMany()
-                        .HasForeignKey("ProjectPhaseId")
+                        .HasForeignKey("IterationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("OpenUpMan.Domain.PhaseItemUser", b =>
+            modelBuilder.Entity("OpenUpMan.Domain.Phase", b =>
                 {
-                    b.HasOne("OpenUpMan.Domain.PhaseItem", null)
+                    b.HasOne("OpenUpMan.Domain.Project", null)
                         .WithMany()
-                        .HasForeignKey("PhaseItemId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("OpenUpMan.Domain.User", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
+                        .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -500,18 +502,8 @@ namespace OpenUpMan.Data.Migrations
                 {
                     b.HasOne("OpenUpMan.Domain.User", null)
                         .WithMany()
-                        .HasForeignKey("OwnerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("OpenUpMan.Domain.ProjectPhase", b =>
-                {
-                    b.HasOne("OpenUpMan.Domain.Project", null)
-                        .WithMany()
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("OpenUpMan.Domain.ProjectUser", b =>

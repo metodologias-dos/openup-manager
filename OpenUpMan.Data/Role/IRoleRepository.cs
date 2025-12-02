@@ -1,17 +1,17 @@
-
 using OpenUpMan.Domain;
 
-namespace OpenUpMan.Data.Repositories
+namespace OpenUpMan.Data
 {
     public interface IRoleRepository
     {
-        Task<Role?> GetByIdAsync(Guid id);
-        Task<Role?> GetByNameAsync(string name);
-        Task<IEnumerable<Role>> GetAllAsync();
-        Task AddAsync(Role role);
-        Task UpdateAsync(Role role);
-        Task DeleteAsync(Guid id);
-        Task<bool> ExistsAsync(Guid id);
+        Task<Role?> GetByIdAsync(int id, CancellationToken ct = default);
+        Task<Role?> GetByNameAsync(string name, CancellationToken ct = default);
+        Task<IEnumerable<Role>> GetAllAsync(CancellationToken ct = default);
+        Task AddAsync(Role role, CancellationToken ct = default);
+        Task UpdateAsync(Role role, CancellationToken ct = default);
+        Task DeleteAsync(int id, CancellationToken ct = default);
+        Task<bool> ExistsAsync(int id, CancellationToken ct = default);
+        Task SaveChangesAsync(CancellationToken ct = default);
     }
 }
 

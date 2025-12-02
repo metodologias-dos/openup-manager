@@ -2,7 +2,7 @@ namespace OpenUpMan.Domain
 {
     public class Role
     {
-        public Guid Id { get; private set; }
+        public int Id { get; private set; }
         public string Name { get; private set; } = null!;
         public string? Description { get; private set; }
 
@@ -16,17 +16,16 @@ namespace OpenUpMan.Domain
                 throw new ArgumentException("Name cannot be null or empty.", nameof(name));
             }
 
-            Id = Guid.NewGuid();
             Name = name;
             Description = description;
         }
 
         // Constructor for seed data with predefined Id
-        public Role(Guid id, string name, string? description = null)
+        public Role(int id, string name, string? description = null)
         {
-            if (id == Guid.Empty)
+            if (id <= 0)
             {
-                throw new ArgumentException("Id cannot be empty.", nameof(id));
+                throw new ArgumentException("Id must be positive.", nameof(id));
             }
             
             if (string.IsNullOrWhiteSpace(name))

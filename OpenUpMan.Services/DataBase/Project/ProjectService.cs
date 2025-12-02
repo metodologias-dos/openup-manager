@@ -7,45 +7,20 @@ namespace OpenUpMan.Services
     public class ProjectService : IProjectService
     {
         private readonly IProjectRepository _repo;
-        private readonly IUserRepository _userRepo;
-        private readonly IProjectUserRepository _projectUserRepo;
-        private readonly IProjectPhaseRepository _projectPhaseRepo;
+        private readonly IPhaseRepository _phaseRepo;
         private readonly ILogger<ProjectService> _logger;
 
         public ProjectService(
-            IProjectRepository repo, 
-            IUserRepository userRepo,
-            IProjectUserRepository projectUserRepo,
-            IProjectPhaseRepository projectPhaseRepo,
+            IProjectRepository repo,
+            IPhaseRepository phaseRepo,
             ILogger<ProjectService> logger)
         {
             _repo = repo;
-            _userRepo = userRepo;
-            _projectUserRepo = projectUserRepo;
-            _projectPhaseRepo = projectPhaseRepo;
+            _phaseRepo = phaseRepo;
             _logger = logger;
         }
 
-        public async Task<string> GenerateUniqueIdentifierAsync(CancellationToken ct = default)
-        {
-            // Generate identifier in format PROY-XXXX where XXXX is a sequential number
-            var year = DateTime.Now.Year.ToString().Substring(2); // Last 2 digits of year
-            var counter = 1;
-            string identifier;
-
-            do
-            {
-                identifier = $"PROY-{year}{counter:D4}";
-                var existing = await _repo.GetByIdentifierAsync(identifier, ct);
-                if (existing == null)
-                    break;
-                counter++;
-            } while (counter < 10000); // Safety limit
-
-            return identifier;
-        }
-
-        public async Task<ProjectServiceResult> CreateProjectAsync(string name, DateTime startDate, Guid ownerId, string? description = null, CancellationToken ct = default)
+        public async Task<ProjectServiceResult> CreateProjectAsync(string name, int? createdBy, string? code = null, string? description = null, DateTime? startDate = null, bool createPhases = true, CancellationToken ct = default)
         {
             try
             {
@@ -58,14 +33,37 @@ namespace OpenUpMan.Services
                     );
                 }
 
-                // Auto-generate unique identifier
-                var identifier = await GenerateUniqueIdentifierAsync(ct);
+                // Autogenerar código del proyecto si no se proporciona
+                if (string.IsNullOrWhiteSpace(code))
+                {
+                    code = await GenerateProjectCodeAsync(ct);
+                }
 
-                var project = new Project(identifier, name, startDate, ownerId, description);
+                var project = new Project(name, createdBy, code, description, startDate);
                 await _repo.AddAsync(project, ct);
-                await _repo.SaveChangesAsync(ct);
+                await _repo.SaveChangesAsync(ct); // Save to get the auto-generated ID
 
-                _logger.LogInformation("Proyecto creado: {ProjectId} - {Identifier}", project.Id, identifier);
+                _logger.LogInformation("Proyecto creado: {ProjectId} - {Name} (Código: {Code})", project.Id, name, project.Code);
+
+                // Auto-create the 4 OpenUP phases
+                if (createPhases)
+                {
+                    var openUpPhases = new[]
+                    {
+                        ("Inicio (Inception)", 1),
+                        ("Elaboración (Elaboration)", 2),
+                        ("Construcción (Construction)", 3),
+                        ("Transición (Transition)", 4)
+                    };
+
+                    foreach (var (phaseName, order) in openUpPhases)
+                    {
+                        var phase = new Phase(project.Id, phaseName, order);
+                        await _phaseRepo.AddAsync(phase, ct);
+                    }
+
+                    _logger.LogInformation("Fases OpenUP creadas automáticamente para proyecto {ProjectId}", project.Id);
+                }
 
                 return new ProjectServiceResult(
                     Success: true,
@@ -85,7 +83,7 @@ namespace OpenUpMan.Services
             }
         }
 
-        public async Task<ProjectServiceResult> GetProjectByIdAsync(Guid id, CancellationToken ct = default)
+        public async Task<ProjectServiceResult> GetProjectByIdAsync(int id, CancellationToken ct = default)
         {
             try
             {
@@ -117,11 +115,13 @@ namespace OpenUpMan.Services
             }
         }
 
-        public async Task<ProjectServiceResult> GetProjectByIdentifierAsync(string identifier, CancellationToken ct = default)
+        public async Task<ProjectServiceResult> GetProjectByCodeAsync(string code, CancellationToken ct = default)
         {
             try
             {
-                var project = await _repo.GetByIdentifierAsync(identifier, ct);
+                var projects = await _repo.GetAllAsync(ct);
+                var project = projects.FirstOrDefault(p => p.Code == code);
+                
                 if (project == null)
                 {
                     return new ProjectServiceResult(
@@ -140,7 +140,7 @@ namespace OpenUpMan.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener proyecto");
+                _logger.LogError(ex, "Error al obtener proyecto por código");
                 return new ProjectServiceResult(
                     Success: false,
                     ResultType: ServiceResultType.Error,
@@ -149,12 +149,12 @@ namespace OpenUpMan.Services
             }
         }
 
-        public async Task<IEnumerable<Project>> GetProjectsByOwnerAsync(Guid ownerId, CancellationToken ct = default)
+        public async Task<IEnumerable<Project>> GetAllProjectsAsync(CancellationToken ct = default)
         {
-            return await _repo.GetByOwnerAsync(ownerId, ct);
+            return await _repo.GetAllAsync(ct);
         }
 
-        public async Task<ProjectServiceResult> UpdateProjectAsync(Guid id, string name, string? description, DateTime startDate, CancellationToken ct = default)
+        public async Task<ProjectServiceResult> UpdateProjectAsync(int id, string name, string? description, DateTime? startDate, string? code = null, CancellationToken ct = default)
         {
             try
             {
@@ -168,9 +168,8 @@ namespace OpenUpMan.Services
                     );
                 }
 
-                project.UpdateDetails(name, description, startDate);
+                project.UpdateDetails(name, description, startDate, code);
                 await _repo.UpdateAsync(project, ct);
-                await _repo.SaveChangesAsync(ct);
 
                 return new ProjectServiceResult(
                     Success: true,
@@ -190,7 +189,7 @@ namespace OpenUpMan.Services
             }
         }
 
-        public async Task<ProjectServiceResult> ChangeProjectStateAsync(Guid id, ProjectState newState, CancellationToken ct = default)
+        public async Task<ProjectServiceResult> SetStatusAsync(int id, string status, CancellationToken ct = default)
         {
             try
             {
@@ -204,9 +203,8 @@ namespace OpenUpMan.Services
                     );
                 }
 
-                project.SetState(newState);
+                project.SetStatus(status);
                 await _repo.UpdateAsync(project, ct);
-                await _repo.SaveChangesAsync(ct);
 
                 return new ProjectServiceResult(
                     Success: true,
@@ -226,7 +224,7 @@ namespace OpenUpMan.Services
             }
         }
 
-        public async Task<ProjectServiceResult> DeleteProjectAsync(Guid id, CancellationToken ct = default)
+        public async Task<ProjectServiceResult> DeleteProjectAsync(int id, CancellationToken ct = default)
         {
             try
             {
@@ -240,33 +238,13 @@ namespace OpenUpMan.Services
                     );
                 }
 
-                _logger.LogInformation("Iniciando borrado del proyecto {ProjectId} - {Identifier}", id, project.Identifier);
+                _logger.LogInformation("Iniciando borrado del proyecto {ProjectId}", id);
 
-                // 1. Eliminar todos los ProjectUser asociados al proyecto
-                var projectUsers = await _projectUserRepo.GetByProjectIdAsync(id, ct);
-                foreach (var pu in projectUsers)
-                {
-                    await _projectUserRepo.RemoveAsync(pu, ct);
-                }
-                _logger.LogInformation("Eliminados {Count} usuarios del proyecto {ProjectId}", projectUsers.Count(), id);
+                // Soft delete - sets DeletedAt timestamp
+                project.SoftDelete();
+                await _repo.UpdateAsync(project, ct);
 
-                // 2. Eliminar todas las fases del proyecto (ProjectPhase)
-                var projectPhases = await _projectPhaseRepo.GetByProjectIdAsync(id, ct);
-                foreach (var phase in projectPhases)
-                {
-                    // La eliminación en cascada de PhaseItems y PhaseItemUsers ya está configurada en EF Core
-                    // (ver AppDbContext.cs, líneas 116 y 138)
-                    await _projectPhaseRepo.DeleteAsync(phase, ct);
-                }
-                _logger.LogInformation("Eliminadas {Count} fases del proyecto {ProjectId}", projectPhases.Count(), id);
-
-                // 3. Eliminar el proyecto
-                await _repo.DeleteAsync(project, ct);
-                
-                // 4. Guardar todos los cambios en la base de datos
-                await _repo.SaveChangesAsync(ct);
-
-                _logger.LogInformation("Proyecto {ProjectId} - {Identifier} eliminado exitosamente", id, project.Identifier);
+                _logger.LogInformation("Proyecto {ProjectId} marcado como eliminado (soft delete)", id);
 
                 return new ProjectServiceResult(
                     Success: true,
@@ -283,6 +261,40 @@ namespace OpenUpMan.Services
                     Message: $"Error al eliminar el proyecto: {ex.Message}"
                 );
             }
+        }
+
+        private async Task<string> GenerateProjectCodeAsync(CancellationToken ct = default)
+        {
+            var currentYear = DateTime.UtcNow.Year;
+            var allProjects = await _repo.GetAllAsync(ct);
+            
+            // Filtrar proyectos del año actual que coincidan con el patrón PROY-YYYY-XXX
+            var projectsThisYear = allProjects
+                .Where(p => !string.IsNullOrEmpty(p.Code) && p.Code.StartsWith($"PROY-{currentYear}-"))
+                .ToList();
+
+            int nextNumber = 1;
+            if (projectsThisYear.Any())
+            {
+                // Extraer el último número secuencial
+                var numbers = projectsThisYear
+                    .Select(p =>
+                    {
+                        var parts = p.Code!.Split('-');
+                        if (parts.Length == 3 && int.TryParse(parts[2], out int num))
+                            return num;
+                        return 0;
+                    })
+                    .Where(n => n > 0)
+                    .ToList();
+
+                if (numbers.Any())
+                {
+                    nextNumber = numbers.Max() + 1;
+                }
+            }
+
+            return $"PROY-{currentYear}-{nextNumber:D3}";
         }
     }
 }

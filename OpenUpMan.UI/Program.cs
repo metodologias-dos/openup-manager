@@ -6,7 +6,6 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 using OpenUpMan.Data;
-using OpenUpMan.Data.Repositories;
 using OpenUpMan.Services;
 using Microsoft.EntityFrameworkCore;
 using OpenUpMan.Domain;
@@ -86,8 +85,20 @@ sealed class Program
         services.AddScoped<IProjectUserRepository, ProjectUserRepository>();
         services.AddScoped<IProjectUserService, ProjectUserService>();
         
-        services.AddScoped<IProjectPhaseRepository, ProjectPhaseRepository>();
-        services.AddScoped<IProjectPhaseService, ProjectPhaseService>();
+        // New schema repositories and services
+        services.AddScoped<IPhaseRepository, PhaseRepository>();
+        services.AddScoped<IPhaseService, PhaseService>();
+        
+        services.AddScoped<IIterationRepository, IterationRepository>();
+        services.AddScoped<IIterationService, IterationService>();
+        
+        services.AddScoped<IMicroincrementRepository, MicroincrementRepository>();
+        services.AddScoped<IMicroincrementService, MicroincrementService>();
+        
+        services.AddScoped<IArtifactRepository, ArtifactRepository>();
+        services.AddScoped<IArtifactService, ArtifactService>();
+        
+        services.AddScoped<IArtifactVersionService, ArtifactVersionService>();
         
         // Role repositories and services
         services.AddScoped<IRoleRepository, RoleRepository>();

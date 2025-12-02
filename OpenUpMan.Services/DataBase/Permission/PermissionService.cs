@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Logging;
 using OpenUpMan.Data;
-using OpenUpMan.Data.Repositories;
 using OpenUpMan.Domain;
 
 namespace OpenUpMan.Services
@@ -65,11 +64,11 @@ namespace OpenUpMan.Services
             }
         }
 
-        public async Task<ServiceResult<Permission>> GetPermissionByIdAsync(Guid id, CancellationToken ct = default)
+        public async Task<ServiceResult<Permission>> GetPermissionByIdAsync(int id, CancellationToken ct = default)
         {
             try
             {
-                if (id == Guid.Empty)
+                if (id <= 0)
                 {
                     return new ServiceResult<Permission>(
                         Success: false,
@@ -177,11 +176,11 @@ namespace OpenUpMan.Services
             }
         }
 
-        public async Task<ServiceResult<Permission>> UpdatePermissionAsync(Guid id, string name, string? description = null, CancellationToken ct = default)
+        public async Task<ServiceResult<Permission>> UpdatePermissionAsync(int id, string name, string? description = null, CancellationToken ct = default)
         {
             try
             {
-                if (id == Guid.Empty)
+                if (id <= 0)
                 {
                     return new ServiceResult<Permission>(
                         Success: false,
@@ -236,11 +235,11 @@ namespace OpenUpMan.Services
             }
         }
 
-        public async Task<ServiceResult<bool>> DeletePermissionAsync(Guid id, CancellationToken ct = default)
+        public async Task<ServiceResult<bool>> DeletePermissionAsync(int id, CancellationToken ct = default)
         {
             try
             {
-                if (id == Guid.Empty)
+                if (id <= 0)
                 {
                     return new ServiceResult<bool>(
                         Success: false,

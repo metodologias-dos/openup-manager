@@ -4,12 +4,14 @@ namespace OpenUpMan.Data
 {
     public interface IProjectRepository
     {
-        Task<Project?> GetByIdAsync(Guid id, CancellationToken ct = default);
-        Task<Project?> GetByIdentifierAsync(string identifier, CancellationToken ct = default);
-        Task<IEnumerable<Project>> GetByOwnerAsync(Guid ownerId, CancellationToken ct = default);
+        Task<Project?> GetByIdAsync(int id, CancellationToken ct = default);
+        Task<Project?> GetByCodeAsync(string code, CancellationToken ct = default);
+        Task<IEnumerable<Project>> GetAllAsync(CancellationToken ct = default);
+        Task<IEnumerable<Project>> GetByCreatorAsync(int createdBy, CancellationToken ct = default);
+        Task<IEnumerable<Project>> GetByStatusAsync(string status, CancellationToken ct = default);
         Task AddAsync(Project project, CancellationToken ct = default);
         Task UpdateAsync(Project project, CancellationToken ct = default);
-        Task DeleteAsync(Project project, CancellationToken ct = default);
+        Task DeleteAsync(int id, CancellationToken ct = default);
         Task SaveChangesAsync(CancellationToken ct = default);
     }
 }
