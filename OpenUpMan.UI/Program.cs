@@ -109,12 +109,12 @@ sealed class Program
         {
             using var scope = ServiceProvider.CreateScope();
             var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            var logger = scope.ServiceProvider.GetRequiredService<ILogger<OpenUpMan.Data.Migrations.DatabaseMigrator>>();
+            var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
             
-            // Use DatabaseMigrator to handle schema updates automatically
-            // autoRemoveObsoleteColumns=true will automatically remove columns that no longer exist in entities
-            var migrator = new OpenUpMan.Data.Migrations.DatabaseMigrator(ctx, logger, autoRemoveObsoleteColumns: true);
-            migrator.MigrateAsync().Wait();
+            // Apply EF Core migrations automatically on startup
+            logger.LogInformation("Applying database migrations...");
+            ctx.Database.Migrate();
+            logger.LogInformation("Database migrations applied successfully.");
 
             // Seed predefined roles
             SeedRoles(ctx, logger);
@@ -129,6 +129,7 @@ sealed class Program
                 using var cmd = conn.CreateCommand();
                 cmd.CommandText = "PRAGMA journal_mode=WAL;";
                 cmd.ExecuteNonQuery();
+                logger.LogInformation("SQLite WAL mode enabled.");
             }
             finally
             {
