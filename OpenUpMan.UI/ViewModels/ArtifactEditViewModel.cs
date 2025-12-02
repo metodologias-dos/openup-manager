@@ -114,7 +114,9 @@ public partial class ArtifactEditViewModel : ViewModelBase
 
         if (HasFile)
         {
-          Date = version.CreatedAt;
+          // Convert UTC to local time for display
+          var utcDate = DateTime.SpecifyKind(version.CreatedAt, DateTimeKind.Utc);
+          Date = utcDate.ToLocalTime();
         }
         else
         {

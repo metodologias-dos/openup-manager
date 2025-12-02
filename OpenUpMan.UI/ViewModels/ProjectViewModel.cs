@@ -21,11 +21,18 @@ public partial class ProjectViewModel : ViewModelBase
     [ObservableProperty]
     private int _projectPercentage = 0;
 
+    [ObservableProperty]
+    private int _currentPhaseId;
+
+    [ObservableProperty]
+    private string _currentPhaseName = "Inicio (Inception)";
+
     public IRelayCommand SaveCommand { get; }
     public IRelayCommand OpenCommand { get; }
     public IRelayCommand AddUserCommand { get; }
     public IRelayCommand BackCommand { get; }
     public IRelayCommand ManageArtifactsCommand { get; }
+    public IRelayCommand<string> SelectPhaseCommand { get; }
 
     public event Action? BackRequested;
     public event Action? ManageArtifactsRequested;
@@ -37,9 +44,18 @@ public partial class ProjectViewModel : ViewModelBase
         AddUserCommand = new RelayCommand(() => { /* visual only */ });
         BackCommand = new RelayCommand(GoBack);
         ManageArtifactsCommand = new RelayCommand(() => ManageArtifactsRequested?.Invoke());
+        SelectPhaseCommand = new RelayCommand<string>(SelectPhase);
 
         ProjectName = "Proyecto ejemplo";
         ProjectPercentage = 12;
+    }
+
+    private void SelectPhase(string? phaseName)
+    {
+        if (!string.IsNullOrEmpty(phaseName))
+        {
+            CurrentPhaseName = phaseName;
+        }
     }
 
     private void GoBack()

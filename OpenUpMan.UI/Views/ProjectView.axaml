@@ -37,10 +37,22 @@
 
       <!-- Stage buttons (notebook-like) -->
       <StackPanel Orientation="Horizontal" Spacing="8">
-        <Button Content="Incepción" Theme="{StaticResource FluentButtonTheme}"/>
-        <Button Content="Elaboración" Theme="{StaticResource FluentButtonTheme}"/>
-        <Button Content="Construcción" Theme="{StaticResource FluentButtonTheme}"/>
-        <Button Content="Transición" Theme="{StaticResource FluentButtonTheme}"/>
+        <Button Content="Incepción" 
+                Command="{Binding SelectPhaseCommand}" 
+                CommandParameter="Inicio (Inception)"
+                Theme="{StaticResource FluentButtonTheme}"/>
+        <Button Content="Elaboración" 
+                Command="{Binding SelectPhaseCommand}" 
+                CommandParameter="Elaboración (Elaboration)"
+                Theme="{StaticResource FluentButtonTheme}"/>
+        <Button Content="Construcción" 
+                Command="{Binding SelectPhaseCommand}" 
+                CommandParameter="Construcción (Construction)"
+                Theme="{StaticResource FluentButtonTheme}"/>
+        <Button Content="Transición" 
+                Command="{Binding SelectPhaseCommand}" 
+                CommandParameter="Transición (Transition)"
+                Theme="{StaticResource FluentButtonTheme}"/>
       </StackPanel>
 
       <!-- Main content area -->

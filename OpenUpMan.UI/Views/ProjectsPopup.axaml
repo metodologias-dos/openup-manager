@@ -1,7 +1,6 @@
 ﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:OpenUpMan.UI.ViewModels"
-        xmlns:converters="using:OpenUpMan.UI.Converters"
         x:Class="OpenUpMan.UI.Views.ProjectsPopup"
         x:DataType="vm:ProjectsPopupViewModel"
         Width="1200" Height="700"
@@ -11,9 +10,7 @@
         Background="{DynamicResource ApplicationPageBackgroundThemeBrush}"
         TransparencyLevelHint="AcrylicBlur">
 
-  <Window.Resources>
-    <converters:InitialsConverter x:Key="InitialsConverter" />
-  </Window.Resources>
+
 
   <Window.Styles>
     <!-- Estilo para botones pequeños de acción -->
@@ -202,7 +199,7 @@
               <DataGridTemplateColumn.Header>
                 <TextBlock HorizontalAlignment="Left">
                   <Run Text="NOMBRE" />
-                  <Run Text="{Binding NameSortIndicator}" Foreground="#00A6FF" FontWeight="Bold" />
+                  <Run Text="{Binding NameSortIndicator}" FontWeight="Bold" />
                 </TextBlock>
               </DataGridTemplateColumn.Header>
               <DataGridTemplateColumn.CellTemplate>
@@ -241,26 +238,27 @@
               </DataGridTemplateColumn.Header>
               <DataGridTemplateColumn.CellTemplate>
                 <DataTemplate DataType="vm:ProjectListItemViewModel">
-                  <StackPanel Orientation="Horizontal" 
-                              Spacing="8" 
-                              HorizontalAlignment="Center"
-                              VerticalAlignment="Center">
-                    <Border Background="{DynamicResource AccentFillColorDefaultBrush}"
-                            Width="28" Height="28"
-                            CornerRadius="14"
-                            VerticalAlignment="Center">
-                      <TextBlock Text="{Binding CreatedByUsername, Converter={StaticResource InitialsConverter}}" 
-                                 FontSize="11"
-                                 FontWeight="SemiBold"
-                                 Foreground="White"
-                                 HorizontalAlignment="Center"
-                                 VerticalAlignment="Center" />
-                    </Border>
-                    <TextBlock Text="{Binding CreatedByUsername}" 
-                               FontSize="13"
-                               Foreground="White"
-                               VerticalAlignment="Center" />
-                  </StackPanel>
+                  <TextBlock Text="{Binding CreatedByUsername}" 
+                             FontSize="13"
+                             Foreground="White"
+                             HorizontalAlignment="Center"
+                             VerticalAlignment="Center" />
+                </DataTemplate>
+              </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+
+            <!-- Columna de Estado - 15% -->
+            <DataGridTemplateColumn Width="0.6*" MinWidth="100" CanUserSort="False">
+              <DataGridTemplateColumn.Header>
+                <TextBlock HorizontalAlignment="Center" Text="ESTADO" />
+              </DataGridTemplateColumn.Header>
+              <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate DataType="vm:ProjectListItemViewModel">
+                  <TextBlock Text="{Binding Status}" 
+                             FontSize="13"
+                             FontWeight="SemiBold"
+                             HorizontalAlignment="Center"
+                             VerticalAlignment="Center" />
                 </DataTemplate>
               </DataGridTemplateColumn.CellTemplate>
             </DataGridTemplateColumn>
@@ -270,7 +268,7 @@
               <DataGridTemplateColumn.Header>
                 <TextBlock HorizontalAlignment="Center">
                   <Run Text="ÚLTIMA EDICIÓN" />
-                  <Run Text="{Binding DateSortIndicator}" Foreground="#00A6FF" FontWeight="Bold" />
+                  <Run Text="{Binding DateSortIndicator}"  FontWeight="Bold" />
                 </TextBlock>
               </DataGridTemplateColumn.Header>
               <DataGridTemplateColumn.CellTemplate>

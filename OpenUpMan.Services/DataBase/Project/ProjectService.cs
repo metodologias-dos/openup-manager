@@ -82,6 +82,66 @@ namespace OpenUpMan.Services
                                 await _artifactRepo.AddAsync(artifact, ct);
                             }
                         }
+                        // Create default artifacts for Elaboración
+                        else if (order == 2) // Elaboración
+                        {
+                            var artifacts = new[]
+                            {
+                                new Artifact(project.Id, phase.Id, "Modelo de Casos de Uso Detallado", "Model", true, "Descripción detallada de los casos de uso del sistema."),
+                                new Artifact(project.Id, phase.Id, "Modelo de Dominio", "Model", true, "Modelo conceptual del dominio del negocio."),
+                                new Artifact(project.Id, phase.Id, "Especificación de Requerimientos Suplementarios", "Document", true, "Requerimientos no capturados en casos de uso."),
+                                new Artifact(project.Id, phase.Id, "Requerimientos no funcionales", "Document", true, "Especificación de requerimientos de calidad y restricciones."),
+                                new Artifact(project.Id, phase.Id, "Documento de Arquitectura de Software", "Document", true, "Descripción de la arquitectura del sistema."),
+                                new Artifact(project.Id, phase.Id, "Diagrama de Arquitectura", "Diagram", true, "Diagrama que muestra la arquitectura global del sistema."),
+                                new Artifact(project.Id, phase.Id, "Diagrama de Capas", "Diagram", true, "Representación de las capas (presentación, negocio, datos)."),
+                                new Artifact(project.Id, phase.Id, "Diagrama de Módulos", "Diagram", true, "Estructura de módulos y sus relaciones."),
+                                new Artifact(project.Id, phase.Id, "Diagrama de Componentes", "Diagram", false, "Componentes principales y sus dependencias."),
+                                new Artifact(project.Id, phase.Id, "Diagrama de Despliegue", "Diagram", false, "Topología de despliegue y nodos."),
+                                new Artifact(project.Id, phase.Id, "Plan de Iteraciones", "Plan", true, "Planificación detallada de las iteraciones."),
+                                new Artifact(project.Id, phase.Id, "Prototipo de Interfaz", "Prototype", false, "Prototipo visual de la interfaz de usuario.")
+                            };
+
+                            foreach (var artifact in artifacts)
+                            {
+                                await _artifactRepo.AddAsync(artifact, ct);
+                            }
+                        }
+                        // Create default artifacts for Construcción
+                        else if (order == 3) // Construcción
+                        {
+                            var artifacts = new[]
+                            {
+                                new Artifact(project.Id, phase.Id, "Modelo de Diseño Detallado", "Model", true, "Diseño detallado de las clases y componentes del sistema."),
+                                new Artifact(project.Id, phase.Id, "Código Fuente", "Code", true, "Implementación del sistema."),
+                                new Artifact(project.Id, phase.Id, "Casos de Prueba", "Test", true, "Especificación de los casos de prueba."),
+                                new Artifact(project.Id, phase.Id, "Resultados de Pruebas", "Report", true, "Registro de defectos y resultados de las pruebas ejecutadas."),
+                                new Artifact(project.Id, phase.Id, "Registro de Iteraciones", "Log", true, "Avance y seguimiento de cada iteración.")
+                            };
+
+                            foreach (var artifact in artifacts)
+                            {
+                                await _artifactRepo.AddAsync(artifact, ct);
+                            }
+                        }
+                        // Create default artifacts for Transición
+                        else if (order == 4) // Transición
+                        {
+                            var artifacts = new[]
+                            {
+                                new Artifact(project.Id, phase.Id, "Manual de Usuario", "Document", true, "Guía para el uso del sistema por parte de los usuarios finales."),
+                                new Artifact(project.Id, phase.Id, "Manual Técnico", "Document", true, "Documentación técnica del sistema."),
+                                new Artifact(project.Id, phase.Id, "Guía de Instalación", "Document", true, "Procedimientos y pasos para la instalación del sistema."),
+                                new Artifact(project.Id, phase.Id, "Plan de Despliegue", "Plan", true, "Estrategia y planificación del despliegue en producción."),
+                                new Artifact(project.Id, phase.Id, "Documento de Cierre del Proyecto", "Document", true, "Resumen del proyecto, lecciones aprendidas y cierre formal."),
+                                new Artifact(project.Id, phase.Id, "Versión del Producto (build final)", "Build", true, "Build final del producto listo para producción."),
+                                new Artifact(project.Id, phase.Id, "Reporte de Pruebas Beta", "Report", true, "Resultados de las pruebas realizadas en ambiente de producción o pre-producción.")
+                            };
+
+                            foreach (var artifact in artifacts)
+                            {
+                                await _artifactRepo.AddAsync(artifact, ct);
+                            }
+                        }
                     }
 
                     _logger.LogInformation("Fases OpenUP creadas automáticamente para proyecto {ProjectId}", project.Id);
@@ -288,7 +348,8 @@ namespace OpenUpMan.Services
         private async Task<string> GenerateProjectCodeAsync(CancellationToken ct = default)
         {
             var currentYear = DateTime.UtcNow.Year;
-            var allProjects = await _repo.GetAllAsync(ct);
+            // Include deleted projects in code generation to avoid duplicate codes
+            var allProjects = await _repo.GetAllIncludingDeletedAsync(ct);
 
             // Filtrar proyectos del año actual que coincidan con el patrón PROY-YYYY-XXX
             var projectsThisYear = allProjects
