@@ -1,0 +1,70 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:OpenUpMan.UI.ViewModels"
+        x:Class="OpenUpMan.UI.Views.ArtifactsWindow"
+        x:DataType="vm:ArtifactsViewModel"
+        Title="Artefactos"
+        Width="750" Height="400"
+        MinWidth="750"
+        WindowStartupLocation="CenterOwner"
+        mc:Ignorable="d">
+
+    <Design.DataContext>
+        <vm:ArtifactsViewModel/>
+    </Design.DataContext>
+
+    <Border Padding="16">
+        <Grid RowDefinitions="Auto,*,Auto">
+            <!-- Header -->
+            <TextBlock Grid.Row="0" 
+                       Text="{Binding PhaseName, StringFormat='Artefactos - {0}'}" 
+                       FontSize="20" 
+                       FontWeight="Bold" 
+                       HorizontalAlignment="Center"
+                       Margin="0,0,0,16"/>
+
+            <!-- Table -->
+            <DataGrid Grid.Row="1" 
+                      ItemsSource="{Binding Artifacts}"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      GridLinesVisibility="All"
+                      BorderThickness="1"
+                      BorderBrush="Gray">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="#" Binding="{Binding Number}" Width="60"/>
+                    <DataGridTextColumn Header="Nombre" Binding="{Binding Name}" Width="*"/>
+                    <DataGridTextColumn Header="Obligatorio" Binding="{Binding MandatoryText}" Width="120"/>
+                    <DataGridTextColumn Header="Estado" Binding="{Binding Status}" Width="150"/>
+                    <DataGridTemplateColumn Header="Acciones" Width="180">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="5">
+                                    <Button Content="Editar" 
+                                            Command="{Binding $parent[Window].DataContext.EditCommand}"
+                                            CommandParameter="{Binding .}"
+                                            Theme="{StaticResource FluentButtonTheme}"/>
+                                    <Button Content="Borrar" 
+                                            Theme="{StaticResource FluentButtonTheme}"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <!-- Footer -->
+            <Grid Grid.Row="2" Margin="0,16,0,0">
+                <Button Content="+" 
+                        ToolTip.Tip="Agregar nuevo artefacto"
+                        HorizontalAlignment="Left"
+                        Theme="{StaticResource FluentButtonTheme}"/>
+                <Button Content="Cerrar" 
+                        HorizontalAlignment="Right" 
+                        Click="CloseButton_Click"/>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>
