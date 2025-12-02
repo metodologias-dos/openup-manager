@@ -1,4 +1,4 @@
-﻿﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Moq;
 using OpenUpMan.Data;
 using OpenUpMan.Domain;
@@ -10,6 +10,7 @@ public class ProjectServiceUnitTests
 {
     private readonly Mock<IProjectRepository> _projectRepositoryMock;
     private readonly Mock<IPhaseRepository> _phaseRepositoryMock;
+    private readonly Mock<IArtifactRepository> _artifactRepositoryMock;
     private readonly Mock<ILogger<ProjectService>> _loggerMock;
     private readonly ProjectService _projectService;
 
@@ -17,8 +18,9 @@ public class ProjectServiceUnitTests
     {
         _projectRepositoryMock = new Mock<IProjectRepository>();
         _phaseRepositoryMock = new Mock<IPhaseRepository>();
+        _artifactRepositoryMock = new Mock<IArtifactRepository>();
         _loggerMock = new Mock<ILogger<ProjectService>>();
-        _projectService = new ProjectService(_projectRepositoryMock.Object, _phaseRepositoryMock.Object, _loggerMock.Object);
+        _projectService = new ProjectService(_projectRepositoryMock.Object, _phaseRepositoryMock.Object, _artifactRepositoryMock.Object, _loggerMock.Object);
     }
 
     [Fact]
@@ -46,7 +48,7 @@ public class ProjectServiceUnitTests
 
         _projectRepositoryMock.Verify(repo => repo.AddAsync(It.IsAny<Project>(), It.IsAny<CancellationToken>()), Times.Once);
         _phaseRepositoryMock.Verify(repo => repo.AddAsync(It.IsAny<Phase>(), It.IsAny<CancellationToken>()), Times.Exactly(4));
-        _projectRepositoryMock.Verify(repo => repo.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _projectRepositoryMock.Verify(repo => repo.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Exactly(5));
     }
 
     [Fact]

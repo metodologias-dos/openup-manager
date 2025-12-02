@@ -1,5 +1,4 @@
-﻿
-using Microsoft.Data.Sqlite;
+﻿using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using OpenUpMan.Data;
 using OpenUpMan.Domain;
@@ -55,8 +54,8 @@ public class AppDbContextTests
         await using var context = new AppDbContext(_dbContextOptions);
         await context.Database.EnsureCreatedAsync();
 
-        var role = new Role(1, "Admin");
-        var permission = new Permission("create:project");
+        var role = new Role(999, "TestRole");
+        var permission = new Permission("test:permission");
         context.Roles.Add(role);
         context.Permissions.Add(permission);
         await context.SaveChangesAsync();
@@ -70,6 +69,6 @@ public class AppDbContextTests
 
         Assert.NotNull(retrievedRolePermission);
         Assert.NotNull(retrievedRolePermission.Permission);
-        Assert.Equal("create:project", retrievedRolePermission.Permission.Name);
+        Assert.Equal("test:permission", retrievedRolePermission.Permission.Name);
     }
 }
