@@ -39,6 +39,13 @@ namespace OpenUpMan.Data
                 .ToListAsync(ct);
         }
 
+        public async Task<IEnumerable<ProjectUser>> GetByUserAndProjectAsync(int userId, int projectId, CancellationToken ct = default)
+        {
+            return await _ctx.ProjectUsers
+                .Where(pu => pu.UserId == userId && pu.ProjectId == projectId)
+                .ToListAsync(ct);
+        }
+
         public async Task AddAsync(ProjectUser projectUser, CancellationToken ct = default)
         {
             await _ctx.ProjectUsers.AddAsync(projectUser, ct);

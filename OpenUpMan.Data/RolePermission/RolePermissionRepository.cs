@@ -25,6 +25,30 @@ namespace OpenUpMan.Data
                 .ToListAsync(ct);
         }
 
+        public async Task<IEnumerable<Permission>> GetPermissionsByRoleAsync(int roleId, CancellationToken ct = default)
+        {
+            return await GetPermissionsByRoleIdAsync(roleId, ct);
+        }
+
+        public async Task<IEnumerable<Permission>> GetPermissionsByRolesAsync(IEnumerable<int> roleIds, CancellationToken ct = default)
+        {
+            var rolePermissions = await _context.RolePermissions
+                .Where(rp => roleIds.Contains(rp.RoleId))
+                .ToListAsync(ct);
+            
+            var permissionIds = rolePermissions.Select(rp => rp.PermissionId).Distinct();
+            return await _context.Permissions
+                .Where(p => permissionIds.Contains(p.Id))
+                .OrderBy(p => p.Name)
+                .ToListAsync(ct);
+        }
+
+        public async Task<bool> RoleHasPermissionAsync(IEnumerable<int> roleIds, int permissionId, CancellationToken ct = default)
+        {
+            return await _context.RolePermissions
+                .AnyAsync(rp => roleIds.Contains(rp.RoleId) && rp.PermissionId == permissionId, ct);
+        }
+
         public async Task<IEnumerable<Role>> GetRolesByPermissionIdAsync(int permissionId, CancellationToken ct = default)
         {
             var rolePermissions = await _context.RolePermissions

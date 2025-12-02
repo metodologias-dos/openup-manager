@@ -81,7 +81,9 @@
                 <TextBox Height="60" 
                          AcceptsReturn="True"
                          TextWrapping="Wrap"/>
-                <Button Content="Manejar artefactos" Margin="0,8,0,0"/>
+                <Button Content="Manejar artefactos" 
+                        Margin="0,8,0,0"
+                        Command="{Binding ManageArtifactsCommand}"/>
               </StackPanel>
 
             </WrapPanel>

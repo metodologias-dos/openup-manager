@@ -2,12 +2,12 @@ namespace OpenUpMan.Domain
 {
     public class Permission
     {
-        public int Id { get; private set; }
-        public string Name { get; private set; } = null!;
-        public string? Description { get; private set; }
+        public int Id { get; set; }
+        public string Name { get; set; } = null!;
+        public string? Description { get; set; }
 
-        // Parameterless constructor for EF
-        protected Permission() { }
+        // Parameterless constructor for EF and seed data
+        public Permission() { }
 
         public Permission(string name, string? description = null)
         {

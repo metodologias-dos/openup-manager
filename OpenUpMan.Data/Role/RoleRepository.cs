@@ -30,6 +30,13 @@ namespace OpenUpMan.Data
                 .ToListAsync(ct);
         }
 
+        public async Task<IEnumerable<Role>> GetByIdsAsync(IEnumerable<int> ids, CancellationToken ct = default)
+        {
+            return await _context.Roles
+                .Where(r => ids.Contains(r.Id))
+                .ToListAsync(ct);
+        }
+
         public async Task AddAsync(Role role, CancellationToken ct = default)
         {
             if (role == null)

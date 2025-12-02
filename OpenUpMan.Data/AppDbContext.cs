@@ -252,6 +252,24 @@ namespace OpenUpMan.Data
                     .HasForeignKey(av => av.CreatedBy)
                     .OnDelete(DeleteBehavior.Restrict);
             });
+
+            // Seed Data - Roles, Permissions and RolePermissions
+            SeedRolesAndPermissions(modelBuilder);
+        }
+
+        private void SeedRolesAndPermissions(ModelBuilder modelBuilder)
+        {
+            // Seed Permissions
+            var permissions = SeedData.RolesAndPermissionsSeed.GetPermissions();
+            modelBuilder.Entity<Permission>().HasData(permissions);
+
+            // Seed Roles
+            var roles = SeedData.RolesAndPermissionsSeed.GetRoles();
+            modelBuilder.Entity<Role>().HasData(roles);
+
+            // Seed RolePermissions
+            var rolePermissions = SeedData.RolesAndPermissionsSeed.GetRolePermissions();
+            modelBuilder.Entity<RolePermission>().HasData(rolePermissions);
         }
     }
 }
