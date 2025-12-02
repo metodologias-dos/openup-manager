@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿﻿using Microsoft.EntityFrameworkCore;
 using OpenUpMan.Domain;
 
 namespace OpenUpMan.Data
@@ -71,7 +71,7 @@ namespace OpenUpMan.Data
                     .HasForeignKey(rp => rp.RoleId)
                     .OnDelete(DeleteBehavior.Cascade);
 
-                b.HasOne<Permission>()
+                b.HasOne(rp => rp.Permission)
                     .WithMany()
                     .HasForeignKey(rp => rp.PermissionId)
                     .OnDelete(DeleteBehavior.Cascade);
