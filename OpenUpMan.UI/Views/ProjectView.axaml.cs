@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
@@ -36,14 +37,24 @@ public partial class ProjectView : UserControl
         if (DataContext is not ProjectViewModel projectVm) return;
 
         var artifactRepo = Program.ServiceProvider.GetService<IArtifactRepository>();
-        if (artifactRepo == null) return;
+        var phaseRepo = Program.ServiceProvider.GetService<IPhaseRepository>();
+        if (artifactRepo == null || phaseRepo == null) return;
+
+        // Get the phase ID for the current phase name
+        var phases = (await phaseRepo.GetByProjectIdAsync(projectVm.ProjectId)).ToList();
+        var currentPhase = phases.FirstOrDefault(p => p.Name == projectVm.CurrentPhaseName);
+        
+        if (currentPhase == null)
+        {
+            // Fallback to first phase if not found
+            currentPhase = phases.FirstOrDefault();
+            if (currentPhase == null) return;
+        }
 
         var vm = new ArtifactsViewModel(artifactRepo);
 
-        // Load artifacts for the current project. 
-        // We default to "Incepción" for now as per requirements, 
-        // but ideally we should know which phase is selected.
-        await vm.LoadArtifactsAsync(projectVm.ProjectId, "Incepción", projectVm.CurrentUserId, projectVm.CurrentUserName);
+        // Load artifacts filtered by the current phase
+        await vm.LoadArtifactsAsync(projectVm.ProjectId, currentPhase.Id, projectVm.CurrentPhaseName, projectVm.CurrentUserId, projectVm.CurrentUserName);
 
         var window = new ArtifactsWindow
         {

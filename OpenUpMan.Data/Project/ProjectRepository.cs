@@ -14,7 +14,7 @@ namespace OpenUpMan.Data
 
         public async Task<Project?> GetByIdAsync(int id, CancellationToken ct = default)
         {
-            return await _ctx.Projects.FindAsync(new object[] { id }, ct);
+             return await _ctx.Projects.FindAsync(new object[] { id }, ct);
         }
 
         public async Task<Project?> GetByCodeAsync(string code, CancellationToken ct = default)
@@ -26,6 +26,13 @@ namespace OpenUpMan.Data
         {
             return await _ctx.Projects
                 .Where(p => p.DeletedAt == null)
+                .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync(ct);
+        }
+
+        public async Task<IEnumerable<Project>> GetAllIncludingDeletedAsync(CancellationToken ct = default)
+        {
+            return await _ctx.Projects
                 .OrderByDescending(p => p.CreatedAt)
                 .ToListAsync(ct);
         }

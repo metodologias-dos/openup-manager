@@ -54,4 +54,10 @@
     <ProjectReference Include="..\OpenUpMan.Services\OpenUpMan.Services.csproj" />
     <ProjectReference Include="..\OpenUpMan.Data\OpenUpMan.Data.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Views\ArtifactsWindow.axaml.cs">
+      <DependentUpon>ArtifactsWindow.axaml</DependentUpon>
+    </Compile>
+  </ItemGroup>
 </Project>

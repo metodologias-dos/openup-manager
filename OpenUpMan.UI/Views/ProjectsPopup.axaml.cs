@@ -143,7 +143,7 @@ public partial class ProjectsPopup : Window
         // Obtener los servicios desde el ServiceProvider
         var projectService = Program.ServiceProvider.GetService(typeof(OpenUpMan.Services.IProjectService)) as OpenUpMan.Services.IProjectService;
         var projectUserService = Program.ServiceProvider.GetService(typeof(OpenUpMan.Services.IProjectUserService)) as OpenUpMan.Services.IProjectUserService;
-
+ 
         if (projectService == null || projectUserService == null)
         {
             Console.WriteLine("Error: No se pudieron obtener los servicios necesarios");
@@ -154,9 +154,9 @@ public partial class ProjectsPopup : Window
         var dialog = new ProjectDialog(dialogVm);
 
         // Suscribirse al evento de proyecto creado
-        dialogVm.ProjectCreated += (result) =>
+        dialogVm.ProjectCreated += async (result) =>
         {
-            vm.AddProject(result);
+            await vm.AddProjectAsync(result);
         };
 
         // Mostrar el diálogo como modal

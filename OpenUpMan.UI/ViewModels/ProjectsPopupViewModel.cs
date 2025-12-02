@@ -130,7 +130,8 @@ public partial class ProjectsPopupViewModel : ViewModelBase
 
             // 3. Convertir los proyectos a ViewModels y agregarlos a la lista
             Projects.Clear();
-            foreach (var project in projects.Where(p => p != null))
+            // Filter out deleted projects (DeletedAt != null)
+            foreach (var project in projects.Where(p => p != null && p.DeletedAt == null))
             {
                 // Convertir UTC a hora local para mostrar
                 var lastEditedDate = project!.UpdatedAt ?? project.CreatedAt;
@@ -155,7 +156,8 @@ public partial class ProjectsPopupViewModel : ViewModelBase
                     LastEdited = lastEditedLocal.ToString("dd/MM/yyyy HH:mm"),
                     CreatedByUserId = project.CreatedBy,
                     CreatedByUsername = createdByUsername,
-                    IsOwner = CurrentUser != null && project.CreatedBy == CurrentUser.Id
+                    IsOwner = CurrentUser != null && project.CreatedBy == CurrentUser.Id,
+                    Status = project.Status
                 };
                 Projects.Add(projectVm);
             }
@@ -244,30 +246,10 @@ public partial class ProjectsPopupViewModel : ViewModelBase
         LogoutRequested?.Invoke();
     }
 
-    public void AddProject(ProjectDialogResult result)
+    public async Task AddProjectAsync(ProjectDialogResult result)
     {
-        var newProject = new ProjectListItemViewModel
-        {
-            Id = result.Id,
-            Code = result.Code,
-            Name = result.Name,
-            LastEdited = DateTime.Now.ToString("dd/MM/yyyy HH:mm") // Ya es hora local
-        };
-        
-        // Agregar a la lista original primero
-        _originalProjectsList.Add(newProject);
-        
-        // Si hay sorting activo, aplicarlo; si no, simplemente agregar al final
-        if (_nameSortState != SortState.None || _dateSortState != SortState.None)
-        {
-            // Re-aplicar el sorting actual
-            ApplySorting();
-        }
-        else
-        {
-            // No hay sorting activo, agregar al final
-            Projects.Add(newProject);
-        }
+        // Reload the entire project list to get fresh data including creator info
+        await LoadUserProjectsAsync();
     }
 
     private void SortByName()
@@ -406,4 +388,7 @@ public partial class ProjectListItemViewModel : ObservableObject
     
     [ObservableProperty]
     private bool _isOwner;
+    
+    [ObservableProperty]
+    private string _status = string.Empty;
 }

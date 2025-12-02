@@ -32,6 +32,7 @@ public partial class ArtifactsViewModel : ViewModelBase
 {
   private readonly IArtifactRepository _artifactRepository;
   private int _currentProjectId;
+  private int _currentPhaseId;
   private string _currentPhaseName = string.Empty;
   private int _currentUserId;
   private string _currentUserName = string.Empty;
@@ -64,17 +65,21 @@ public partial class ArtifactsViewModel : ViewModelBase
     EditArtifactRequested?.Invoke(item.Id, _currentUserId, _currentUserName);
   }
 
-  public async Task LoadArtifactsAsync(int projectId, string phaseName, int userId, string userName)
+  public async Task LoadArtifactsAsync(int projectId, int phaseId, string phaseName, int userId, string userName)
   {
     _currentProjectId = projectId;
+    _currentPhaseId = phaseId;
     _currentPhaseName = phaseName;
     _currentUserId = userId;
     _currentUserName = userName;
 
     PhaseName = phaseName;
-    Artifacts.Clear(); if (_artifactRepository == null) return;
+    Artifacts.Clear();
+    
+    if (_artifactRepository == null) return;
 
-    var artifacts = await _artifactRepository.GetByProjectIdAsync(projectId);
+    // Filter artifacts by phase ID
+    var artifacts = await _artifactRepository.GetByPhaseIdAsync(phaseId);
 
     int index = 1;
     foreach (var artifact in artifacts)
@@ -92,9 +97,9 @@ public partial class ArtifactsViewModel : ViewModelBase
 
   public async Task RefreshAsync()
   {
-    if (_currentProjectId != 0)
+    if (_currentProjectId != 0 && _currentPhaseId != 0)
     {
-      await LoadArtifactsAsync(_currentProjectId, _currentPhaseName, _currentUserId, _currentUserName);
+      await LoadArtifactsAsync(_currentProjectId, _currentPhaseId, _currentPhaseName, _currentUserId, _currentUserName);
     }
   }
 }
