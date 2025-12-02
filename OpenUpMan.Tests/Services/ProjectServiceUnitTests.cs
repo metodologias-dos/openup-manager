@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+﻿﻿using Microsoft.Extensions.Logging;
 using Moq;
 using OpenUpMan.Data;
 using OpenUpMan.Domain;
@@ -48,7 +48,7 @@ public class ProjectServiceUnitTests
 
         _projectRepositoryMock.Verify(repo => repo.AddAsync(It.IsAny<Project>(), It.IsAny<CancellationToken>()), Times.Once);
         _phaseRepositoryMock.Verify(repo => repo.AddAsync(It.IsAny<Phase>(), It.IsAny<CancellationToken>()), Times.Exactly(4));
-        _projectRepositoryMock.Verify(repo => repo.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Exactly(5));
+        _projectRepositoryMock.Verify(repo => repo.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Exactly(5)); // Once for project, 4 times for phases
     }
 
     [Fact]
