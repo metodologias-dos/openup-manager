@@ -8,15 +8,18 @@ namespace OpenUpMan.Services
     {
         private readonly IProjectRepository _repo;
         private readonly IPhaseRepository _phaseRepo;
+        private readonly IArtifactRepository _artifactRepo;
         private readonly ILogger<ProjectService> _logger;
 
         public ProjectService(
             IProjectRepository repo,
             IPhaseRepository phaseRepo,
+            IArtifactRepository artifactRepo,
             ILogger<ProjectService> logger)
         {
             _repo = repo;
             _phaseRepo = phaseRepo;
+            _artifactRepo = artifactRepo;
             _logger = logger;
         }
 
@@ -60,6 +63,25 @@ namespace OpenUpMan.Services
                     {
                         var phase = new Phase(project.Id, phaseName, order);
                         await _phaseRepo.AddAsync(phase, ct);
+                        await _repo.SaveChangesAsync(ct); // Save to get Phase Id
+
+                        // Create default artifacts for Inception
+                        if (order == 1) // Inception
+                        {
+                            var artifacts = new[]
+                            {
+                                new Artifact(project.Id, phase.Id, "Documento de Visión", "Document", true, "Define el alcance y los objetivos del proyecto."),
+                                new Artifact(project.Id, phase.Id, "Lista de Stakeholders", "List", true, "Identifica a los interesados en el proyecto."),
+                                new Artifact(project.Id, phase.Id, "Lista de Riesgos Iniciales", "List", true, "Enumera los riesgos conocidos al inicio."),
+                                new Artifact(project.Id, phase.Id, "Plan de Proyecto (versión inicial)", "Plan", true, "Planificación preliminar de fases e hitos."),
+                                new Artifact(project.Id, phase.Id, "Modelo de Casos de Uso de Alto Nivel", "Model", true, "Visión general de los casos de uso principales.")
+                            };
+
+                            foreach (var artifact in artifacts)
+                            {
+                                await _artifactRepo.AddAsync(artifact, ct);
+                            }
+                        }
                     }
 
                     _logger.LogInformation("Fases OpenUP creadas automáticamente para proyecto {ProjectId}", project.Id);
@@ -121,7 +143,7 @@ namespace OpenUpMan.Services
             {
                 var projects = await _repo.GetAllAsync(ct);
                 var project = projects.FirstOrDefault(p => p.Code == code);
-                
+
                 if (project == null)
                 {
                     return new ProjectServiceResult(
@@ -267,7 +289,7 @@ namespace OpenUpMan.Services
         {
             var currentYear = DateTime.UtcNow.Year;
             var allProjects = await _repo.GetAllAsync(ct);
-            
+
             // Filtrar proyectos del año actual que coincidan con el patrón PROY-YYYY-XXX
             var projectsThisYear = allProjects
                 .Where(p => !string.IsNullOrEmpty(p.Code) && p.Code.StartsWith($"PROY-{currentYear}-"))
