@@ -66,9 +66,17 @@ namespace OpenUpMan.Data
             }
         }
 
-        public async Task SaveChangesAsync(CancellationToken ct = default)
+        public async Task<int> SaveChangesAsync(CancellationToken ct = default)
         {
-            await _ctx.SaveChangesAsync(ct);
+            return await _ctx.SaveChangesAsync(ct);
+        }
+
+        public async Task<string?> GetLastProjectCodeAsync(CancellationToken ct = default)
+        {
+            return await _ctx.Projects
+                .OrderByDescending(p => p.Code)
+                .Select(p => p.Code)
+                .FirstOrDefaultAsync(ct);
         }
     }
 }

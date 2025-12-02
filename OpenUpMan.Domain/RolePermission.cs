@@ -24,6 +24,7 @@ namespace OpenUpMan.Domain
             RoleId = roleId;
             PermissionId = permissionId;
         }
+        
+        public Permission? Permission { get; set; }
     }
 }
-

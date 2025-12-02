@@ -12,6 +12,7 @@ namespace OpenUpMan.Data
         Task AddAsync(Project project, CancellationToken ct = default);
         Task UpdateAsync(Project project, CancellationToken ct = default);
         Task DeleteAsync(int id, CancellationToken ct = default);
-        Task SaveChangesAsync(CancellationToken ct = default);
+        Task<int> SaveChangesAsync(CancellationToken ct = default);
+        Task<string?> GetLastProjectCodeAsync(CancellationToken ct = default);
     }
 }

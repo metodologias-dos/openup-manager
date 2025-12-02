@@ -1,96 +1,92 @@
-using OpenUpMan.Domain;
+﻿using OpenUpMan.Domain;
 
-namespace OpenUpMan.Tests.Domain
+namespace OpenUpMan.Tests.Domain;
+
+public class RoleTests
 {
-    public class RoleTests
+    [Fact]
+    public void Constructor_WithValidParameters_ShouldCreateRole()
     {
-        [Fact]
-        public void Constructor_ValidParameters_CreatesRole()
-        {
-            // Arrange
-            var name = "DESARROLLADOR";
-            var description = "Rol de desarrollador";
+        // Arrange
+        var name = "Test Role";
+        var description = "Test Description";
 
-            // Act
-            var role = new Role(name, description);
+        // Act
+        var role = new Role(name, description);
 
-            // Assert
-            Assert.NotEqual(Guid.Empty, role.Id);
-            Assert.Equal(name, role.Name);
-            Assert.Equal(description, role.Description);
-        }
+        // Assert
+        Assert.Equal(name, role.Name);
+        Assert.Equal(description, role.Description);
+    }
 
-        [Fact]
-        public void Constructor_WithoutDescription_CreatesRole()
-        {
-            // Arrange
-            var name = "TESTER";
+    [Fact]
+    public void Constructor_WithNullOrEmptyName_ShouldThrowArgumentException()
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentException>(() => new Role(null!));
+        Assert.Throws<ArgumentException>(() => new Role(""));
+        Assert.Throws<ArgumentException>(() => new Role("   "));
+    }
 
-            // Act
-            var role = new Role(name);
+    [Fact]
+    public void Constructor_WithId_WithValidParameters_ShouldCreateRole()
+    {
+        // Arrange
+        var id = 1;
+        var name = "Test Role";
+        var description = "Test Description";
 
-            // Assert
-            Assert.NotEqual(Guid.Empty, role.Id);
-            Assert.Equal(name, role.Name);
-            Assert.Null(role.Description);
-        }
+        // Act
+        var role = new Role(id, name, description);
 
-        [Fact]
-        public void Constructor_NullName_ThrowsArgumentException()
-        {
-            // Act & Assert
-            Assert.Throws<ArgumentException>(() => new Role(null!));
-        }
+        // Assert
+        Assert.Equal(id, role.Id);
+        Assert.Equal(name, role.Name);
+        Assert.Equal(description, role.Description);
+    }
 
-        [Fact]
-        public void Constructor_EmptyName_ThrowsArgumentException()
-        {
-            // Act & Assert
-            Assert.Throws<ArgumentException>(() => new Role(""));
-        }
+    [Fact]
+    public void Constructor_WithId_WithInvalidId_ShouldThrowArgumentException()
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentException>(() => new Role(0, "Test Role"));
+        Assert.Throws<ArgumentException>(() => new Role(-1, "Test Role"));
+    }
 
-        [Fact]
-        public void Constructor_WhitespaceName_ThrowsArgumentException()
-        {
-            // Act & Assert
-            Assert.Throws<ArgumentException>(() => new Role("   "));
-        }
+    [Fact]
+    public void Constructor_WithId_WithNullOrEmptyName_ShouldThrowArgumentException()
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentException>(() => new Role(1, null!));
+        Assert.Throws<ArgumentException>(() => new Role(1, ""));
+        Assert.Throws<ArgumentException>(() => new Role(1, "   "));
+    }
 
-        [Fact]
-        public void UpdateDetails_ValidParameters_UpdatesRole()
-        {
-            // Arrange
-            var role = new Role("ADMIN", "Administrador");
-            var newName = "SUPER_ADMIN";
-            var newDescription = "Super Administrador";
+    [Fact]
+    public void UpdateDetails_WithValidParameters_ShouldUpdateRole()
+    {
+        // Arrange
+        var role = new Role("Old Name");
+        var newName = "New Name";
+        var newDescription = "New Description";
 
-            // Act
-            role.UpdateDetails(newName, newDescription);
+        // Act
+        role.UpdateDetails(newName, newDescription);
 
-            // Assert
-            Assert.Equal(newName, role.Name);
-            Assert.Equal(newDescription, role.Description);
-        }
+        // Assert
+        Assert.Equal(newName, role.Name);
+        Assert.Equal(newDescription, role.Description);
+    }
 
-        [Fact]
-        public void UpdateDetails_NullName_ThrowsArgumentException()
-        {
-            // Arrange
-            var role = new Role("ADMIN");
+    [Fact]
+    public void UpdateDetails_WithNullOrEmptyName_ShouldThrowArgumentException()
+    {
+        // Arrange
+        var role = new Role("Old Name");
 
-            // Act & Assert
-            Assert.Throws<ArgumentException>(() => role.UpdateDetails(null!, "Description"));
-        }
-
-        [Fact]
-        public void UpdateDetails_EmptyName_ThrowsArgumentException()
-        {
-            // Arrange
-            var role = new Role("ADMIN");
-
-            // Act & Assert
-            Assert.Throws<ArgumentException>(() => role.UpdateDetails("", "Description"));
-        }
+        // Act & Assert
+        Assert.Throws<ArgumentException>(() => role.UpdateDetails(null!, null));
+        Assert.Throws<ArgumentException>(() => role.UpdateDetails("", null));
+        Assert.Throws<ArgumentException>(() => role.UpdateDetails("   ", null));
     }
 }
-

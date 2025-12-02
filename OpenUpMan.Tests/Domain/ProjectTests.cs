@@ -1,92 +1,102 @@
-using OpenUpMan.Domain;
-using Xunit;
+﻿using OpenUpMan.Domain;
 
-namespace OpenUpMan.Tests.Domain
+namespace OpenUpMan.Tests.Domain;
+
+public class ProjectTests
 {
-    public class ProjectTests
+    [Fact]
+    public void Constructor_WithValidParameters_ShouldCreateProject()
     {
-        [Fact]
-        public void Constructor_ShouldInitializeProject_WithValidParameters()
-        {
-            var identifier = "PROY-001";
-            var name = "Proyecto prueba";
-            var ownerId = Guid.NewGuid();
-            var startDate = DateTime.UtcNow;
+        // Arrange
+        var name = "Test Project";
+        var createdBy = 1;
+        var code = "TP";
+        var description = "Test Description";
+        var startDate = DateTime.UtcNow;
 
-            var project = new Project(identifier, name, startDate, ownerId, "Desc");
+        // Act
+        var project = new Project(name, createdBy, code, description, startDate);
 
-            Assert.NotEqual(Guid.Empty, project.Id);
-            Assert.Equal(identifier, project.Identifier);
-            Assert.Equal(name, project.Name);
-            Assert.Equal(ownerId, project.OwnerId);
-            Assert.Equal(ProjectState.CREATED, project.State);
-            Assert.True((DateTime.UtcNow - project.CreatedAt).TotalSeconds < 2);
-        }
+        // Assert
+        Assert.Equal(name, project.Name);
+        Assert.Equal(createdBy, project.CreatedBy);
+        Assert.Equal(code, project.Code);
+        Assert.Equal(description, project.Description);
+        Assert.Equal(startDate, project.StartDate);
+        Assert.Equal("CREATED", project.Status);
+        Assert.True(project.CreatedAt <= DateTime.UtcNow);
+        Assert.Null(project.UpdatedAt);
+        Assert.Null(project.DeletedAt);
+    }
 
-        [Fact]
-        public void UpdateDetails_ShouldUpdateFields_AndSetUpdatedAt()
-        {
-            var project = new Project("PROY-002", "Name", DateTime.UtcNow, Guid.NewGuid(), "Old");
-            var oldUpdated = project.UpdatedAt;
+    [Fact]
+    public void Constructor_WithNullOrEmptyName_ShouldThrowArgumentException()
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentException>(() => new Project(null!, 1));
+        Assert.Throws<ArgumentException>(() => new Project("", 1));
+        Assert.Throws<ArgumentException>(() => new Project("   ", 1));
+    }
 
-            Thread.Sleep(10);
+    [Fact]
+    public void UpdateDetails_WithValidParameters_ShouldUpdateProject()
+    {
+        // Arrange
+        var project = new Project("Old Name", 1);
+        var newName = "New Name";
+        var newDescription = "New Description";
+        var newStartDate = DateTime.UtcNow.AddDays(1);
+        var newCode = "NN";
 
-            var newStart = DateTime.UtcNow.AddDays(1);
-            project.UpdateDetails("NewName", "NewDesc", newStart);
+        // Act
+        project.UpdateDetails(newName, newDescription, newStartDate, newCode);
 
-            Assert.Equal("NewName", project.Name);
-            Assert.Equal("NewDesc", project.Description);
-            Assert.Equal(newStart, project.StartDate);
-            Assert.NotNull(project.UpdatedAt);
-            Assert.NotEqual(oldUpdated, project.UpdatedAt);
-        }
+        // Assert
+        Assert.Equal(newName, project.Name);
+        Assert.Equal(newDescription, project.Description);
+        Assert.Equal(newStartDate, project.StartDate);
+        Assert.Equal(newCode, project.Code);
+        Assert.NotNull(project.UpdatedAt);
+    }
 
-        [Fact]
-        public void SetState_ShouldChangeState_AndSetUpdatedAt()
-        {
-            var project = new Project("PROY-003", "Name", DateTime.UtcNow, Guid.NewGuid());
-            var oldUpdated = project.UpdatedAt;
+    [Fact]
+    public void UpdateDetails_WithNullOrEmptyName_ShouldThrowArgumentException()
+    {
+        // Arrange
+        var project = new Project("Old Name", 1);
 
-            Thread.Sleep(10);
+        // Act & Assert
+        Assert.Throws<ArgumentException>(() => project.UpdateDetails(null!, null, null));
+        Assert.Throws<ArgumentException>(() => project.UpdateDetails("", null, null));
+        Assert.Throws<ArgumentException>(() => project.UpdateDetails("   ", null, null));
+    }
 
-            project.SetState(ProjectState.ACTIVE);
+    [Fact]
+    public void SetStatus_WithValidStatus_ShouldUpdateStatus()
+    {
+        // Arrange
+        var project = new Project("Test Project", 1);
+        var newStatus = "IN_PROGRESS";
 
-            Assert.Equal(ProjectState.ACTIVE, project.State);
-            Assert.NotNull(project.UpdatedAt);
-            Assert.NotEqual(oldUpdated, project.UpdatedAt);
-        }
+        // Act
+        project.SetStatus(newStatus);
 
-        [Fact]
-        public void AssignOwner_ShouldSetOwnerId_AndSetUpdatedAt()
-        {
-            var project = new Project("PROY-004", "Name", DateTime.UtcNow, Guid.NewGuid());
-            var newOwner = Guid.NewGuid();
-            var oldUpdated = project.UpdatedAt;
+        // Assert
+        Assert.Equal(newStatus, project.Status);
+        Assert.NotNull(project.UpdatedAt);
+    }
 
-            Thread.Sleep(10);
+    [Fact]
+    public void SoftDelete_ShouldSetDeletedAt()
+    {
+        // Arrange
+        var project = new Project("Test Project", 1);
 
-            project.AssignOwner(newOwner);
+        // Act
+        project.SoftDelete();
 
-            Assert.Equal(newOwner, project.OwnerId);
-            Assert.NotNull(project.UpdatedAt);
-            Assert.NotEqual(oldUpdated, project.UpdatedAt);
-        }
-
-        [Fact]
-        public void Constructor_ShouldThrow_WhenIdentifierInvalid()
-        {
-            var owner = Guid.NewGuid();
-            Assert.Throws<ArgumentException>(() => new Project("", "Name", DateTime.UtcNow, owner));
-            Assert.Throws<ArgumentException>(() => new Project("   ", "Name", DateTime.UtcNow, owner));
-        }
-
-        [Fact]
-        public void Constructor_ShouldThrow_WhenNameInvalid()
-        {
-            var owner = Guid.NewGuid();
-            Assert.Throws<ArgumentException>(() => new Project("PROY-005", "", DateTime.UtcNow, owner));
-            Assert.Throws<ArgumentException>(() => new Project("PROY-005", "   ", DateTime.UtcNow, owner));
-        }
+        // Assert
+        Assert.NotNull(project.DeletedAt);
+        Assert.NotNull(project.UpdatedAt);
     }
 }
-

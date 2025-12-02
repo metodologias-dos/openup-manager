@@ -1,96 +1,58 @@
-using OpenUpMan.Domain;
+﻿using OpenUpMan.Domain;
 
-namespace OpenUpMan.Tests.Domain
+namespace OpenUpMan.Tests.Domain;
+
+public class PermissionTests
 {
-    public class PermissionTests
+    [Fact]
+    public void Constructor_WithValidParameters_ShouldCreatePermission()
     {
-        [Fact]
-        public void Constructor_ValidParameters_CreatesPermission()
-        {
-            // Arrange
-            var name = "BorrarProyecto";
-            var description = "Permite borrar proyectos";
+        // Arrange
+        var name = "Test Permission";
+        var description = "Test Description";
 
-            // Act
-            var permission = new Permission(name, description);
+        // Act
+        var permission = new Permission(name, description);
 
-            // Assert
-            Assert.NotEqual(Guid.Empty, permission.Id);
-            Assert.Equal(name, permission.Name);
-            Assert.Equal(description, permission.Description);
-        }
+        // Assert
+        Assert.Equal(name, permission.Name);
+        Assert.Equal(description, permission.Description);
+    }
 
-        [Fact]
-        public void Constructor_WithoutDescription_CreatesPermission()
-        {
-            // Arrange
-            var name = "RenombrarProyecto";
+    [Fact]
+    public void Constructor_WithNullOrEmptyName_ShouldThrowArgumentException()
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentException>(() => new Permission(null!));
+        Assert.Throws<ArgumentException>(() => new Permission(""));
+        Assert.Throws<ArgumentException>(() => new Permission("   "));
+    }
 
-            // Act
-            var permission = new Permission(name);
+    [Fact]
+    public void UpdateDetails_WithValidParameters_ShouldUpdatePermission()
+    {
+        // Arrange
+        var permission = new Permission("Old Name");
+        var newName = "New Name";
+        var newDescription = "New Description";
 
-            // Assert
-            Assert.NotEqual(Guid.Empty, permission.Id);
-            Assert.Equal(name, permission.Name);
-            Assert.Null(permission.Description);
-        }
+        // Act
+        permission.UpdateDetails(newName, newDescription);
 
-        [Fact]
-        public void Constructor_NullName_ThrowsArgumentException()
-        {
-            // Act & Assert
-            Assert.Throws<ArgumentException>(() => new Permission(null!));
-        }
+        // Assert
+        Assert.Equal(newName, permission.Name);
+        Assert.Equal(newDescription, permission.Description);
+    }
 
-        [Fact]
-        public void Constructor_EmptyName_ThrowsArgumentException()
-        {
-            // Act & Assert
-            Assert.Throws<ArgumentException>(() => new Permission(""));
-        }
+    [Fact]
+    public void UpdateDetails_WithNullOrEmptyName_ShouldThrowArgumentException()
+    {
+        // Arrange
+        var permission = new Permission("Old Name");
 
-        [Fact]
-        public void Constructor_WhitespaceName_ThrowsArgumentException()
-        {
-            // Act & Assert
-            Assert.Throws<ArgumentException>(() => new Permission("   "));
-        }
-
-        [Fact]
-        public void UpdateDetails_ValidParameters_UpdatesPermission()
-        {
-            // Arrange
-            var permission = new Permission("AgregarUsuarios", "Agregar usuarios al proyecto");
-            var newName = "AgregarYEliminarUsuarios";
-            var newDescription = "Agregar y eliminar usuarios del proyecto";
-
-            // Act
-            permission.UpdateDetails(newName, newDescription);
-
-            // Assert
-            Assert.Equal(newName, permission.Name);
-            Assert.Equal(newDescription, permission.Description);
-        }
-
-        [Fact]
-        public void UpdateDetails_NullName_ThrowsArgumentException()
-        {
-            // Arrange
-            var permission = new Permission("AgregarUsuarios");
-
-            // Act & Assert
-            Assert.Throws<ArgumentException>(() => permission.UpdateDetails(null!, "Description"));
-        }
-
-        [Fact]
-        public void UpdateDetails_EmptyName_ThrowsArgumentException()
-        {
-            // Arrange
-            var permission = new Permission("AgregarUsuarios");
-
-            // Act & Assert
-            Assert.Throws<ArgumentException>(() => permission.UpdateDetails("", "Description"));
-        }
+        // Act & Assert
+        Assert.Throws<ArgumentException>(() => permission.UpdateDetails(null!, null));
+        Assert.Throws<ArgumentException>(() => permission.UpdateDetails("", null));
+        Assert.Throws<ArgumentException>(() => permission.UpdateDetails("   ", null));
     }
 }
-
