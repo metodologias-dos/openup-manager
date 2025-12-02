@@ -16,54 +16,55 @@ public partial class ProjectsPopup : Window
     }
 
     private bool _isClosingProgrammatically = false;
-    
+
     public ProjectsPopup(ProjectsPopupViewModel vm) : this()
     {
         DataContext = vm;
         vm.CloseRequested += OnCloseRequested;
         vm.LogoutRequested += OnLogoutRequested;
         vm.NewProjectDialogRequested += OnNewProjectDialogRequested;
-        
+        vm.OpenProjectRequested += OnOpenProjectRequested;
+
         // Handle window closing (X button) to trigger logout
         this.Closing += OnWindowClosing;
-        
+
         // Attach header click handlers after the window is loaded
         this.Opened += OnWindowOpened;
     }
-    
+
     private void OnWindowOpened(object? sender, EventArgs e)
     {
         // Find and attach event handlers to column headers
         AttachHeaderClickHandlers();
     }
-    
+
     private void AttachHeaderClickHandlers()
     {
         if (DataContext is not ProjectsPopupViewModel vm)
             return;
-            
+
         // Find all DataGridColumnHeaders in the visual tree
         var headers = this.GetVisualDescendants()
             .OfType<DataGridColumnHeader>()
             .ToList();
-        
+
         for (int i = 0; i < headers.Count; i++)
         {
             var header = headers[i];
-            
+
             // Get the TextBlock content from the header
             var textBlock = header.GetVisualDescendants()
                 .OfType<TextBlock>()
                 .FirstOrDefault();
-            
+
             if (textBlock == null)
             {
                 // Try to get text from Content property directly
                 var content = header.Content?.ToString() ?? "";
-                
+
                 if (content.Contains("ACCIONES"))
                     continue; // Skip actions column
-                    
+
                 // Fallback: use column index
                 if (i == 0) // First column = NOMBRE
                 {
@@ -75,7 +76,7 @@ public partial class ProjectsPopup : Window
                 }
                 continue;
             }
-            
+
             // Get all text from the TextBlock including Runs
             var allText = string.Empty;
             if (textBlock.Inlines != null)
@@ -88,13 +89,13 @@ public partial class ProjectsPopup : Window
                     }
                 }
             }
-            
+
             // If no inlines, try Text property
             if (string.IsNullOrEmpty(allText))
             {
                 allText = textBlock.Text ?? "";
             }
-            
+
             // Check the text content to identify which column this is
             if (allText.Contains("NOMBRE"))
             {
@@ -107,7 +108,7 @@ public partial class ProjectsPopup : Window
             // ACCIONES column gets no handler
         }
     }
-    
+
     private void OnWindowClosing(object? sender, System.ComponentModel.CancelEventArgs e)
     {
         // If we're already closing programmatically, allow it
@@ -115,10 +116,10 @@ public partial class ProjectsPopup : Window
         {
             return;
         }
-        
+
         // Cancel the default close behavior
         e.Cancel = true;
-        
+
         // Trigger logout on the UI thread asynchronously to avoid recursion
         Avalonia.Threading.Dispatcher.UIThread.Post(() =>
         {
@@ -142,7 +143,7 @@ public partial class ProjectsPopup : Window
         // Obtener los servicios desde el ServiceProvider
         var projectService = Program.ServiceProvider.GetService(typeof(OpenUpMan.Services.IProjectService)) as OpenUpMan.Services.IProjectService;
         var projectUserService = Program.ServiceProvider.GetService(typeof(OpenUpMan.Services.IProjectUserService)) as OpenUpMan.Services.IProjectUserService;
-
+ 
         if (projectService == null || projectUserService == null)
         {
             Console.WriteLine("Error: No se pudieron obtener los servicios necesarios");
@@ -153,9 +154,9 @@ public partial class ProjectsPopup : Window
         var dialog = new ProjectDialog(dialogVm);
 
         // Suscribirse al evento de proyecto creado
-        dialogVm.ProjectCreated += (result) =>
+        dialogVm.ProjectCreated += async (result) =>
         {
-            vm.AddProject(result);
+            await vm.AddProjectAsync(result);
         };
 
         // Mostrar el diálogo como modal
@@ -166,7 +167,7 @@ public partial class ProjectsPopup : Window
     {
         // Set flag to prevent infinite recursion
         _isClosingProgrammatically = true;
-        
+
         // Close this projects window
         this.Close();
 
@@ -219,5 +220,84 @@ public partial class ProjectsPopup : Window
                 return;
             }
         });
+    }
+
+    private async void OnOpenProjectRequested(string? code)
+    {
+        if (string.IsNullOrEmpty(code)) return;
+
+        // Try to get project name from service (optional)
+        var projectService = Program.ServiceProvider.GetService(typeof(OpenUpMan.Services.IProjectService)) as OpenUpMan.Services.IProjectService;
+        string title = code;
+        int projectId = 0;
+
+        if (projectService != null)
+        {
+            try
+            {
+                var result = await projectService.GetProjectByCodeAsync(code);
+                if (result.Success && result.Project != null)
+                {
+                    title = result.Project.Name ?? code;
+                    projectId = result.Project.Id;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to load project '{code}': {ex.Message}");
+            }
+        }
+
+        // Create ViewModel and View (visual only)
+        var projectVm = new OpenUpMan.UI.ViewModels.ProjectViewModel();
+        projectVm.ProjectName = title;
+        projectVm.ProjectId = projectId;
+
+        if (DataContext is ProjectsPopupViewModel popupVm && popupVm.CurrentUser != null)
+        {
+            projectVm.CurrentUserId = popupVm.CurrentUser.Id;
+            projectVm.CurrentUserName = popupVm.CurrentUser.Username;
+        }
+
+        var view = new OpenUpMan.UI.Views.ProjectView
+        {
+            DataContext = projectVm
+        };
+
+        // Create a window to host the view
+        var wnd = new Window
+        {
+            Title = title,
+            Width = 1000,
+            Height = 700,
+            Content = view,
+            WindowStartupLocation = WindowStartupLocation.CenterScreen
+        };
+
+        // Subscribe to BackRequested event to close project window and show ProjectsPopup again
+        projectVm.BackRequested += () =>
+        {
+            wnd.Close();
+            this.Show();
+        };
+
+        // Handle window closing to show ProjectsPopup again
+        wnd.Closing += (s, e) =>
+        {
+            this.Show();
+        };
+
+        try
+        {
+            // Show as independent window
+            wnd.Show();
+            // Hide ProjectsPopup after project window is shown
+            this.Hide();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Failed to open project window: " + ex.Message);
+            this.Show();
+        }
     }
 }

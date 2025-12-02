@@ -1,61 +1,47 @@
 namespace OpenUpMan.Domain
 {
-    public enum ProjectUserPermission
-    {
-        VIEWER,
-        EDITOR,
-        OWNER
-    }
-
-    public enum ProjectUserRole
-    {
-        AUTOR,
-        REVISOR,
-        PO,
-        SM,
-        DESARROLLADOR,
-        TESTER,
-        ADMIN
-    }
-
     public class ProjectUser
     {
-        public Guid ProjectId { get; private set; }
-        public Project? Project { get; private set; }
-        public Guid UserId { get; private set; }
-        public User? User { get; private set; }
-        public ProjectUserPermission Permissions { get; private set; }
-        public ProjectUserRole Role { get; private set; }
+        public int Id { get; private set; }
+        public int ProjectId { get; private set; }
+        public int UserId { get; private set; }
+        public int RoleId { get; private set; }
+        public DateTime AddedAt { get; private set; }
 
         // Parameterless constructor for EF
         protected ProjectUser() { }
 
-        public ProjectUser(Guid projectId, Guid userId, ProjectUserPermission permissions = ProjectUserPermission.VIEWER, ProjectUserRole role = ProjectUserRole.AUTOR)
+        public ProjectUser(int projectId, int userId, int roleId)
         {
-            if (projectId == Guid.Empty)
+            if (projectId <= 0)
             {
-                throw new ArgumentException("ProjectId cannot be an empty GUID.", nameof(projectId));
+                throw new ArgumentException("ProjectId must be positive.", nameof(projectId));
             }
 
-            if (userId == Guid.Empty)
+            if (userId <= 0)
             {
-                throw new ArgumentException("UserId cannot be an empty GUID.", nameof(userId));
+                throw new ArgumentException("UserId must be positive.", nameof(userId));
+            }
+
+            if (roleId <= 0)
+            {
+                throw new ArgumentException("RoleId must be positive.", nameof(roleId));
             }
 
             ProjectId = projectId;
             UserId = userId;
-            Permissions = permissions;
-            Role = role;
+            RoleId = roleId;
+            AddedAt = DateTime.UtcNow;
         }
 
-        public void SetPermissions(ProjectUserPermission newPermissions)
+        public void SetRole(int newRoleId)
         {
-            Permissions = newPermissions;
-        }
+            if (newRoleId <= 0)
+            {
+                throw new ArgumentException("RoleId must be positive.", nameof(newRoleId));
+            }
 
-        public void SetRole(ProjectUserRole newRole)
-        {
-            Role = newRole;
+            RoleId = newRoleId;
         }
     }
 }

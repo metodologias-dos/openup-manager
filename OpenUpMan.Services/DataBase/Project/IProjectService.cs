@@ -4,14 +4,20 @@ namespace OpenUpMan.Services
 {
     public interface IProjectService
     {
-        Task<ProjectServiceResult> CreateProjectAsync(string name, DateTime startDate, Guid ownerId, string? description = null, CancellationToken ct = default);
-        Task<string> GenerateUniqueIdentifierAsync(CancellationToken ct = default);
-        Task<ProjectServiceResult> GetProjectByIdAsync(Guid id, CancellationToken ct = default);
-        Task<ProjectServiceResult> GetProjectByIdentifierAsync(string identifier, CancellationToken ct = default);
-        Task<IEnumerable<Project>> GetProjectsByOwnerAsync(Guid ownerId, CancellationToken ct = default);
-        Task<ProjectServiceResult> UpdateProjectAsync(Guid id, string name, string? description, DateTime startDate, CancellationToken ct = default);
-        Task<ProjectServiceResult> ChangeProjectStateAsync(Guid id, ProjectState newState, CancellationToken ct = default);
-        Task<ProjectServiceResult> DeleteProjectAsync(Guid id, CancellationToken ct = default);
+        Task<ProjectServiceResult> CreateProjectAsync(string name, int? createdBy, string? code = null, string? description = null, DateTime? startDate = null, bool createPhases = true, CancellationToken ct = default);
+        Task<ProjectServiceResult> GetProjectByIdAsync(int id, CancellationToken ct = default);
+        Task<ProjectServiceResult> GetProjectByCodeAsync(string code, CancellationToken ct = default);
+        Task<IEnumerable<Project>> GetAllProjectsAsync(CancellationToken ct = default);
+        Task<ProjectServiceResult> UpdateProjectAsync(int id, string name, string? description, DateTime? startDate, string? code = null, CancellationToken ct = default);
+        Task<ProjectServiceResult> SetStatusAsync(int id, string status, CancellationToken ct = default);
+        Task<ProjectServiceResult> DeleteProjectAsync(int id, CancellationToken ct = default);
     }
+
+    public record ProjectServiceResult(
+        bool Success,
+        ServiceResultType ResultType,
+        string Message,
+        Project? Project = null
+    );
 }
 

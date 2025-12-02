@@ -10,6 +10,8 @@
         Background="{DynamicResource ApplicationPageBackgroundThemeBrush}"
         TransparencyLevelHint="AcrylicBlur">
 
+
+
   <Window.Styles>
     <!-- Estilo para botones pequeños de acción -->
     <Style Selector="Button.action-button">
@@ -197,7 +199,7 @@
               <DataGridTemplateColumn.Header>
                 <TextBlock HorizontalAlignment="Left">
                   <Run Text="NOMBRE" />
-                  <Run Text="{Binding NameSortIndicator}" Foreground="#00A6FF" FontWeight="Bold" />
+                  <Run Text="{Binding NameSortIndicator}" FontWeight="Bold" />
                 </TextBlock>
               </DataGridTemplateColumn.Header>
               <DataGridTemplateColumn.CellTemplate>
@@ -219,7 +221,7 @@
                                  FontWeight="SemiBold"
                                  TextTrimming="CharacterEllipsis"
                                  Foreground="White" />
-                      <TextBlock Text="{Binding Id}" 
+                      <TextBlock Text="{Binding Code}" 
                                  FontSize="11"
                                  Foreground="#B0B0B0"
                                  FontFamily="Consolas, Courier New" />
@@ -229,12 +231,44 @@
               </DataGridTemplateColumn.CellTemplate>
             </DataGridTemplateColumn>
 
-            <!-- Columna de Última Edición - 25% -->
-            <DataGridTemplateColumn Width="1*" MinWidth="160" CanUserSort="False">
+            <!-- Columna de Propietario - 20% -->
+            <DataGridTemplateColumn Width="0.8*" MinWidth="140" CanUserSort="False">
+              <DataGridTemplateColumn.Header>
+                <TextBlock HorizontalAlignment="Center" Text="PROPIETARIO" />
+              </DataGridTemplateColumn.Header>
+              <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate DataType="vm:ProjectListItemViewModel">
+                  <TextBlock Text="{Binding CreatedByUsername}" 
+                             FontSize="13"
+                             Foreground="White"
+                             HorizontalAlignment="Center"
+                             VerticalAlignment="Center" />
+                </DataTemplate>
+              </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+
+            <!-- Columna de Estado - 15% -->
+            <DataGridTemplateColumn Width="0.6*" MinWidth="100" CanUserSort="False">
+              <DataGridTemplateColumn.Header>
+                <TextBlock HorizontalAlignment="Center" Text="ESTADO" />
+              </DataGridTemplateColumn.Header>
+              <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate DataType="vm:ProjectListItemViewModel">
+                  <TextBlock Text="{Binding Status}" 
+                             FontSize="13"
+                             FontWeight="SemiBold"
+                             HorizontalAlignment="Center"
+                             VerticalAlignment="Center" />
+                </DataTemplate>
+              </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+
+            <!-- Columna de Última Edición - 20% -->
+            <DataGridTemplateColumn Width="0.8*" MinWidth="160" CanUserSort="False">
               <DataGridTemplateColumn.Header>
                 <TextBlock HorizontalAlignment="Center">
                   <Run Text="ÚLTIMA EDICIÓN" />
-                  <Run Text="{Binding DateSortIndicator}" Foreground="#00A6FF" FontWeight="Bold" />
+                  <Run Text="{Binding DateSortIndicator}"  FontWeight="Bold" />
                 </TextBlock>
               </DataGridTemplateColumn.Header>
               <DataGridTemplateColumn.CellTemplate>
@@ -280,12 +314,13 @@
                       </StackPanel>
                     </Button>
 
-                    <!-- Botón Borrar -->
+                    <!-- Botón Borrar (solo visible para el owner) -->
                     <Button Command="{Binding $parent[Window].((vm:ProjectsPopupViewModel)DataContext).DeleteProjectCommand}" 
                             CommandParameter="{Binding}"
                             Classes="action-button"
                             Background="#E81123"
-                            Foreground="White">
+                            Foreground="White"
+                            IsVisible="{Binding IsOwner}">
                       <StackPanel Orientation="Horizontal" Spacing="6">
                         <Viewbox Width="14" Height="14" VerticalAlignment="Center">
                           <Canvas Width="24" Height="24">

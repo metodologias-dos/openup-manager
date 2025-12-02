@@ -1,0 +1,81 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:OpenUpMan.UI.ViewModels"
+        x:Class="OpenUpMan.UI.Views.ArtifactEditWindow"
+        x:DataType="vm:ArtifactEditViewModel"
+        Title="Editar Artefacto"
+        Width="500" Height="550"
+        WindowStartupLocation="CenterOwner"
+        mc:Ignorable="d">
+
+    <Design.DataContext>
+        <vm:ArtifactEditViewModel/>
+    </Design.DataContext>
+
+    <Border Padding="20">
+        <ScrollViewer>
+            <StackPanel Spacing="15">
+                <TextBlock Text="Editar Artefacto" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center"/>
+
+                <!-- Name (Read Only) -->
+                <StackPanel>
+                    <TextBlock Text="Nombre del Artefacto" FontWeight="SemiBold"/>
+                    <TextBox Text="{Binding Name}" IsReadOnly="True" Background="Transparent" BorderThickness="0"/>
+                </StackPanel>
+
+                <Grid ColumnDefinitions="*, 10, *">
+                    <!-- Type -->
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="Tipo" FontWeight="SemiBold"/>
+                        <TextBox Text="{Binding ArtifactType}"/>
+                    </StackPanel>
+
+                    <!-- Author -->
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="Autor" FontWeight="SemiBold"/>
+                        <TextBox Text="{Binding AuthorName}" IsReadOnly="True" Watermark="Nombre del autor"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Mandatory -->
+                <CheckBox Content="Es Obligatorio" IsChecked="{Binding IsMandatory}"/>
+
+                <Separator/>
+
+                <!-- File Upload -->
+                <StackPanel Spacing="5">
+                    <TextBlock Text="Archivo" FontWeight="SemiBold"/>
+                    <Grid ColumnDefinitions="*, Auto">
+                        <TextBox Grid.Column="0" Text="{Binding FilePath}" Watermark="Ruta del archivo..." IsReadOnly="True"/>
+                        <Button Grid.Column="1" Content="Examinar..." Command="{Binding BrowseFileCommand}" Margin="5,0,0,0"/>
+                    </Grid>
+                    <TextBlock Text="Archivo actual ya subido" Foreground="Green" IsVisible="{Binding HasFile}" FontSize="12"/>
+                </StackPanel>
+
+                <!-- Link -->
+                <StackPanel>
+                    <TextBlock Text="Enlace (URL)" FontWeight="SemiBold"/>
+                    <TextBox Text="{Binding Link}" Watermark="https://..."/>
+                </StackPanel>
+
+                <!-- Date -->
+                <StackPanel>
+                    <TextBlock Text="Ultima modificacion" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding Date, StringFormat='{}{0:dd/MM/yyyy}'}" Margin="0,5,0,0"/>
+                </StackPanel>
+
+                <!-- Buttons -->
+                <Grid ColumnDefinitions="Auto, *, Auto" Margin="0,20,0,0">
+                    <Button Grid.Column="0" Content="Abrir / Previsualizar" Command="{Binding OpenContentCommand}"/>
+                    
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+                        <Button Content="Cancelar" Command="{Binding CancelCommand}"/>
+                        <Button Content="Guardar" Command="{Binding SaveCommand}" Theme="{StaticResource FluentAccentButtonTheme}"/>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </ScrollViewer>
+    </Border>
+</Window>

@@ -12,43 +12,78 @@ namespace OpenUpMan.Data
             _ctx = ctx;
         }
 
+        public async Task<Project?> GetByIdAsync(int id, CancellationToken ct = default)
+        {
+             return await _ctx.Projects.FindAsync(new object[] { id }, ct);
+        }
+
+        public async Task<Project?> GetByCodeAsync(string code, CancellationToken ct = default)
+        {
+            return await _ctx.Projects.FirstOrDefaultAsync(p => p.Code == code, ct);
+        }
+
+        public async Task<IEnumerable<Project>> GetAllAsync(CancellationToken ct = default)
+        {
+            return await _ctx.Projects
+                .Where(p => p.DeletedAt == null)
+                .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync(ct);
+        }
+
+        public async Task<IEnumerable<Project>> GetAllIncludingDeletedAsync(CancellationToken ct = default)
+        {
+            return await _ctx.Projects
+                .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync(ct);
+        }
+
+        public async Task<IEnumerable<Project>> GetByCreatorAsync(int createdBy, CancellationToken ct = default)
+        {
+            return await _ctx.Projects
+                .Where(p => p.CreatedBy == createdBy && p.DeletedAt == null)
+                .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync(ct);
+        }
+
+        public async Task<IEnumerable<Project>> GetByStatusAsync(string status, CancellationToken ct = default)
+        {
+            return await _ctx.Projects
+                .Where(p => p.Status == status && p.DeletedAt == null)
+                .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync(ct);
+        }
+
         public async Task AddAsync(Project project, CancellationToken ct = default)
         {
-            await _ctx.Set<Project>().AddAsync(project, ct);
+            await _ctx.Projects.AddAsync(project, ct);
         }
 
-        public async Task<Project?> GetByIdAsync(Guid id, CancellationToken ct = default)
+        public Task UpdateAsync(Project project, CancellationToken ct = default)
         {
-            return await _ctx.Set<Project>()
-                .Include(p => p.Owner)
-                .FirstOrDefaultAsync(p => p.Id == id, ct);
+            _ctx.Projects.Update(project);
+            return Task.CompletedTask;
         }
 
-        public async Task<Project?> GetByIdentifierAsync(string identifier, CancellationToken ct = default)
+        public async Task DeleteAsync(int id, CancellationToken ct = default)
         {
-            return await _ctx.Set<Project>().FirstOrDefaultAsync(p => p.Identifier == identifier, ct);
-       }
-
-        public async Task<IEnumerable<Project>> GetByOwnerAsync(Guid ownerId, CancellationToken ct = default)
-        {
-            return await _ctx.Set<Project>().Where(p => p.OwnerId == ownerId).ToListAsync(ct);
+            var project = await GetByIdAsync(id, ct);
+            if (project != null)
+            {
+                project.SoftDelete();
+            }
         }
 
-        public async Task UpdateAsync(Project project, CancellationToken ct = default)
+        public async Task<int> SaveChangesAsync(CancellationToken ct = default)
         {
-            _ctx.Set<Project>().Update(project);
-            await Task.CompletedTask;
+            return await _ctx.SaveChangesAsync(ct);
         }
 
-        public async Task DeleteAsync(Project project, CancellationToken ct = default)
+        public async Task<string?> GetLastProjectCodeAsync(CancellationToken ct = default)
         {
-            _ctx.Set<Project>().Remove(project);
-            await Task.CompletedTask;
-        }
-
-        public async Task SaveChangesAsync(CancellationToken ct = default)
-        {
-            await _ctx.SaveChangesAsync(ct);
+            return await _ctx.Projects
+                .OrderByDescending(p => p.Code)
+                .Select(p => p.Code)
+                .FirstOrDefaultAsync(ct);
         }
     }
 }

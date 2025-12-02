@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using OpenUpMan.UI.ViewModels;
 using System;
 using Microsoft.Extensions.DependencyInjection;
+using OpenUpMan.Services;
 
 namespace OpenUpMan.UI.Views;
 
@@ -49,8 +50,16 @@ public partial class UserAuthControl : UserControl
                 return;
             }
 
+            // Obtener IUserService
+            var userService = Program.ServiceProvider.GetService(typeof(IUserService)) as IUserService;
+            if (userService == null)
+            {
+                Console.WriteLine("Error: No se pudo obtener el servicio de usuarios");
+                return;
+            }
+
             // Crear el ViewModel con servicios para cargar proyectos desde la BD
-            var popupVm = new ProjectsPopupViewModel(user, projectUserService, projectService);
+            var popupVm = new ProjectsPopupViewModel(user, projectUserService, projectService, userService);
 
             // Try to find a window to be the owner
             var owner = TopLevel.GetTopLevel(this) as Window;
