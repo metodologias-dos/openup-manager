@@ -140,6 +140,9 @@ namespace OpenUpMan.Data
                 b.Property(p => p.EndDate).HasColumnName("end_date");
                 b.Property(p => p.Status).HasColumnName("status").IsRequired();
                 b.Property(p => p.OrderIndex).HasColumnName("order_index");
+                b.Property(p => p.Objective).HasColumnName("objective");
+                b.Property(p => p.Scope).HasColumnName("scope");
+                b.Property(p => p.Observations).HasColumnName("observations");
 
                 b.HasOne<Project>()
                     .WithMany()
