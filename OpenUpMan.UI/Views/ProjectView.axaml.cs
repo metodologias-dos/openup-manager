@@ -5,6 +5,7 @@ using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
 using OpenUpMan.Data;
+using OpenUpMan.Services; // added for IIterationService
 using OpenUpMan.UI.ViewModels;
 
 namespace OpenUpMan.UI.Views;
@@ -29,6 +30,72 @@ public partial class ProjectView : UserControl
             // Avoid double subscription if DataContext is set multiple times
             vm.ManageArtifactsRequested -= OpenArtifactsWindow;
             vm.ManageArtifactsRequested += OpenArtifactsWindow;
+
+            // Subscribe to create iteration requests
+            vm.CreateIterationRequested -= OpenCreateIterationDialog;
+            vm.CreateIterationRequested += OpenCreateIterationDialog;
+
+            // Load existing iterations for the project
+            _ = LoadIterationsForProjectAsync(vm);
+        }
+    }
+
+    private async System.Threading.Tasks.Task LoadIterationsForProjectAsync(ProjectViewModel vm)
+    {
+        var iterationService = Program.ServiceProvider.GetService<IIterationService>();
+        var phaseRepo = Program.ServiceProvider.GetService<IPhaseRepository>();
+        if (iterationService == null || phaseRepo == null) return;
+
+        try
+        {
+            // Load phases to find iterations by phase
+            var phases = (await phaseRepo.GetByProjectIdAsync(vm.ProjectId)).ToList();
+            vm.Iterations.Clear();
+            foreach (var phase in phases)
+            {
+                var iterations = await iterationService.GetIterationsByPhaseIdAsync(phase.Id);
+                foreach (var it in iterations)
+                {
+                    vm.Iterations.Add(it);
+                }
+            }
+        }
+        catch
+        {
+            // ignore for now - visual only
+        }
+    }
+
+    private async void OpenCreateIterationDialog()
+    {
+        if (DataContext is not ProjectViewModel projectVm) return;
+
+        var phaseRepo = Program.ServiceProvider.GetService<IPhaseRepository>();
+        var iterationService = Program.ServiceProvider.GetService<IIterationService>();
+        if (phaseRepo == null || iterationService == null) return;
+
+        var phases = (await phaseRepo.GetByProjectIdAsync(projectVm.ProjectId)).ToList();
+        if (!phases.Any())
+        {
+            // no phases available for this project
+            return;
+        }
+
+        var dialog = new IterationCreateWindow();
+        dialog.SetPhases(phases);
+
+        if (VisualRoot is Window parent)
+        {
+            var result = await dialog.ShowDialog<object?>(parent);
+            if (result is OpenUpMan.Domain.Iteration created)
+            {
+                // persist using service
+                var sr = await iterationService.CreateIterationAsync(created.PhaseId, created.Name, created.Goal, created.StartDate, created.EndDate);
+                if (sr.Success && sr.Iteration != null)
+                {
+                    projectVm.Iterations.Add(sr.Iteration);
+                }
+            }
         }
     }
 
