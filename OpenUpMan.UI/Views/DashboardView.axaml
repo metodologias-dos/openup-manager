@@ -1,0 +1,114 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:OpenUpMan.UI.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="600"
+             x:Class="OpenUpMan.UI.Views.DashboardView"
+             x:DataType="vm:DashboardViewModel">
+
+    <UserControl.Styles>
+        <Style Selector="TextBlock.active">
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="Auto,*" Margin="24">
+        
+        <!-- Top: Phase Timeline -->
+        <Border Grid.Row="0" Margin="0,0,0,48">
+            <ItemsControl ItemsSource="{Binding Phases}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="0"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Grid RowDefinitions="Auto,Auto" Width="180">
+                            <!-- Connector Line (behind the node) -->
+                            <!-- Note: Ideally this should be hidden for the first/last half, but for mock simplicity it's a full line -->
+                            <Rectangle Grid.Row="0" Height="2" Fill="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" VerticalAlignment="Center" ZIndex="0"/>
+                            
+                            <!-- Node -->
+                            <Panel Grid.Row="0" Width="24" Height="24" ZIndex="1">
+                                <!-- Completed -->
+                                <Ellipse Fill="{DynamicResource SystemControlForegroundBaseMediumBrush}" 
+                                         IsVisible="{Binding IsCompleted}"/>
+                                <!-- Current -->
+                                <Ellipse Fill="{DynamicResource SystemControlForegroundAccentBrush}" 
+                                         Width="24" Height="24"
+                                         IsVisible="{Binding IsCurrent}"/>
+                                <!-- Pending -->
+                                <Ellipse Stroke="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" StrokeThickness="2" Fill="{DynamicResource ApplicationPageBackgroundThemeBrush}"
+                                         IsVisible="{Binding IsPending}"/>
+                            </Panel>
+                            
+                            <!-- Label -->
+                            <TextBlock Grid.Row="1" Text="{Binding Name}" HorizontalAlignment="Center" Margin="0,12,0,0"
+                                       Classes.active="{Binding IsCurrent}"
+                                       Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Border>
+
+        <!-- Main Content -->
+        <Grid Grid.Row="1" MaxWidth="1000" HorizontalAlignment="Center">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*" />
+                <ColumnDefinition Width="120" /> <!-- Spacer -->
+                <ColumnDefinition Width="1*" />
+            </Grid.ColumnDefinitions>
+            
+            <!-- Left: Active Iterations -->
+            <Grid Grid.Column="0" RowDefinitions="Auto,*">
+                <TextBlock Grid.Row="0" Text="Iteraciones Activas" Classes="section-header" HorizontalAlignment="Center" Margin="0,0,0,16"/>
+                
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,0,16,0">
+                    <ItemsControl ItemsSource="{Binding ActiveIterations}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Classes="card" Padding="20" Margin="0,0,0,16">
+                                    <StackPanel Spacing="12">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="16"/>
+                                            <TextBlock Text="{Binding DateRange}" Grid.Column="1" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" FontSize="12"/>
+                                        </Grid>
+                                        
+                                        <TextBlock Text="{Binding Goal}" TextWrapping="Wrap" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                                        
+                                        <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,8,0,0">
+                                            <TextBlock Text="{Binding MicroincrementsCount}" FontWeight="Bold" Foreground="{DynamicResource SystemControlForegroundAccentBrush}"/>
+                                            <TextBlock Text="Microincrementos" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+
+            <!-- Right: Artifacts KPI -->
+            <StackPanel Grid.Column="2" Spacing="16">
+                <TextBlock Text="Métricas Clave" Classes="section-header" HorizontalAlignment="Center"/>
+                
+                <Border Classes="card" Padding="24" HorizontalAlignment="Stretch">
+                    <StackPanel Spacing="8" HorizontalAlignment="Center">
+                        <TextBlock Text="Artefactos Obligatorios" FontSize="14" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" HorizontalAlignment="Center"/>
+                        
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="8">
+                            <TextBlock Text="{Binding MandatoryArtifactsCount}" FontSize="48" FontWeight="Bold" Foreground="{DynamicResource SystemControlForegroundAccentBrush}"/>
+                            <TextBlock Text="/" FontSize="48" FontWeight="Light" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                            <TextBlock Text="{Binding TotalMandatoryArtifacts}" FontSize="48" FontWeight="Bold" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                        </StackPanel>
+                        
+                        <TextBlock Text="Registrados" FontSize="12" HorizontalAlignment="Center" Opacity="0.6"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</UserControl>
