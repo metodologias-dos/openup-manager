@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using HeyRed.Mime;
 using OpenUpMan.Data;
 using OpenUpMan.Domain;
 
@@ -138,7 +139,7 @@ public partial class ArtifactEditViewModel : ViewModelBase
     }
     else if (!string.IsNullOrEmpty(FilePath))
     {
-      OpenFile(FilePath);
+      OpenFileOrShowInExplorer(FilePath);
     }
     else if (HasFile && _artifactRepository != null)
     {
@@ -150,23 +151,110 @@ public partial class ArtifactEditViewModel : ViewModelBase
           string ext = ".bin";
           if (!string.IsNullOrEmpty(version.FileMime))
           {
-            // Simple mime mapping
-            if (version.FileMime.Contains("pdf")) ext = ".pdf";
-            else if (version.FileMime.Contains("image")) ext = ".png"; // simplified
-            else if (version.FileMime.Contains("text")) ext = ".txt";
-            else if (version.FileMime.Contains("word")) ext = ".docx";
+            var extension = MimeTypesMap.GetExtension(version.FileMime);
+            if (!string.IsNullOrEmpty(extension))
+            {
+              // MimeTypesMap.GetExtension returns extension without dot, so add it
+              ext = extension.StartsWith(".") ? extension : "." + extension;
+            }
           }
 
           string safeName = string.Join("_", Name.Split(Path.GetInvalidFileNameChars()));
-          string tempPath = Path.Combine(Path.GetTempPath(), safeName + ext);
+          
+          // Create tmp directory in user's temp folder
+          string tmpDir = Path.Combine(Path.GetTempPath(), "OpenUpMan_Artifacts");
+          Directory.CreateDirectory(tmpDir);
+          
+          string tempPath = Path.Combine(tmpDir, safeName + ext);
 
           await File.WriteAllBytesAsync(tempPath, version.FileBlob);
-          OpenFile(tempPath);
+          OpenFileOrShowInExplorer(tempPath);
         }
         catch (Exception ex)
         {
           Console.WriteLine($"Error opening file: {ex.Message}");
         }
+      }
+    }
+  }
+
+  private bool ShouldShowInExplorer(string extension)
+  {
+    // Extensions that should NOT be opened directly, but shown in explorer
+    // These are typically compressed files, executables, and other binary formats
+    // where the user should decide what to do with them
+    string[] showInExplorerExtensions = 
+    {
+      ".zip", ".rar", ".7z", ".tar", ".gz", ".bz2",     // Compressed files
+      ".exe", ".msi", ".dll", ".bat", ".cmd", ".ps1",   // Executables/Scripts
+      ".iso", ".dmg",                                   // Disk images
+      ".bin", ".dat"                                    // Generic binary files
+    };
+
+    return Array.Exists(showInExplorerExtensions, ext => ext.Equals(extension, StringComparison.OrdinalIgnoreCase));
+  }
+
+  private void OpenFileOrShowInExplorer(string path)
+  {
+    if (!File.Exists(path))
+    {
+      Console.WriteLine($"File not found: {path}");
+      return;
+    }
+
+    string extension = Path.GetExtension(path);
+    
+    if (ShouldShowInExplorer(extension))
+    {
+      // Open file explorer and select the file for compressed/binary files
+      ShowInFileExplorer(path);
+    }
+    else
+    {
+      // Open the file directly - let Windows handle it with default application
+      // This works for .txt, .pdf, .docx, images, etc.
+      OpenFile(path);
+    }
+  }
+
+  private void ShowInFileExplorer(string path)
+  {
+    try
+    {
+      if (OperatingSystem.IsWindows())
+      {
+        // Windows: Use explorer.exe with /select to highlight the file
+        Process.Start("explorer.exe", $"/select,\"{path}\"");
+      }
+      else if (OperatingSystem.IsMacOS())
+      {
+        // macOS: Use 'open' with -R flag
+        Process.Start("open", $"-R \"{path}\"");
+      }
+      else if (OperatingSystem.IsLinux())
+      {
+        // Linux: Open the directory containing the file
+        string directory = Path.GetDirectoryName(path) ?? path;
+        Process.Start(new ProcessStartInfo
+        {
+          FileName = "xdg-open",
+          Arguments = $"\"{directory}\"",
+          UseShellExecute = true
+        });
+      }
+    }
+    catch (Exception ex)
+    {
+      Console.WriteLine($"Error showing file in explorer: {ex.Message}");
+      // Fallback: try to open the directory
+      try
+      {
+        string directory = Path.GetDirectoryName(path) ?? path;
+        Process.Start(new ProcessStartInfo(directory) { UseShellExecute = true });
+      }
+      catch (Exception ex2)
+      {
+        Console.WriteLine($"Error opening directory: {ex2.Message}");
       }
     }
   }
@@ -219,7 +307,7 @@ public partial class ArtifactEditViewModel : ViewModelBase
         try
         {
           fileBytes = await System.IO.File.ReadAllBytesAsync(FilePath);
-          mimeType = "application/octet-stream"; // Simplified
+          mimeType = MimeTypesMap.GetMimeType(FilePath);
         }
         catch (Exception ex)
         {
