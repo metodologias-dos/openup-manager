@@ -22,6 +22,8 @@
                   Command="{Binding OpenCommand}"/>
           <Button Content="Agregar usuario" 
                   Command="{Binding AddUserCommand}"/>
+          <Button Content="Tablero" 
+                  Command="{Binding OpenDashboardCommand}"/>
           <TextBlock VerticalAlignment="Center" 
                      Margin="16,0,0,0"
                      Text="{Binding ProjectPercentage, StringFormat='Porcentaje: {0}%'}"/>
