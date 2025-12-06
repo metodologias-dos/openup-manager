@@ -15,7 +15,8 @@ namespace OpenUpMan.Services
             _logger = logger;
         }
 
-        public async Task<PhaseServiceResult> CreatePhaseAsync(int projectId, string name, int orderIndex, string status = "PENDING", CancellationToken ct = default)
+        public async Task<PhaseServiceResult> CreatePhaseAsync(int projectId, string name, int orderIndex, string status = "PENDING", 
+            string? objective = null, string? scope = null, string? observations = null, CancellationToken ct = default)
         {
             try
             {
@@ -33,6 +34,17 @@ namespace OpenUpMan.Services
                 {
                     phase.SetStatus(status);
                 }
+                
+                // Establecer los campos opcionales
+                if (!string.IsNullOrWhiteSpace(objective))
+                    phase.SetObjective(objective);
+                
+                if (!string.IsNullOrWhiteSpace(scope))
+                    phase.SetScope(scope);
+                
+                if (!string.IsNullOrWhiteSpace(observations))
+                    phase.SetObservations(observations);
+                
                 await _repo.AddAsync(phase, ct);
 
                 _logger.LogInformation("Fase creada: {PhaseId} - {Name} para proyecto {ProjectId}", phase.Id, name, projectId);
@@ -92,7 +104,8 @@ namespace OpenUpMan.Services
             return await _repo.GetByProjectIdAsync(projectId, ct);
         }
 
-        public async Task<PhaseServiceResult> UpdatePhaseAsync(int id, string name, DateTime? startDate, DateTime? endDate, string status, CancellationToken ct = default)
+        public async Task<PhaseServiceResult> UpdatePhaseAsync(int id, string name, DateTime? startDate, DateTime? endDate, string status, 
+            int? orderIndex = null, string? objective = null, string? scope = null, string? observations = null, CancellationToken ct = default)
         {
             try
             {
@@ -106,7 +119,9 @@ namespace OpenUpMan.Services
                     );
                 }
 
-                phase.UpdateDetails(name, startDate, endDate, phase.OrderIndex);
+                // Usar orderIndex proporcionado o mantener el existente
+                var finalOrderIndex = orderIndex ?? phase.OrderIndex;
+                phase.UpdateDetails(name, startDate, endDate, finalOrderIndex, objective, scope, observations);
                 phase.SetStatus(status);
                 await _repo.UpdateAsync(phase, ct);
 
@@ -163,6 +178,117 @@ namespace OpenUpMan.Services
             }
         }
 
+        public async Task<PhaseServiceResult> UpdatePhaseObjectiveAsync(int id, string? objective, CancellationToken ct = default)
+        {
+            try
+            {
+                var phase = await _repo.GetByIdAsync(id, ct);
+                if (phase == null)
+                {
+                    return new PhaseServiceResult(
+                        Success: false,
+                        ResultType: ServiceResultType.Error,
+                        Message: "Fase no encontrada."
+                    );
+                }
+
+                phase.SetObjective(objective);
+                await _repo.UpdateAsync(phase, ct);
+
+                _logger.LogInformation("Objetivo de fase {PhaseId} actualizado", id);
+
+                return new PhaseServiceResult(
+                    Success: true,
+                    ResultType: ServiceResultType.Success,
+                    Message: "Objetivo de la fase actualizado exitosamente.",
+                    Phase: phase
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al actualizar objetivo de fase {PhaseId}", id);
+                return new PhaseServiceResult(
+                    Success: false,
+                    ResultType: ServiceResultType.Error,
+                    Message: "Error al actualizar el objetivo de la fase."
+                );
+            }
+        }
+
+        public async Task<PhaseServiceResult> UpdatePhaseScopeAsync(int id, string? scope, CancellationToken ct = default)
+        {
+            try
+            {
+                var phase = await _repo.GetByIdAsync(id, ct);
+                if (phase == null)
+                {
+                    return new PhaseServiceResult(
+                        Success: false,
+                        ResultType: ServiceResultType.Error,
+                        Message: "Fase no encontrada."
+                    );
+                }
+
+                phase.SetScope(scope);
+                await _repo.UpdateAsync(phase, ct);
+
+                _logger.LogInformation("Alcance de fase {PhaseId} actualizado", id);
+
+                return new PhaseServiceResult(
+                    Success: true,
+                    ResultType: ServiceResultType.Success,
+                    Message: "Alcance de la fase actualizado exitosamente.",
+                    Phase: phase
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al actualizar alcance de fase {PhaseId}", id);
+                return new PhaseServiceResult(
+                    Success: false,
+                    ResultType: ServiceResultType.Error,
+                    Message: "Error al actualizar el alcance de la fase."
+                );
+            }
+        }
+
+        public async Task<PhaseServiceResult> UpdatePhaseObservationsAsync(int id, string? observations, CancellationToken ct = default)
+        {
+            try
+            {
+                var phase = await _repo.GetByIdAsync(id, ct);
+                if (phase == null)
+                {
+                    return new PhaseServiceResult(
+                        Success: false,
+                        ResultType: ServiceResultType.Error,
+                        Message: "Fase no encontrada."
+                    );
+                }
+
+                phase.SetObservations(observations);
+                await _repo.UpdateAsync(phase, ct);
+
+                _logger.LogInformation("Observaciones de fase {PhaseId} actualizadas", id);
+
+                return new PhaseServiceResult(
+                    Success: true,
+                    ResultType: ServiceResultType.Success,
+                    Message: "Observaciones de la fase actualizadas exitosamente.",
+                    Phase: phase
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al actualizar observaciones de fase {PhaseId}", id);
+                return new PhaseServiceResult(
+                    Success: false,
+                    ResultType: ServiceResultType.Error,
+                    Message: "Error al actualizar las observaciones de la fase."
+                );
+            }
+        }
+
         public async Task<PhaseServiceResult> DeletePhaseAsync(int id, CancellationToken ct = default)
         {
             try
@@ -199,4 +325,3 @@ namespace OpenUpMan.Services
         }
     }
 }
-
