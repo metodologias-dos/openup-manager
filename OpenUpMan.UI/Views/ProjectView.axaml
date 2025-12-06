@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:OpenUpMan.UI.ViewModels"
+             xmlns:domain="using:OpenUpMan.Domain"
              x:Class="OpenUpMan.UI.Views.ProjectView"
              x:DataType="vm:ProjectViewModel"
              mc:Ignorable="d">
@@ -14,11 +15,9 @@
         <StackPanel Orientation="Horizontal" Spacing="8" Grid.Column="0">
           <TextBox Width="300" 
                    Watermark="Nombre Proyecto Actual" 
-                   Text="{Binding ProjectName}"
-                   Theme="{StaticResource FluentTextBoxTheme}"/>
+                   Text="{Binding ProjectName}"/>
           <Button Content="Guardar" 
-                  Command="{Binding SaveCommand}"
-                  Theme="{StaticResource FluentAccentButtonTheme}"/>
+                  Command="{Binding SaveCommand}"/>
           <Button Content="Abrir" 
                   Command="{Binding OpenCommand}"/>
           <Button Content="Agregar usuario" 
@@ -30,8 +29,7 @@
 
         <StackPanel Orientation="Horizontal" Spacing="8" Grid.Column="2" HorizontalAlignment="Right">
           <Button Content="Volver" 
-                  Command="{Binding BackCommand}"
-                  Theme="{StaticResource FluentAccentButtonTheme}"/>
+                  Command="{Binding BackCommand}"/>
         </StackPanel>
       </Grid>
 
@@ -39,20 +37,16 @@
       <StackPanel Orientation="Horizontal" Spacing="8">
         <Button Content="Incepción" 
                 Command="{Binding SelectPhaseCommand}" 
-                CommandParameter="Inicio (Inception)"
-                Theme="{StaticResource FluentButtonTheme}"/>
+                CommandParameter="Inicio (Inception)"/>
         <Button Content="Elaboración" 
                 Command="{Binding SelectPhaseCommand}" 
-                CommandParameter="Elaboración (Elaboration)"
-                Theme="{StaticResource FluentButtonTheme}"/>
+                CommandParameter="Elaboración (Elaboration)"/>
         <Button Content="Construcción" 
                 Command="{Binding SelectPhaseCommand}" 
-                CommandParameter="Construcción (Construction)"
-                Theme="{StaticResource FluentButtonTheme}"/>
+                CommandParameter="Construcción (Construction)"/>
         <Button Content="Transición" 
                 Command="{Binding SelectPhaseCommand}" 
-                CommandParameter="Transición (Transition)"
-                Theme="{StaticResource FluentButtonTheme}"/>
+                CommandParameter="Transición (Transition)"/>
       </StackPanel>
 
       <!-- Main content area -->
@@ -102,7 +96,7 @@
 
             <TextBlock FontWeight="SemiBold" 
                        FontSize="16" 
-                       Margin="0,20,0,12">Iteraciones y microincrementos</TextBlock>
+                       Margin="0,20,0,12">Iteraciones</TextBlock>
             <!-- Table placeholder -->
             <Border BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" 
                     BorderThickness="1" 
@@ -111,57 +105,57 @@
                     Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
                     CornerRadius="4">
               <StackPanel>
-                <Grid ColumnDefinitions="80,80,2*,90,90,80,2*" 
+                <Grid ColumnDefinitions="80,2*,90,90,80,2*" 
                       Margin="0,0,0,8"
                       Height="30">
-                  <TextBlock Text="Tipo" 
-                             FontWeight="Bold" 
-                             VerticalAlignment="Center"
-                             Margin="4,0"/>
-                  <TextBlock Grid.Column="1" 
+                  <!-- Removed 'Tipo' column -->
+                  <TextBlock Grid.Column="0" 
                              Text="Iteración" 
                              FontWeight="Bold" 
                              VerticalAlignment="Center"
                              Margin="4,0"/>
-                  <TextBlock Grid.Column="2" 
+                  <TextBlock Grid.Column="1" 
                              Text="Nombre" 
                              FontWeight="Bold" 
                              VerticalAlignment="Center"
                              Margin="4,0"/>
-                  <TextBlock Grid.Column="3" 
+                  <TextBlock Grid.Column="2" 
                              Text="Inicio" 
                              FontWeight="Bold" 
                              VerticalAlignment="Center"
                              Margin="4,0"/>
-                  <TextBlock Grid.Column="4" 
+                  <TextBlock Grid.Column="3" 
                              Text="Fin" 
                              FontWeight="Bold" 
                              VerticalAlignment="Center"
                              Margin="4,0"/>
-                  <TextBlock Grid.Column="5" 
+                  <TextBlock Grid.Column="4" 
                              Text="Estado" 
                              FontWeight="Bold" 
                              VerticalAlignment="Center"
                              Margin="4,0"/>
-                  <TextBlock Grid.Column="6" 
+                  <TextBlock Grid.Column="5" 
                              Text="Descripción" 
                              FontWeight="Bold" 
                              VerticalAlignment="Center"
                              Margin="4,0"/>
                 </Grid>
-                <ListBox Height="200">
-                  <!-- visual-only sample rows -->
-                  <ListBoxItem>
-                    <Grid ColumnDefinitions="80,80,2*,90,90,80,2*">
-                      <TextBlock Text="Iteración" VerticalAlignment="Center" Margin="4,0"/>
-                      <TextBlock Grid.Column="1" Text="1" VerticalAlignment="Center" Margin="4,0"/>
-                      <TextBlock Grid.Column="2" Text="It1-Definiciones" VerticalAlignment="Center" Margin="4,0"/>
-                      <TextBlock Grid.Column="3" Text="01/01/2025" VerticalAlignment="Center" Margin="4,0"/>
-                      <TextBlock Grid.Column="4" Text="10/01/2025" VerticalAlignment="Center" Margin="4,0"/>
-                      <TextBlock Grid.Column="5" Text="Activo" VerticalAlignment="Center" Margin="4,0"/>
-                      <TextBlock Grid.Column="6" Text="Definición de puntos a tratar" VerticalAlignment="Center" Margin="4,0"/>
-                    </Grid>
-                  </ListBoxItem>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,8">
+                  <Button Content="Nueva Iteración" Command="{Binding CreateIterationCommand}"/>
+                </StackPanel>
+                <ListBox Height="200" ItemsSource="{Binding Iterations}">
+                  <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="domain:Iteration">
+                      <Grid ColumnDefinitions="80,2*,90,90,80,2*">
+                        <TextBlock Text="Iteración" VerticalAlignment="Center" Margin="4,0"/>
+                        <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center" Margin="4,0"/>
+                        <TextBlock Grid.Column="2" Text="{Binding StartDate, StringFormat=d}" VerticalAlignment="Center" Margin="4,0"/>
+                        <TextBlock Grid.Column="3" Text="{Binding EndDate, StringFormat=d}" VerticalAlignment="Center" Margin="4,0"/>
+                        <TextBlock Grid.Column="4" Text="{Binding CompletionPercentage}" VerticalAlignment="Center" Margin="4,0"/>
+                        <TextBlock Grid.Column="5" Text="{Binding Goal}" VerticalAlignment="Center" Margin="4,0"/>
+                      </Grid>
+                    </DataTemplate>
+                  </ListBox.ItemTemplate>
                 </ListBox>
               </StackPanel>
             </Border>
@@ -171,12 +165,11 @@
         <!-- Right panel divided in two -->
         <Grid Grid.Column="1" ColumnDefinitions="*,*" RowDefinitions="Auto, *">
           <StackPanel Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Left" Margin="8">
-            <StackPanel Spacing="4">
+            <StackPanel Grid.Column="0" Spacing="4">
               <TextBlock>Iteración: 1</TextBlock>
-              <TextBlock>Microincremento: 2</TextBlock>
+              <TextBlock Grid.Column="1">Microincremento: 2</TextBlock>
               <Button Content="Nuevo documento" 
-                      Margin="0,8,0,0"
-                      Theme="{StaticResource FluentAccentButtonTheme}"/>
+                      Grid.Column="2" Margin="0,8,0,0"/>
             </StackPanel>
           </StackPanel>
 
@@ -260,4 +253,3 @@
     </StackPanel>
   </Border>
 </UserControl>
-

@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using OpenUpMan.Domain;
 
 namespace OpenUpMan.UI.ViewModels;
 
@@ -27,6 +29,10 @@ public partial class ProjectViewModel : ViewModelBase
     [ObservableProperty]
     private string _currentPhaseName = "Inicio (Inception)";
 
+    // New: collection of iterations for the bound project
+    [ObservableProperty]
+    private ObservableCollection<Iteration> _iterations = new();
+
     public IRelayCommand SaveCommand { get; }
     public IRelayCommand OpenCommand { get; }
     public IRelayCommand AddUserCommand { get; }
@@ -34,8 +40,13 @@ public partial class ProjectViewModel : ViewModelBase
     public IRelayCommand ManageArtifactsCommand { get; }
     public IRelayCommand<string> SelectPhaseCommand { get; }
 
+    // New: command to request creation of a new iteration
+    public IRelayCommand CreateIterationCommand { get; }
+
+    // Event the view can subscribe to in order to show a creation dialog
     public event Action? BackRequested;
     public event Action? ManageArtifactsRequested;
+    public event Action? CreateIterationRequested;
 
     public ProjectViewModel()
     {
@@ -45,6 +56,9 @@ public partial class ProjectViewModel : ViewModelBase
         BackCommand = new RelayCommand(GoBack);
         ManageArtifactsCommand = new RelayCommand(() => ManageArtifactsRequested?.Invoke());
         SelectPhaseCommand = new RelayCommand<string>(SelectPhase);
+
+        // New
+        CreateIterationCommand = new RelayCommand(() => CreateIterationRequested?.Invoke());
 
         ProjectName = "Proyecto ejemplo";
         ProjectPercentage = 12;
