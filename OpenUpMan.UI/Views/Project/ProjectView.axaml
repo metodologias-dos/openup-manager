@@ -36,6 +36,42 @@
                                        Margin="0,0,0,8"/>
                             
                             <WrapPanel>
+                                <StackPanel Width="280" Spacing="8" Margin="0,0,0,10" Orientation="Horizontal">
+
+                                    <!-- Botón Iniciar Fase (Verde) -->
+                                    <Button Content="Iniciar fase" Command="{Binding SaveCommand}">
+                                        <Button.Styles>
+                                            <Style Selector="Button">
+                                                <Setter Property="Background" Value="#2ECC71"/> <!-- Verde -->
+                                                <Setter Property="Foreground" Value="White"/>
+                                            </Style>
+                                            <Style Selector="Button:pointerover">
+                                                <Setter Property="Background" Value="#27AE60"/> <!-- Verde hover -->
+                                            </Style>
+                                            <Style Selector="Button:pressed">
+                                                <Setter Property="Background" Value="#1E8449"/> <!-- Verde oscuro -->
+                                            </Style>
+                                        </Button.Styles>
+                                    </Button>
+
+                                    <!-- Botón Terminar Fase (Rojo elegante) -->
+                                    <Button Content="Terminar fase" Command="{Binding SaveCommand}">
+                                        <Button.Styles>
+                                            <Style Selector="Button">
+                                                <Setter Property="Background" Value="#E74C3C"/> <!-- Rojo -->
+                                                <Setter Property="Foreground" Value="White"/>
+                                            </Style>
+                                            <Style Selector="Button:pointerover">
+                                                <Setter Property="Background" Value="#CB4335"/> <!-- Rojo hover -->
+                                            </Style>
+                                            <Style Selector="Button:pressed">
+                                                <Setter Property="Background" Value="#922B21"/> <!-- Rojo oscuro -->
+                                            </Style>
+                                        </Button.Styles>
+                                    </Button>
+
+                                </StackPanel>
+
                                 <StackPanel Width="280" Spacing="8" Margin="0,0,16,0">
                                     <TextBlock Text="Fecha de Inicio:" FontSize="12" Foreground="White"/>
                                     <TextBlock Text="Fecha de Fin:" FontSize="12" Foreground="White"/>
