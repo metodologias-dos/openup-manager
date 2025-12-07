@@ -188,6 +188,61 @@ namespace OpenUpMan.Services
                 );
             }
         }
+
+        public async Task<IterationServiceResult> ActivateIterationAsync(int id, CancellationToken ct = default)
+        {
+            try
+            {
+                var iteration = await _repo.GetByIdAsync(id, ct);
+                if (iteration == null)
+                {
+                    return new IterationServiceResult(
+                        Success: false,
+                        ResultType: ServiceResultType.Error,
+                        Message: "Iteración no encontrada."
+                    );
+                }
+
+                // Deactivate any other active iteration in the same phase
+                var allIterations = await _repo.GetByPhaseIdAsync(iteration.PhaseId, ct);
+                foreach (var iter in allIterations)
+                {
+                    if (iter.IsActive && iter.Id != id)
+                    {
+                        iter.Deactivate();
+                        await _repo.UpdateAsync(iter, ct);
+                    }
+                }
+
+                // Activate the requested iteration
+                iteration.Activate();
+                await _repo.UpdateAsync(iteration, ct);
+
+                _logger.LogInformation("Iteración {IterationId} activada exitosamente", id);
+
+                return new IterationServiceResult(
+                    Success: true,
+                    ResultType: ServiceResultType.Success,
+                    Message: "Iteración activada exitosamente.",
+                    Iteration: iteration
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al activar iteración {IterationId}", id);
+                return new IterationServiceResult(
+                    Success: false,
+                    ResultType: ServiceResultType.Error,
+                    Message: $"Error al activar la iteración: {ex.Message}"
+                );
+            }
+        }
+
+        public async Task<Iteration?> GetActiveIterationByPhaseIdAsync(int phaseId, CancellationToken ct = default)
+        {
+            var iterations = await _repo.GetByPhaseIdAsync(phaseId, ct);
+            return iterations.FirstOrDefault(i => i.IsActive);
+        }
     }
 }
 

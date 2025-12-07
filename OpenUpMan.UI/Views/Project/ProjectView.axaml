@@ -4,254 +4,516 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:OpenUpMan.UI.ViewModels"
              xmlns:domain="using:OpenUpMan.Domain"
+             xmlns:labs="clr-namespace:FluentIcons.Avalonia;assembly=FluentIcons.Avalonia"
+             xmlns:ic="clr-namespace:FluentIcons.Common;assembly=FluentIcons.Common"
              x:Class="OpenUpMan.UI.Views.ProjectView"
              x:DataType="vm:ProjectViewModel"
-             mc:Ignorable="d">
+             mc:Ignorable="d"
+             d:DesignWidth="1200"
+             d:DesignHeight="800">
+    
+    <UserControl.Resources>
+        <!-- DataTemplate compartido para el contenido de todas las fases -->
+        <DataTemplate x:Key="PhaseContentTemplate" x:DataType="vm:ProjectViewModel">
+            <Grid ColumnDefinitions="3*,2*" RowDefinitions="*">
+                
+                <!-- Panel izquierdo: Detalles de fase e iteraciones -->
+                <Border Grid.Column="0"
+                        BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" 
+                        BorderThickness="1" 
+                        Margin="8"
+                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                        CornerRadius="8"
+                        Padding="16">
+                    <Grid RowDefinitions="Auto,Auto,*">
+                        
+                        <!-- Detalles de fase -->
+                        <StackPanel Grid.Row="0" Spacing="12">
+                            <TextBlock Text="Detalles de Fase" 
+                                       FontWeight="Bold" 
+                                       FontSize="18" 
+                                       Foreground="White"
+                                       Margin="0,0,0,8"/>
+                            
+                            <WrapPanel>
+                                <StackPanel Width="280" Spacing="8" Margin="0,0,16,0">
+                                    <TextBlock Text="Fecha de Inicio:" FontSize="12" Foreground="White"/>
+                                    <TextBlock Text="Fecha de Fin:" FontSize="12" Foreground="White"/>
+                                    <TextBlock Text="Objetivo general:" FontSize="12" Foreground="White"/>
+                                    <TextBlock Text="Alcance:" FontSize="12" Foreground="White"/>
+                                </StackPanel>
 
-  <Border Padding="16" Background="{DynamicResource SystemControlBackgroundAltHighBrush}">
-    <StackPanel Orientation="Vertical" Spacing="12">
-      <!-- Header: Project name + buttons -->
-      <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center" Margin="0,0,0,8">
-        <StackPanel Orientation="Horizontal" Spacing="8" Grid.Column="0">
-          <TextBox Width="300" 
-                   Watermark="Nombre Proyecto Actual" 
-                   Text="{Binding ProjectName}"/>
-          <Button Content="Guardar" 
-                  Command="{Binding SaveCommand}"/>
-          <Button Content="Abrir" 
-                  Command="{Binding OpenCommand}"/>
-          <Button Content="Agregar usuario" 
-                  Command="{Binding AddUserCommand}"/>
-          <Button Content="Tablero" 
-                  Command="{Binding OpenDashboardCommand}"/>
-          <TextBlock VerticalAlignment="Center" 
-                     Margin="16,0,0,0"
-                     Text="{Binding ProjectPercentage, StringFormat='Porcentaje: {0}%'}"/>
-        </StackPanel>
+                                <StackPanel Width="200" Spacing="8" Margin="0,0,16,0">
+                                    <TextBlock Text="Porcentaje de fase: 50%" FontSize="12" Foreground="White"/>
+                                    <TextBlock Text="Estado de la fase:" FontSize="12" Foreground="White"/>
+                                    <ComboBox Width="180" SelectedIndex="0">
+                                        <ComboBoxItem Content="No iniciada"/>
+                                        <ComboBoxItem Content="En progreso"/>
+                                        <ComboBoxItem Content="Finalizada"/>
+                                    </ComboBox>
+                                    <TextBlock Text="Acceso: Edición" FontSize="12" Foreground="White" Margin="0,8,0,0"/>
+                                </StackPanel>
 
-        <StackPanel Orientation="Horizontal" Spacing="8" Grid.Column="2" HorizontalAlignment="Right">
-          <Button Content="Volver" 
-                  Command="{Binding BackCommand}"/>
-        </StackPanel>
-      </Grid>
+                                <StackPanel Width="280" Spacing="8">
+                                    <TextBlock Text="Observaciones de fase:" FontSize="12" Foreground="White"/>
+                                    <TextBox Height="80" 
+                                             AcceptsReturn="True"
+                                             TextWrapping="Wrap"
+                                             Watermark="Ingrese observaciones..."/>
+                                    <Button Content="Gestionar Artefactos" 
+                                            Command="{Binding ManageArtifactsCommand}"
+                                            HorizontalAlignment="Stretch"/>
+                                </StackPanel>
+                            </WrapPanel>
+                        </StackPanel>
 
-      <!-- Stage buttons (notebook-like) -->
-      <StackPanel Orientation="Horizontal" Spacing="8">
-        <Button Content="Incepción" 
-                Command="{Binding SelectPhaseCommand}" 
-                CommandParameter="Inicio (Inception)"/>
-        <Button Content="Elaboración" 
-                Command="{Binding SelectPhaseCommand}" 
-                CommandParameter="Elaboración (Elaboration)"/>
-        <Button Content="Construcción" 
-                Command="{Binding SelectPhaseCommand}" 
-                CommandParameter="Construcción (Construction)"/>
-        <Button Content="Transición" 
-                Command="{Binding SelectPhaseCommand}" 
-                CommandParameter="Transición (Transition)"/>
-      </StackPanel>
+                        <!-- Separador -->
+                        <Border Grid.Row="1" 
+                                Height="1" 
+                                Background="{DynamicResource DividerStrokeColorDefaultBrush}"
+                                Margin="0,20"/>
 
-      <!-- Main content area -->
-      <Grid ColumnDefinitions="2*,1*" RowDefinitions="Auto" Height="600">
-        <!-- Left large panel -->
-        <Border BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" 
-                BorderThickness="1" 
-                Margin="4"
-                Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
-                CornerRadius="4">
-          <StackPanel Margin="12">
-            <!-- Placeholder for phase details and artifacts -->
-            <TextBlock FontWeight="SemiBold" 
-                       FontSize="16" 
-                       Margin="0,0,0,12">Detalles de fase</TextBlock>
-            <WrapPanel>
-              <StackPanel Width="300" Spacing="4">
-                <TextBlock>Fecha de Inicio:</TextBlock>
-                <TextBlock>Fecha de Fin:</TextBlock>
-                <TextBlock>Objetivo general:</TextBlock>
-                <TextBlock>Alcance:</TextBlock>
-              </StackPanel>
+                        <!-- Iteraciones y Microincrementos -->
+                        <Grid Grid.Row="2" RowDefinitions="Auto,Auto,*">
+                            <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,12">
+                                <TextBlock Grid.Column="0"
+                                           Text="Iteraciones" 
+                                           FontWeight="Bold" 
+                                           FontSize="18"
+                                           Foreground="White"
+                                           VerticalAlignment="Center"/>
+                                <Button Grid.Column="1"
+                                        Command="{Binding CreateIterationCommand}">
+                                    <Button.Styles>
+                                        <Style Selector="Button">
+                                            <Setter Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}"/>
+                                        </Style>
+                                    </Button.Styles>
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <labs:SymbolIcon Symbol="{x:Static ic:Symbol.Add}" FontSize="16" Foreground="White"/>
+                                        <TextBlock Text="Nueva Iteración" FontSize="13" Foreground="White" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
 
-              <StackPanel Margin="16,0,0,0" Spacing="4">
-                <TextBlock>Porcentaje de fase: 50%</TextBlock>
-                <TextBlock Margin="0,8,0,4">Estado de la fase:</TextBlock>
-                <ComboBox Width="150">
-                  <ComboBoxItem Content="No iniciada"/>
-                  <ComboBoxItem Content="En progreso"/>
-                  <ComboBoxItem Content="Finalizada"/>
-                </ComboBox>
+                            <!-- DataGrid de Iteraciones -->
+                            <DataGrid Grid.Row="1" Grid.RowSpan="2"
+                                      ItemsSource="{Binding Iterations}"
+                                      AutoGenerateColumns="False"
+                                      CanUserReorderColumns="False"
+                                      CanUserResizeColumns="True"
+                                      CanUserSortColumns="True"
+                                      GridLinesVisibility="None"
+                                      HeadersVisibility="Column"
+                                      SelectionMode="Single"
+                                      IsReadOnly="True"
+                                      BorderThickness="0"
+                                      Background="Transparent">
 
-                <TextBlock Margin="0,8,0,0">Acceso: Edición</TextBlock>
-              </StackPanel>
+                                <DataGrid.Styles>
+                                    <Style Selector="DataGridRow">
+                                        <Setter Property="MinHeight" Value="60"/>
+                                        <Setter Property="Background" Value="Transparent"/>
+                                    </Style>
+                                    <Style Selector="DataGridRow:nth-child(2n)">
+                                        <Setter Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}"/>
+                                    </Style>
+                                    <Style Selector="DataGridRow:pointerover /template/ Rectangle#BackgroundRectangle">
+                                        <Setter Property="Fill" Value="{DynamicResource SubtleFillColorTertiaryBrush}"/>
+                                    </Style>
+                                    <Style Selector="DataGridCell">
+                                        <Setter Property="BorderThickness" Value="0"/>
+                                        <Setter Property="Padding" Value="12,8"/>
+                                    </Style>
+                                    <Style Selector="DataGridCell TextBlock">
+                                        <Setter Property="Foreground" Value="White"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                    </Style>
+                                    <Style Selector="DataGridColumnHeader">
+                                        <Setter Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}"/>
+                                        <Setter Property="Foreground" Value="White"/>
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                        <Setter Property="FontSize" Value="11"/>
+                                        <Setter Property="Padding" Value="12,8"/>
+                                    </Style>
+                                </DataGrid.Styles>
 
-              <StackPanel Margin="16,0,0,0" Width="250" Spacing="4">
-                <TextBlock>Observaciones de fase:</TextBlock>
-                <TextBox Height="60" 
-                         AcceptsReturn="True"
-                         TextWrapping="Wrap"/>
-                <Button Content="Manejar artefactos" 
-                        Margin="0,8,0,0"
-                        Command="{Binding ManageArtifactsCommand}"/>
-              </StackPanel>
+                                <DataGrid.Columns>
+                                    <!-- Nombre de Iteración -->
+                                    <DataGridTemplateColumn Header="ITERACIÓN" Width="2*" MinWidth="200">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate DataType="vm:IterationItemViewModel">
+                                                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                                    <labs:SymbolIcon Symbol="{x:Static ic:Symbol.Calendar}" 
+                                                                     FontSize="16" 
+                                                                     Foreground="White"
+                                                                     VerticalAlignment="Center"/>
+                                                    <StackPanel VerticalAlignment="Center">
+                                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                                            <TextBlock Text="{Binding Name}" 
+                                                                       FontWeight="SemiBold"
+                                                                       FontSize="13"
+                                                                       Foreground="White"
+                                                                       VerticalAlignment="Center"/>
+                                                            <Border Background="#FFD700"
+                                                                    CornerRadius="3"
+                                                                    Padding="6,2"
+                                                                    IsVisible="{Binding IsActive}"
+                                                                    VerticalAlignment="Center">
+                                                                <TextBlock Text="ACTIVA" 
+                                                                           FontWeight="Bold"
+                                                                           FontSize="9"
+                                                                           Foreground="Black"/>
+                                                            </Border>
+                                                        </StackPanel>
+                                                        <TextBlock Text="{Binding Goal}" 
+                                                                   FontSize="11"
+                                                                   Foreground="White"
+                                                                   TextTrimming="CharacterEllipsis"
+                                                                   Opacity="0.8"/>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
 
-            </WrapPanel>
+                                    <!-- Fecha Inicio -->
+                                    <DataGridTemplateColumn Header="FECHA INICIO" Width="*" MinWidth="100">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate DataType="vm:IterationItemViewModel">
+                                                <TextBlock Text="{Binding StartDate, StringFormat='dd/MM/yyyy'}" 
+                                                           FontSize="12"
+                                                           Foreground="White"
+                                                           VerticalAlignment="Center"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
 
-            <TextBlock FontWeight="SemiBold" 
-                       FontSize="16" 
-                       Margin="0,20,0,12">Iteraciones</TextBlock>
-            <!-- Table placeholder -->
-            <Border BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" 
-                    BorderThickness="1" 
-                    Padding="8" 
-                    Margin="0,0,0,0"
-                    Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
-                    CornerRadius="4">
-              <StackPanel>
-                <Grid ColumnDefinitions="80,2*,90,90,80,2*" 
-                      Margin="0,0,0,8"
-                      Height="30">
-                  <!-- Removed 'Tipo' column -->
-                  <TextBlock Grid.Column="0" 
-                             Text="Iteración" 
-                             FontWeight="Bold" 
-                             VerticalAlignment="Center"
-                             Margin="4,0"/>
-                  <TextBlock Grid.Column="1" 
-                             Text="Nombre" 
-                             FontWeight="Bold" 
-                             VerticalAlignment="Center"
-                             Margin="4,0"/>
-                  <TextBlock Grid.Column="2" 
-                             Text="Inicio" 
-                             FontWeight="Bold" 
-                             VerticalAlignment="Center"
-                             Margin="4,0"/>
-                  <TextBlock Grid.Column="3" 
-                             Text="Fin" 
-                             FontWeight="Bold" 
-                             VerticalAlignment="Center"
-                             Margin="4,0"/>
-                  <TextBlock Grid.Column="4" 
-                             Text="Estado" 
-                             FontWeight="Bold" 
-                             VerticalAlignment="Center"
-                             Margin="4,0"/>
-                  <TextBlock Grid.Column="5" 
-                             Text="Descripción" 
-                             FontWeight="Bold" 
-                             VerticalAlignment="Center"
-                             Margin="4,0"/>
-                </Grid>
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,8">
-                  <Button Content="Nueva Iteración" Command="{Binding CreateIterationCommand}"/>
+                                    <!-- Fecha Fin -->
+                                    <DataGridTemplateColumn Header="FECHA FIN" Width="*" MinWidth="100">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate DataType="vm:IterationItemViewModel">
+                                                <TextBlock Text="{Binding EndDate, StringFormat='dd/MM/yyyy'}" 
+                                                           FontSize="12"
+                                                           Foreground="White"
+                                                           VerticalAlignment="Center"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+
+                                    <!-- Microincrementos (nueva columna) -->
+                                    <DataGridTemplateColumn Header="MICROINCREMENTOS" Width="Auto" MinWidth="120">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate DataType="vm:IterationItemViewModel">
+                                                <Border Background="{DynamicResource AccentFillColorDefaultBrush}"
+                                                        CornerRadius="4"
+                                                        Padding="8,4"
+                                                        HorizontalAlignment="Center"
+                                                        VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Microincrements.Count}" 
+                                                               FontSize="12"
+                                                               FontWeight="Bold"
+                                                               Foreground="White"
+                                                               HorizontalAlignment="Center"/>
+                                                </Border>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+
+                                    <!-- Progreso -->
+                                    <DataGridTemplateColumn Header="PROGRESO" Width="*" MinWidth="80">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate DataType="vm:IterationItemViewModel">
+                                                <TextBlock Text="{Binding CompletionPercentage, StringFormat={}{0}%}" 
+                                                           FontSize="12"
+                                                           Foreground="White"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+
+                                    <!-- Acciones -->
+                                    <DataGridTemplateColumn Header="ACCIONES" Width="Auto" MinWidth="180">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate DataType="vm:IterationItemViewModel">
+                                                <StackPanel Orientation="Horizontal" 
+                                                            Spacing="6"
+                                                            HorizontalAlignment="Center"
+                                                            VerticalAlignment="Center">
+                                                    <!-- Botón activar -->
+                                                    <Button Command="{Binding $parent[UserControl].((vm:ProjectViewModel)DataContext).ActivateIterationCommand}"
+                                                            CommandParameter="{Binding}"
+                                                            IsVisible="{Binding !IsActive}"
+                                                            Padding="10,6"
+                                                            FontSize="11"
+                                                            ToolTip.Tip="Activar iteración">
+                                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                                            <labs:SymbolIcon Symbol="{x:Static ic:Symbol.Play}" FontSize="12" Foreground="White"/>
+                                                            <TextBlock Text="Activar" FontSize="11" Foreground="White"/>
+                                                        </StackPanel>
+                                                    </Button>
+                                                    
+                                                    <!-- Botón Ver Detalles -->
+                                                    <Button Command="{Binding $parent[UserControl].((vm:ProjectViewModel)DataContext).ViewIterationDetailsCommand}"
+                                                            CommandParameter="{Binding}"
+                                                            Padding="10,6"
+                                                            FontSize="11"
+                                                            ToolTip.Tip="Ver microincrementos">
+                                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                                            <labs:SymbolIcon Symbol="{x:Static ic:Symbol.DocumentBulletList}" FontSize="12" Foreground="White"/>
+                                                            <TextBlock Text="Ver Detalles" FontSize="11" Foreground="White"/>
+                                                        </StackPanel>
+                                                    </Button>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <!-- Panel derecho: Artefactos de la fase -->
+                <Border Grid.Column="1" 
+                        BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" 
+                        BorderThickness="1" 
+                        Margin="8"
+                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                        CornerRadius="8"
+                        Padding="16">
+                    <Grid RowDefinitions="Auto,*">
+                        <StackPanel Grid.Row="0" Spacing="8" Margin="0,0,0,16">
+                            <TextBlock Text="Artefactos de la Fase" 
+                                       FontWeight="Bold" 
+                                       FontSize="18"
+                                       Foreground="White"/>
+                            <TextBlock Text="{Binding CurrentPhaseName}" 
+                                       FontSize="13" 
+                                       Foreground="White"/>
+                        </StackPanel>
+
+                        <!-- DataGrid de Artefactos -->
+                        <DataGrid Grid.Row="1"
+                                  ItemsSource="{Binding PhaseArtifacts}"
+                                  AutoGenerateColumns="False"
+                                  CanUserReorderColumns="False"
+                                  CanUserResizeColumns="True"
+                                  CanUserSortColumns="False"
+                                  GridLinesVisibility="None"
+                                  HeadersVisibility="Column"
+                                  SelectionMode="Single"
+                                  IsReadOnly="True"
+                                  BorderThickness="0"
+                                  Background="Transparent">
+
+                            <DataGrid.Styles>
+                                <Style Selector="DataGridRow">
+                                    <Setter Property="MinHeight" Value="50"/>
+                                    <Setter Property="Background" Value="Transparent"/>
+                                </Style>
+                                <Style Selector="DataGridRow:nth-child(2n)">
+                                    <Setter Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}"/>
+                                </Style>
+                                <Style Selector="DataGridRow:pointerover /template/ Rectangle#BackgroundRectangle">
+                                    <Setter Property="Fill" Value="{DynamicResource SubtleFillColorTertiaryBrush}"/>
+                                </Style>
+                                <Style Selector="DataGridCell">
+                                    <Setter Property="BorderThickness" Value="0"/>
+                                    <Setter Property="Padding" Value="12,8"/>
+                                </Style>
+                                <Style Selector="DataGridCell TextBlock">
+                                    <Setter Property="Foreground" Value="White"/>
+                                </Style>
+                                <Style Selector="DataGridColumnHeader">
+                                    <Setter Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}"/>
+                                    <Setter Property="Foreground" Value="White"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                    <Setter Property="FontSize" Value="11"/>
+                                    <Setter Property="Padding" Value="12,8"/>
+                                </Style>
+                            </DataGrid.Styles>
+
+                            <DataGrid.Columns>
+                                <!-- Nombre -->
+                                <DataGridTemplateColumn Header="NOMBRE" Width="*" MinWidth="120">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate DataType="vm:ArtifactItemViewModel">
+                                            <StackPanel Spacing="4">
+                                                <TextBlock Text="{Binding Name}" 
+                                                           FontWeight="SemiBold"
+                                                           FontSize="13"
+                                                           Foreground="White"
+                                                           TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Text="{Binding ArtifactType}" 
+                                                           FontSize="11"
+                                                           Foreground="White"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <!-- Obligatorio -->
+                                <DataGridTemplateColumn Header="REQ." Width="60">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate DataType="vm:ArtifactItemViewModel">
+                                            <TextBlock Text="{Binding MandatoryText}" 
+                                                       HorizontalAlignment="Center"
+                                                       FontSize="12"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <!-- Versión -->
+                                <DataGridTemplateColumn Header="VER." Width="60">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate DataType="vm:ArtifactItemViewModel">
+                                            <Border Background="{DynamicResource AccentFillColorDefaultBrush}"
+                                                    CornerRadius="4"
+                                                    Padding="8,4"
+                                                    HorizontalAlignment="Center">
+                                                <TextBlock Text="{Binding CurrentVersion}" 
+                                                           FontSize="12"
+                                                           FontWeight="Bold"
+                                                           Foreground="White"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <!-- Acciones -->
+                                <DataGridTemplateColumn Header="ACCIONES" Width="120">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate DataType="vm:ArtifactItemViewModel">
+                                            <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                                                <Button Command="{Binding $parent[UserControl].((vm:ProjectViewModel)DataContext).RegisterArtifactChangeCommand}"
+                                                        CommandParameter="{Binding}"
+                                                        Padding="8,6"
+                                                        ToolTip.Tip="Registrar cambio">
+                                                    <labs:SymbolIcon Symbol="{x:Static ic:Symbol.Edit}" FontSize="16" Foreground="White"/>
+                                                </Button>
+                                                <Button Command="{Binding $parent[UserControl].((vm:ProjectViewModel)DataContext).ViewArtifactHistoryCommand}"
+                                                        CommandParameter="{Binding}"
+                                                        Padding="8,6"
+                                                        ToolTip.Tip="Ver historial">
+                                                    <labs:SymbolIcon Symbol="{x:Static ic:Symbol.History}" FontSize="16" Foreground="White"/>
+                                                </Button>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </Border>
+            </Grid>
+        </DataTemplate>
+    </UserControl.Resources>
+    
+    <Grid RowDefinitions="Auto,*">
+        <!-- Header: Información del proyecto -->
+        <Border Grid.Row="0"
+                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                BorderThickness="0,0,0,1"
+                Padding="20,16">
+            <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12">
+                    <TextBox Width="300" 
+                             Watermark="Nombre del Proyecto" 
+                             Text="{Binding ProjectName}"
+                             VerticalAlignment="Center"/>
+                    <Button Content="Guardar" Command="{Binding SaveCommand}">
+                        <Button.Styles>
+                            <Style Selector="Button">
+                                <Setter Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}"/>
+                            </Style>
+                        </Button.Styles>
+                    </Button>
+                    <Button Content="Abrir" Command="{Binding OpenCommand}"/>
+                    <Button Content="Agregar Usuario" Command="{Binding AddUserCommand}"/>
+                    <Button Command="{Binding OpenDashboardCommand}">
+                        <Button.Styles>
+                            <Style Selector="Button">
+                                <Setter Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}"/>
+                            </Style>
+                        </Button.Styles>
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <labs:SymbolIcon Symbol="{x:Static ic:Symbol.ChartMultiple}" FontSize="16" Foreground="White"/>
+                            <TextBlock Text="Tablero" FontSize="13" Foreground="White" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Border Background="{DynamicResource SubtleFillColorSecondaryBrush}"
+                            CornerRadius="4"
+                            Padding="12,6"
+                            VerticalAlignment="Center">
+                        <TextBlock Text="{Binding ProjectPercentage, StringFormat='Progreso: {0}%'}"
+                                   FontSize="13"
+                                   Foreground="White"
+                                   FontWeight="SemiBold"/>
+                    </Border>
                 </StackPanel>
-                <ListBox Height="200" ItemsSource="{Binding Iterations}">
-                  <ListBox.ItemTemplate>
-                    <DataTemplate x:DataType="domain:Iteration">
-                      <Grid ColumnDefinitions="80,2*,90,90,80,2*">
-                        <TextBlock Text="Iteración" VerticalAlignment="Center" Margin="4,0"/>
-                        <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center" Margin="4,0"/>
-                        <TextBlock Grid.Column="2" Text="{Binding StartDate, StringFormat=d}" VerticalAlignment="Center" Margin="4,0"/>
-                        <TextBlock Grid.Column="3" Text="{Binding EndDate, StringFormat=d}" VerticalAlignment="Center" Margin="4,0"/>
-                        <TextBlock Grid.Column="4" Text="{Binding CompletionPercentage}" VerticalAlignment="Center" Margin="4,0"/>
-                        <TextBlock Grid.Column="5" Text="{Binding Goal}" VerticalAlignment="Center" Margin="4,0"/>
-                      </Grid>
-                    </DataTemplate>
-                  </ListBox.ItemTemplate>
-                </ListBox>
-              </StackPanel>
-            </Border>
-          </StackPanel>
+
+                <Button Grid.Column="1" 
+                        Content="Volver" 
+                        Command="{Binding BackCommand}"
+                        HorizontalAlignment="Right"/>
+            </Grid>
         </Border>
 
-        <!-- Right panel divided in two -->
-        <Grid Grid.Column="1" ColumnDefinitions="*,*" RowDefinitions="Auto, *">
-          <StackPanel Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Left" Margin="8">
-            <StackPanel Grid.Column="0" Spacing="4">
-              <TextBlock>Iteración: 1</TextBlock>
-              <TextBlock Grid.Column="1">Microincremento: 2</TextBlock>
-              <Button Content="Nuevo documento" 
-                      Grid.Column="2" Margin="0,8,0,0"/>
-            </StackPanel>
-          </StackPanel>
+        <!-- Phase Tabs con contenido -->
+        <Border Grid.Row="1"
+                Background="{DynamicResource LayerFillColorDefaultBrush}"
+                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                BorderThickness="0"
+                Padding="0">
+            <TabControl SelectedIndex="{Binding SelectedPhaseIndex}"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Padding="20,0,20,20">
+                <TabControl.Styles>
+                    <Style Selector="TabControl">
+                        <Setter Property="Background" Value="Transparent"/>
+                    </Style>
+                    <Style Selector="TabItem">
+                        <Setter Property="FontSize" Value="16"/>
+                        <Setter Property="FontWeight" Value="SemiBold"/>
+                        <Setter Property="Padding" Value="24,12"/>
+                        <Setter Property="Margin" Value="0,0,4,0"/>
+                        <Setter Property="Foreground" Value="White"/>
+                    </Style>
+                    <Style Selector="TabItem:selected">
+                        <Setter Property="FontWeight" Value="Bold"/>
+                        <Setter Property="FontSize" Value="17"/>
+                        <Setter Property="Foreground" Value="White"/>
+                    </Style>
+                    <Style Selector="TabItem:pointerover">
+                        <Setter Property="Foreground" Value="White"/>
+                    </Style>
+                </TabControl.Styles>
 
-          <Border Grid.Row="1" 
-                  Grid.ColumnSpan="2" 
-                  BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" 
-                  BorderThickness="1" 
-                  Margin="4"
-                  Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
-                  CornerRadius="4">
-            <StackPanel Margin="12">
-              <TextBlock FontWeight="SemiBold" 
-                         FontSize="16" 
-                         Margin="0,0,0,12">Documentos</TextBlock>
-              <Border BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" 
-                      BorderThickness="1" 
-                      Padding="8" 
-                      Margin="0,0,0,0"
-                      Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
-                      CornerRadius="4">
-                <StackPanel>
-                  <Grid ColumnDefinitions="1.5*,80,90,1.5*,70,Auto" 
-                        Margin="0,0,0,8"
-                        Height="30">
-                    <TextBlock Text="Documento" 
-                               FontWeight="Bold" 
-                               VerticalAlignment="Center"
-                               Margin="4,0"/>
-                    <TextBlock Grid.Column="1" 
-                               Text="Autor" 
-                               FontWeight="Bold" 
-                               VerticalAlignment="Center"
-                               Margin="4,0"/>
-                    <TextBlock Grid.Column="2" 
-                               Text="Creación" 
-                               FontWeight="Bold" 
-                               VerticalAlignment="Center"
-                               Margin="4,0"/>
-                    <TextBlock Grid.Column="3" 
-                               Text="Notas" 
-                               FontWeight="Bold" 
-                               VerticalAlignment="Center"
-                               Margin="4,0"/>
-                    <TextBlock Grid.Column="4" 
-                               Text="Req." 
-                               FontWeight="Bold" 
-                               VerticalAlignment="Center"
-                               Margin="4,0"/>
-                    <TextBlock Grid.Column="5" 
-                               Text="Versión" 
-                               FontWeight="Bold" 
-                               VerticalAlignment="Center"
-                               Margin="4,0"/>
-                  </Grid>
-                  <ListBox Height="260">
-                    <ListBoxItem>
-                      <Grid ColumnDefinitions="1.5*,80,90,1.5*,70,Auto">
-                        <TextBlock Text="Vision" VerticalAlignment="Center" Margin="4,0"/>
-                        <TextBlock Grid.Column="1" Text="Mary" VerticalAlignment="Center" Margin="4,0"/>
-                        <TextBlock Grid.Column="2" Text="15/12/2025" VerticalAlignment="Center" Margin="4,0"/>
-                        <TextBlock Grid.Column="3" 
-                                   Text="Añadiendo comentarios" 
-                                   VerticalAlignment="Center" 
-                                   Margin="4,0"
-                                   TextTrimming="CharacterEllipsis"/>
-                        <TextBlock Grid.Column="4" Text="X" VerticalAlignment="Center" Margin="4,0"/>
-                        <StackPanel Grid.Column="5" Orientation="Horizontal" VerticalAlignment="Center">
-                          <Button Content="3" Width="30" Margin="4,0"/>
-                          <Button Content="Historial" Margin="4,0"/>
-                        </StackPanel>
-                      </Grid>
-                    </ListBoxItem>
-                  </ListBox>
-                </StackPanel>
-              </Border>
-            </StackPanel>
-          </Border>
-        </Grid>
+                <!-- Tab: Incepción -->
+                <TabItem Header="INCEPCIÓN">
+                    <ContentControl Content="{Binding}" ContentTemplate="{StaticResource PhaseContentTemplate}"/>
+                </TabItem>
 
-      </Grid>
-    </StackPanel>
-  </Border>
+                <!-- Tab: Elaboración -->
+                <TabItem Header="ELABORACIÓN">
+                    <ContentControl Content="{Binding}" ContentTemplate="{StaticResource PhaseContentTemplate}"/>
+                </TabItem>
+
+                <!-- Tab: Construcción -->
+                <TabItem Header="CONSTRUCCIÓN">
+                    <ContentControl Content="{Binding}" ContentTemplate="{StaticResource PhaseContentTemplate}"/>
+                </TabItem>
+
+                <!-- Tab: Transición -->
+                <TabItem Header="TRANSICIÓN">
+                    <ContentControl Content="{Binding}" ContentTemplate="{StaticResource PhaseContentTemplate}"/>
+                </TabItem>
+            </TabControl>
+        </Border>
+    </Grid>
 </UserControl>
+

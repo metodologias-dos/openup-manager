@@ -10,6 +10,8 @@ namespace OpenUpMan.Services
         Task<IterationServiceResult> UpdateIterationAsync(int id, string? name, string? goal, DateTime? startDate, DateTime? endDate, int completionPercentage, CancellationToken ct = default);
         Task<IterationServiceResult> SetCompletionAsync(int id, int percentage, CancellationToken ct = default);
         Task<IterationServiceResult> DeleteIterationAsync(int id, CancellationToken ct = default);
+        Task<IterationServiceResult> ActivateIterationAsync(int id, CancellationToken ct = default);
+        Task<Iteration?> GetActiveIterationByPhaseIdAsync(int phaseId, CancellationToken ct = default);
     }
 
     public record IterationServiceResult(
