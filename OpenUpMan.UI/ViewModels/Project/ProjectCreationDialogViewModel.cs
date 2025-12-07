@@ -7,7 +7,7 @@ using OpenUpMan.Domain;
 
 namespace OpenUpMan.UI.ViewModels;
 
-public partial class ProjectDialogViewModel : ViewModelBase
+public partial class ProjectCreationDialogViewModel : ViewModelBase
 {
     private readonly IProjectService _projectService;
     private readonly IProjectUserService _projectUserService;
@@ -53,7 +53,7 @@ public partial class ProjectDialogViewModel : ViewModelBase
     public IRelayCommand CreateCommand { get; }
     public IRelayCommand CancelCommand { get; }
 
-    public ProjectDialogViewModel(IProjectService projectService, IProjectUserService projectUserService, int currentUserId)
+    public ProjectCreationDialogViewModel(IProjectService projectService, IProjectUserService projectUserService, int currentUserId)
     {
         _projectService = projectService;
         _projectUserService = projectUserService;

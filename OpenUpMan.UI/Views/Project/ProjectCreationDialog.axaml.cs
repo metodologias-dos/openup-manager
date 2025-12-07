@@ -3,14 +3,14 @@ using OpenUpMan.UI.ViewModels;
 
 namespace OpenUpMan.UI.Views;
 
-public partial class ProjectDialog : Window
+public partial class ProjectCreationDialog : Window
 {
-    public ProjectDialog()
+    public ProjectCreationDialog()
     {
         InitializeComponent();
     }
 
-    public ProjectDialog(ProjectDialogViewModel vm) : this()
+    public ProjectCreationDialog(ProjectCreationDialogViewModel vm) : this()
     {
         DataContext = vm;
         vm.CloseRequested += OnCloseRequested;

@@ -1,8 +1,8 @@
 ﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:OpenUpMan.UI.ViewModels"
-        x:Class="OpenUpMan.UI.Views.ProjectsPopup"
-        x:DataType="vm:ProjectsPopupViewModel"
+        x:Class="OpenUpMan.UI.Views.ProjectList"
+        x:DataType="vm:ProjectList"
         Width="1200" Height="700"
         MinWidth="900" MinHeight="600"
         Icon="/Assets/avalonia-logo.ico"
@@ -301,7 +301,7 @@
                               HorizontalAlignment="Center"
                               VerticalAlignment="Center">
                     <!-- Botón Abrir -->
-                    <Button Command="{Binding $parent[Window].((vm:ProjectsPopupViewModel)DataContext).OpenProjectCommand}" 
+                    <Button Command="{Binding $parent[Window].((vm:ProjectList)DataContext).OpenProjectCommand}" 
                             CommandParameter="{Binding}"
                             Classes="primary action-button">
                       <StackPanel Orientation="Horizontal" Spacing="6">
@@ -315,7 +315,7 @@
                     </Button>
 
                     <!-- Botón Borrar (solo visible para el owner) -->
-                    <Button Command="{Binding $parent[Window].((vm:ProjectsPopupViewModel)DataContext).DeleteProjectCommand}" 
+                    <Button Command="{Binding $parent[Window].((vm:ProjectList)DataContext).DeleteProjectCommand}" 
                             CommandParameter="{Binding}"
                             Classes="action-button"
                             Background="#E81123"

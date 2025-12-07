@@ -10,7 +10,7 @@ using System.Linq;
 
 namespace OpenUpMan.UI.ViewModels;
 
-public partial class ProjectsPopupViewModel : ViewModelBase
+public partial class ProjectList : ViewModelBase
 {
     private readonly IProjectUserService? _projectUserService;
     private readonly IProjectService? _projectService;
@@ -54,7 +54,7 @@ public partial class ProjectsPopupViewModel : ViewModelBase
     private string _dateSortIndicator = "";
 
     // Constructor para uso en producción con servicios
-    public ProjectsPopupViewModel(User? currentUser, IProjectUserService projectUserService, IProjectService projectService, IUserService userService)
+    public ProjectList(User? currentUser, IProjectUserService projectUserService, IProjectService projectService, IUserService userService)
     {
         CurrentUser = currentUser;
         _projectUserService = projectUserService;
@@ -75,7 +75,7 @@ public partial class ProjectsPopupViewModel : ViewModelBase
     }
 
     // Constructor para tests (sin servicios, con proyectos iniciales)
-    public ProjectsPopupViewModel(User? currentUser = null, IEnumerable<ProjectListItemViewModel>? initialProjects = null)
+    public ProjectList(User? currentUser = null, IEnumerable<ProjectListItemViewModel>? initialProjects = null)
     {
         CurrentUser = currentUser;
         Projects = new ObservableCollection<ProjectListItemViewModel>();

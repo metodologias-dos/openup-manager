@@ -57,8 +57,33 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Views\ArtifactsWindow.axaml.cs">
+    <Compile Update="Views\Artifacts\ArtifactEditWindow.axaml.cs">
+      <DependentUpon>ArtifactEditWindow.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\Artifacts\ArtifactsWindow.axaml.cs">
       <DependentUpon>ArtifactsWindow.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\Dashboard\DashboardView.axaml.cs">
+      <DependentUpon>DashboardView.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\Dashboard\DashboardWindow.axaml.cs">
+      <DependentUpon>DashboardWindow.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\Project\ProjectCreationDialog.axaml.cs">
+      <DependentUpon>ProjectCreationDialog.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\Project\ProjectList.axaml.cs">
+      <DependentUpon>ProjectList.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\Project\ProjectView.axaml.cs">
+      <DependentUpon>ProjectView.axaml</DependentUpon>
+      <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
 </Project>

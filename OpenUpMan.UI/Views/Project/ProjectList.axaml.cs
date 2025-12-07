@@ -8,16 +8,16 @@ using Avalonia.VisualTree;
 
 namespace OpenUpMan.UI.Views;
 
-public partial class ProjectsPopup : Window
+public partial class ProjectList : Window
 {
-    public ProjectsPopup()
+    public ProjectList()
     {
         InitializeComponent();
     }
 
     private bool _isClosingProgrammatically = false;
 
-    public ProjectsPopup(ProjectsPopupViewModel vm) : this()
+    public ProjectList(ViewModels.ProjectList vm) : this()
     {
         DataContext = vm;
         vm.CloseRequested += OnCloseRequested;
@@ -40,7 +40,7 @@ public partial class ProjectsPopup : Window
 
     private void AttachHeaderClickHandlers()
     {
-        if (DataContext is not ProjectsPopupViewModel vm)
+        if (DataContext is not ViewModels.ProjectList vm)
             return;
 
         // Find all DataGridColumnHeaders in the visual tree
@@ -123,7 +123,7 @@ public partial class ProjectsPopup : Window
         // Trigger logout on the UI thread asynchronously to avoid recursion
         Avalonia.Threading.Dispatcher.UIThread.Post(() =>
         {
-            if (DataContext is ProjectsPopupViewModel vm)
+            if (DataContext is ViewModels.ProjectList vm)
             {
                 OnLogoutRequested();
             }
@@ -137,7 +137,7 @@ public partial class ProjectsPopup : Window
 
     private async void OnNewProjectDialogRequested()
     {
-        if (DataContext is not ProjectsPopupViewModel vm || vm.CurrentUser == null)
+        if (DataContext is not ViewModels.ProjectList vm || vm.CurrentUser == null)
             return;
 
         // Obtener los servicios desde el ServiceProvider
@@ -150,8 +150,8 @@ public partial class ProjectsPopup : Window
             return;
         }
 
-        var dialogVm = new ProjectDialogViewModel(projectService, projectUserService, vm.CurrentUser.Id);
-        var dialog = new ProjectDialog(dialogVm);
+        var dialogVm = new ProjectCreationDialogViewModel(projectService, projectUserService, vm.CurrentUser.Id);
+        var dialog = new ProjectCreationDialog(dialogVm);
 
         // Suscribirse al evento de proyecto creado
         dialogVm.ProjectCreated += async (result) =>
@@ -253,7 +253,7 @@ public partial class ProjectsPopup : Window
         projectVm.ProjectName = title;
         projectVm.ProjectId = projectId;
 
-        if (DataContext is ProjectsPopupViewModel popupVm && popupVm.CurrentUser != null)
+        if (DataContext is ViewModels.ProjectList popupVm && popupVm.CurrentUser != null)
         {
             projectVm.CurrentUserId = popupVm.CurrentUser.Id;
             projectVm.CurrentUserName = popupVm.CurrentUser.Username;
