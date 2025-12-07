@@ -21,7 +21,7 @@ public partial class ProjectViewModel : ViewModelBase
     private string _currentUserName = string.Empty;
 
     [ObservableProperty]
-    private int _projectPercentage = 0;
+    private int _projectPercentage;
 
     [ObservableProperty]
     private int _currentPhaseId;
@@ -29,9 +29,14 @@ public partial class ProjectViewModel : ViewModelBase
     [ObservableProperty]
     private string _currentPhaseName = "Inicio (Inception)";
 
-    // New: collection of iterations for the bound project
     [ObservableProperty]
-    private ObservableCollection<Iteration> _iterations = new();
+    private ObservableCollection<IterationItemViewModel> _iterations = new();
+
+    [ObservableProperty]
+    private ObservableCollection<MicroincrementItemViewModel> _microincrements = new();
+
+    [ObservableProperty]
+    private ObservableCollection<ArtifactItemViewModel> _phaseArtifacts = new();
 
     public IRelayCommand SaveCommand { get; }
     public IRelayCommand OpenCommand { get; }
@@ -40,15 +45,19 @@ public partial class ProjectViewModel : ViewModelBase
     public IRelayCommand BackCommand { get; }
     public IRelayCommand ManageArtifactsCommand { get; }
     public IRelayCommand<string> SelectPhaseCommand { get; }
-
-    // New: command to request creation of a new iteration
     public IRelayCommand CreateIterationCommand { get; }
+    public IRelayCommand<ArtifactItemViewModel> RegisterArtifactChangeCommand { get; }
+    public IRelayCommand<ArtifactItemViewModel> ViewArtifactHistoryCommand { get; }
+    public IRelayCommand<int?> PreviewArtifactCommand { get; }
 
-    // Event the view can subscribe to in order to show a creation dialog
     public event Action? BackRequested;
     public event Action? ManageArtifactsRequested;
     public event Action? CreateIterationRequested;
     public event Action? OpenDashboardRequested;
+    public event Action<int, string>? ArtifactChangeRequested;
+    public event Action<int, string>? ArtifactHistoryRequested;
+    public event Action<int>? ArtifactPreviewRequested;
+    public event Action? MicroincrementsChanged;
 
     public ProjectViewModel()
     {
@@ -59,9 +68,25 @@ public partial class ProjectViewModel : ViewModelBase
         BackCommand = new RelayCommand(GoBack);
         ManageArtifactsCommand = new RelayCommand(() => ManageArtifactsRequested?.Invoke());
         SelectPhaseCommand = new RelayCommand<string>(SelectPhase);
-
-        // New
         CreateIterationCommand = new RelayCommand(() => CreateIterationRequested?.Invoke());
+
+        RegisterArtifactChangeCommand = new RelayCommand<ArtifactItemViewModel>(artifact =>
+        {
+            if (artifact != null)
+                ArtifactChangeRequested?.Invoke(artifact.Id, artifact.Name);
+        });
+
+        ViewArtifactHistoryCommand = new RelayCommand<ArtifactItemViewModel>(artifact =>
+        {
+            if (artifact != null)
+                ArtifactHistoryRequested?.Invoke(artifact.Id, artifact.Name);
+        });
+
+        PreviewArtifactCommand = new RelayCommand<int?>(artifactId =>
+        {
+            if (artifactId.HasValue)
+                ArtifactPreviewRequested?.Invoke(artifactId.Value);
+        });
 
         ProjectName = "Proyecto ejemplo";
         ProjectPercentage = 12;
@@ -79,4 +104,10 @@ public partial class ProjectViewModel : ViewModelBase
     {
         BackRequested?.Invoke();
     }
+
+    public void NotifyMicroincrementsChanged()
+    {
+        MicroincrementsChanged?.Invoke();
+    }
 }
+
