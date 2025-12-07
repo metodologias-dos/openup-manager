@@ -6,6 +6,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
+using OpenUpMan.Data;
 using OpenUpMan.Services;
 using OpenUpMan.UI.ViewModels;
 
@@ -37,6 +38,9 @@ public partial class IterationDetailsWindow : Window
             return;
 
         var artifactVersionService = Program.ServiceProvider.GetService<IArtifactVersionService>();
+        var artifactRepo = Program.ServiceProvider.GetService<OpenUpMan.Data.IArtifactRepository>();
+        var projectRepo = Program.ServiceProvider.GetService<OpenUpMan.Data.IProjectRepository>();
+        
         if (artifactVersionService == null)
             return;
 
@@ -53,36 +57,86 @@ public partial class IterationDetailsWindow : Window
 
             var version = versionResult.ArtifactVersion;
 
-            // Si tiene URL, abrirla en el navegador
-            if (!string.IsNullOrEmpty(version.BuildInfo) && Uri.TryCreate(version.BuildInfo, UriKind.Absolute, out var uri))
+            // Obtener código del proyecto para crear carpeta organizada
+            string projectCode = "unknown";
+            if (artifactRepo != null && projectRepo != null)
             {
-                Process.Start(new ProcessStartInfo
+                var artifact = await artifactRepo.GetByIdAsync(microincrement.ArtifactId.Value);
+                if (artifact != null)
                 {
-                    FileName = version.BuildInfo,
-                    UseShellExecute = true
-                });
+                    var project = await projectRepo.GetByIdAsync(artifact.ProjectId);
+                    if (project != null)
+                    {
+                        projectCode = project.Name.Replace(" ", "_").ToLower();
+                    }
+                }
+            }
+
+            // Si tiene URL (BuildInfo), abrirla en el navegador
+            if (!string.IsNullOrWhiteSpace(version.BuildInfo))
+            {
+                try
+                {
+                    var psi = new ProcessStartInfo
+                    {
+                        FileName = version.BuildInfo,
+                        UseShellExecute = true
+                    };
+                    Process.Start(psi);
+                }
+                catch (Exception ex)
+                {
+                    await ShowErrorDialog($"No se pudo abrir el enlace: {ex.Message}");
+                }
                 return;
             }
 
-            // Si tiene archivo, guardarlo temporalmente y abrirlo
+            // Si tiene archivo, guardarlo en carpeta organizada y abrirlo
             if (version.FileBlob != null && version.FileBlob.Length > 0)
             {
-                var tempPath = System.IO.Path.Combine(
-                    System.IO.Path.GetTempPath(),
-                    $"artifact_{version.Id}_{DateTime.Now:yyyyMMddHHmmss}{GetFileExtension(version.FileMime)}"
-                );
-
+                var extension = GetExtensionFromMime(version.FileMime);
+                
+                // Crear carpeta organizada: temp/openupman/{project_code}/
+                var openUpManTempFolder = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "openupman", projectCode);
+                System.IO.Directory.CreateDirectory(openUpManTempFolder);
+                
+                var fileName = $"artifact_{microincrement.ArtifactId}_{version.VersionNumber}{extension}";
+                var tempPath = System.IO.Path.Combine(openUpManTempFolder, fileName);
+                
                 await System.IO.File.WriteAllBytesAsync(tempPath, version.FileBlob);
 
-                Process.Start(new ProcessStartInfo
+                try
                 {
-                    FileName = tempPath,
-                    UseShellExecute = true
-                });
+                    // Si es un archivo comprimido, abrir el explorador
+                    if (IsCompressedFile(extension))
+                    {
+                        var psi = new ProcessStartInfo
+                        {
+                            FileName = "explorer.exe",
+                            Arguments = $"/select,\"{tempPath}\"",
+                            UseShellExecute = true
+                        };
+                        Process.Start(psi);
+                    }
+                    else
+                    {
+                        // Para otros archivos, abrirlos con la aplicación predeterminada
+                        var psi = new ProcessStartInfo
+                        {
+                            FileName = tempPath,
+                            UseShellExecute = true
+                        };
+                        Process.Start(psi);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    await ShowErrorDialog($"No se pudo abrir el archivo: {ex.Message}");
+                }
                 return;
             }
 
-            await ShowErrorDialog("El artefacto no tiene archivo ni URL asociado.");
+            await ShowErrorDialog("No hay contenido para previsualizar.");
         }
         catch (Exception ex)
         {
@@ -90,19 +144,36 @@ public partial class IterationDetailsWindow : Window
         }
     }
 
-    private string GetFileExtension(string? mimeType)
+    private string GetExtensionFromMime(string? mimeType)
     {
+        if (string.IsNullOrWhiteSpace(mimeType))
+            return ".bin";
+
         return mimeType switch
         {
             "application/pdf" => ".pdf",
-            "application/msword" => ".doc",
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document" => ".docx",
-            "text/plain" => ".txt",
             "image/png" => ".png",
             "image/jpeg" => ".jpg",
+            "image/gif" => ".gif",
+            "image/bmp" => ".bmp",
+            "image/svg+xml" => ".svg",
+            "text/plain" => ".txt",
+            "text/html" => ".html",
+            "application/msword" => ".doc",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document" => ".docx",
+            "application/vnd.ms-excel" => ".xls",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" => ".xlsx",
             "application/zip" => ".zip",
+            "application/x-rar-compressed" => ".rar",
+            "application/x-7z-compressed" => ".7z",
             _ => ".bin"
         };
+    }
+
+    private bool IsCompressedFile(string extension)
+    {
+        var compressedExtensions = new[] { ".zip", ".rar", ".7z", ".tar", ".gz", ".bz2" };
+        return compressedExtensions.Contains(extension.ToLowerInvariant());
     }
 
     private async Task ShowErrorDialog(string message)

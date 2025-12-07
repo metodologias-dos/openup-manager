@@ -182,13 +182,8 @@
                                   FontSize="11"
                                   Click="PreviewArtifact_Click"
                                   Tag="{Binding}"
-                                  ToolTip.Tip="Ver archivo o URL del artefacto asociado">
-                            <Button.Styles>
-                              <Style Selector="Button">
-                                <Setter Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}"/>
-                              </Style>
-                            </Button.Styles>
-                          </Button>
+                                  Classes="accent"
+                                  ToolTip.Tip="Ver archivo o URL del artefacto asociado"/>
                         </StackPanel>
                       </Grid>
                     </Grid>

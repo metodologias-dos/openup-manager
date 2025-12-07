@@ -332,12 +332,16 @@
                                     <Setter Property="FontWeight" Value="SemiBold"/>
                                     <Setter Property="FontSize" Value="11"/>
                                     <Setter Property="Padding" Value="12,8"/>
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                </Style>
+                                <Style Selector="DataGridColumnHeader > Grid">
+                                    <Setter Property="HorizontalAlignment" Value="Stretch"/>
                                 </Style>
                             </DataGrid.Styles>
 
                             <DataGrid.Columns>
                                 <!-- Nombre -->
-                                <DataGridTemplateColumn Header="NOMBRE" Width="*" MinWidth="120">
+                                <DataGridTemplateColumn Header="NOMBRE" Width="*" MinWidth="70">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate DataType="vm:ArtifactItemViewModel">
                                             <StackPanel Spacing="4">
@@ -355,18 +359,12 @@
                                 </DataGridTemplateColumn>
 
                                 <!-- Obligatorio -->
-                                <DataGridTemplateColumn Header="REQ." Width="60">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate DataType="vm:ArtifactItemViewModel">
-                                            <TextBlock Text="{Binding MandatoryText}" 
-                                                       HorizontalAlignment="Center"
-                                                       FontSize="12"/>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="OBLIGATORIO" 
+                                                    Binding="{Binding MandatoryDisplay}"
+                                                    Width="100"/>
 
                                 <!-- Versión -->
-                                <DataGridTemplateColumn Header="VER." Width="60">
+                                <DataGridTemplateColumn Header="VERSIÓN" Width="80">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate DataType="vm:ArtifactItemViewModel">
                                             <Border Background="{DynamicResource AccentFillColorDefaultBrush}"
@@ -427,7 +425,14 @@
                     <Button Content="Guardar" Command="{Binding SaveCommand}">
                         <Button.Styles>
                             <Style Selector="Button">
-                                <Setter Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}"/>
+                                <Setter Property="Background" Value="#0078D4"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Style>
+                            <Style Selector="Button:pointerover">
+                                <Setter Property="Background" Value="#106EBE"/>
+                            </Style>
+                            <Style Selector="Button:pressed">
+                                <Setter Property="Background" Value="#005A9E"/>
                             </Style>
                         </Button.Styles>
                     </Button>
@@ -516,4 +521,3 @@
         </Border>
     </Grid>
 </UserControl>
-

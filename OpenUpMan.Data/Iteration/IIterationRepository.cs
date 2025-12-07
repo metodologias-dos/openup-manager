@@ -12,6 +12,8 @@ namespace OpenUpMan.Data
         Task UpdateAsync(Iteration iteration, CancellationToken ct = default);
         Task DeleteAsync(int id, CancellationToken ct = default);
         Task<bool> ExistsAsync(int id, CancellationToken ct = default);
+        Task<Iteration?> GetActiveIterationByPhaseIdAsync(int phaseId, CancellationToken ct = default);
+        Task<Iteration?> GetActiveIterationByProjectIdAsync(int projectId, CancellationToken ct = default);
     }
 }
 

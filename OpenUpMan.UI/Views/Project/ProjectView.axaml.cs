@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using OpenUpMan.Data;
 using OpenUpMan.Services; // added for IIterationService
 using OpenUpMan.UI.ViewModels;
+using OpenUpMan.UI.Views.Artifact;
 
 namespace OpenUpMan.UI.Views;
 
@@ -314,7 +315,7 @@ public partial class ProjectView : UserControl
         if (artifactVersionService == null || microincrementService == null || 
             iterationService == null || phaseRepo == null) return;
 
-        var vm = new RegisterArtifactChangeViewModel(
+        var vm = new RegisterArtifactViewModel(
             artifactVersionService, 
             microincrementService, 
             iterationService);
@@ -328,10 +329,8 @@ public partial class ProjectView : UserControl
         // Pasar el ID del usuario actual
         await vm.InitializeAsync(artifactId, artifactName, projectVm.ProjectId, currentPhase.Id, projectVm.CurrentUserId);
 
-        var window = new RegisterArtifactChangeWindow
-        {
-            DataContext = vm
-        };
+        var window = new RegisterArtifactWindow(artifactVersionService, microincrementService);
+        window.SetViewModel(vm);
 
         if (VisualRoot is Window parent)
         {
@@ -349,17 +348,15 @@ public partial class ProjectView : UserControl
     private async void OpenArtifactHistoryWindow(int artifactId, string artifactName)
     {
         var artifactVersionService = Program.ServiceProvider.GetService<IArtifactVersionService>();
-        var userRepo = Program.ServiceProvider.GetService<IUserRepository>();
+        var previewService = Program.ServiceProvider.GetService<IArtifactPreviewService>();
         
-        if (artifactVersionService == null || userRepo == null) return;
+        if (artifactVersionService == null) return;
 
-        var vm = new ArtifactVersionHistoryViewModel(artifactVersionService, userRepo);
-        await vm.LoadVersionHistoryAsync(artifactId, artifactName);
+        var vm = new ArtifactHistoryViewModel();
+        vm.LoadVersionHistory(artifactId, artifactName);
 
-        var window = new ArtifactVersionHistoryWindow
-        {
-            DataContext = vm
-        };
+        var window = new ArtifactHistoryWindow(artifactVersionService, previewService!);
+        window.SetViewModel(vm);
 
         if (VisualRoot is Window parent)
         {
@@ -444,9 +441,11 @@ public partial class ProjectView : UserControl
     {
         if (DataContext is not ProjectViewModel projectVm) return;
 
-        var artifactRepo = Program.ServiceProvider.GetService<IArtifactRepository>();
+        var artifactService = Program.ServiceProvider.GetService<IArtifactService>();
+        var artifactVersionService = Program.ServiceProvider.GetService<IArtifactVersionService>();
         var phaseRepo = Program.ServiceProvider.GetService<IPhaseRepository>();
-        if (artifactRepo == null || phaseRepo == null) return;
+        
+        if (artifactService == null || artifactVersionService == null || phaseRepo == null) return;
 
         // Get the phase ID for the current phase name
         var phases = (await phaseRepo.GetByProjectIdAsync(projectVm.ProjectId)).ToList();
@@ -459,19 +458,21 @@ public partial class ProjectView : UserControl
             if (currentPhase == null) return;
         }
 
-        var vm = new ArtifactsViewModel(artifactRepo);
+        var vm = new ArtifactAdministrationViewModel();
+        vm.Initialize(projectVm.ProjectId, currentPhase.Id, projectVm.CurrentPhaseName);
 
-        // Load artifacts filtered by the current phase
-        await vm.LoadArtifactsAsync(projectVm.ProjectId, currentPhase.Id, projectVm.CurrentPhaseName, projectVm.CurrentUserId, projectVm.CurrentUserName);
+        // Subscribe to artifacts changed to reload in real-time
+        vm.ArtifactsChanged += async () => await LoadArtifactsForCurrentPhaseAsync(projectVm);
 
-        var window = new ArtifactsWindow
-        {
-            DataContext = vm
-        };
+        var window = new ArtifactAdministrationWindow(artifactService, artifactVersionService);
+        window.SetViewModel(vm);
 
         if (VisualRoot is Window parent)
         {
-            await window.ShowDialog(parent);
+            await window.ShowDialog<bool?>(parent);
+            
+            // Reload artifacts after closing (in case of any changes)
+            await LoadArtifactsForCurrentPhaseAsync(projectVm);
         }
     }
 }

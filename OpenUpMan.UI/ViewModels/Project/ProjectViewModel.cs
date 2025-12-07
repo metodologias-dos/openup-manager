@@ -178,6 +178,17 @@ public partial class ProjectViewModel : ViewModelBase
         if (!string.IsNullOrEmpty(phaseName))
         {
             CurrentPhaseName = phaseName;
+            
+            // Update phase index for consistency
+            SelectedPhaseIndex = phaseName switch
+            {
+                "Inicio (Inception)" => 0,
+                "Elaboración (Elaboration)" => 1,
+                "Construcción (Construction)" => 2,
+                "Transición (Transition)" => 3,
+                _ => 0
+            };
+            
             PhaseChanged?.Invoke();
         }
     }
