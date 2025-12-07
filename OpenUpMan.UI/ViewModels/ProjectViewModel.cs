@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -36,6 +36,7 @@ public partial class ProjectViewModel : ViewModelBase
     public IRelayCommand SaveCommand { get; }
     public IRelayCommand OpenCommand { get; }
     public IRelayCommand AddUserCommand { get; }
+    public IRelayCommand OpenDashboardCommand { get; }
     public IRelayCommand BackCommand { get; }
     public IRelayCommand ManageArtifactsCommand { get; }
     public IRelayCommand<string> SelectPhaseCommand { get; }
@@ -47,12 +48,14 @@ public partial class ProjectViewModel : ViewModelBase
     public event Action? BackRequested;
     public event Action? ManageArtifactsRequested;
     public event Action? CreateIterationRequested;
+    public event Action? OpenDashboardRequested;
 
     public ProjectViewModel()
     {
         SaveCommand = new RelayCommand(() => { /* visual only */ });
         OpenCommand = new RelayCommand(() => { /* visual only */ });
         AddUserCommand = new RelayCommand(() => { /* visual only */ });
+        OpenDashboardCommand = new RelayCommand(() => OpenDashboardRequested?.Invoke());
         BackCommand = new RelayCommand(GoBack);
         ManageArtifactsCommand = new RelayCommand(() => ManageArtifactsRequested?.Invoke());
         SelectPhaseCommand = new RelayCommand<string>(SelectPhase);

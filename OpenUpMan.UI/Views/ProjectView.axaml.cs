@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
@@ -34,6 +34,9 @@ public partial class ProjectView : UserControl
             // Subscribe to create iteration requests
             vm.CreateIterationRequested -= OpenCreateIterationDialog;
             vm.CreateIterationRequested += OpenCreateIterationDialog;
+
+            vm.OpenDashboardRequested -= OpenDashboardWindow;
+            vm.OpenDashboardRequested += OpenDashboardWindow;
 
             // Load existing iterations for the project
             _ = LoadIterationsForProjectAsync(vm);
@@ -99,6 +102,19 @@ public partial class ProjectView : UserControl
         }
     }
 
+    private void OpenDashboardWindow()
+    {
+        var dashboardWindow = new DashboardWindow();
+        if (VisualRoot is Window parentWindow)
+        {
+            dashboardWindow.ShowDialog(parentWindow);
+        }
+        else
+        {
+            dashboardWindow.Show();
+        }
+    }
+
     private async void OpenArtifactsWindow()
     {
         if (DataContext is not ProjectViewModel projectVm) return;
@@ -110,7 +126,7 @@ public partial class ProjectView : UserControl
         // Get the phase ID for the current phase name
         var phases = (await phaseRepo.GetByProjectIdAsync(projectVm.ProjectId)).ToList();
         var currentPhase = phases.FirstOrDefault(p => p.Name == projectVm.CurrentPhaseName);
-        
+
         if (currentPhase == null)
         {
             // Fallback to first phase if not found
