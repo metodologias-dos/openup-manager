@@ -1,4 +1,4 @@
-﻿﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using OpenUpMan.Domain;
 
 namespace OpenUpMan.Data
@@ -162,6 +162,7 @@ namespace OpenUpMan.Data
                 b.Property(i => i.StartDate).HasColumnName("start_date");
                 b.Property(i => i.EndDate).HasColumnName("end_date");
                 b.Property(i => i.CompletionPercentage).HasColumnName("completion_percentage").IsRequired();
+                b.Property(i => i.IsActive).HasColumnName("is_active").IsRequired().HasDefaultValue(false);
 
                 b.HasOne<Phase>()
                     .WithMany()

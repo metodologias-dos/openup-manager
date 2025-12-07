@@ -9,6 +9,7 @@
         public DateTime? StartDate { get; private set; }
         public DateTime? EndDate { get; private set; }
         public int CompletionPercentage { get; private set; }
+        public bool IsActive { get; private set; }
 
         // Parameterless constructor for EF
         protected Iteration() { }
@@ -19,6 +20,7 @@
             Name = name;
             Goal = goal;
             CompletionPercentage = 0;
+            IsActive = false;
         }
 
         public void UpdateDetails(string? name, string? goal, DateTime? startDate, DateTime? endDate)
@@ -37,6 +39,20 @@
             }
 
             CompletionPercentage = percentage;
+        }
+
+        public void Activate()
+        {
+            IsActive = true;
+            if (!StartDate.HasValue)
+            {
+                StartDate = DateTime.Now;
+            }
+        }
+
+        public void Deactivate()
+        {
+            IsActive = false;
         }
     }
 }

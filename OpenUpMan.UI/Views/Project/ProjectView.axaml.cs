@@ -48,6 +48,18 @@ public partial class ProjectView : UserControl
             vm.ArtifactPreviewRequested -= PreviewArtifact;
             vm.ArtifactPreviewRequested += PreviewArtifact;
 
+            // Subscribe to activate iteration requests
+            vm.ActivateIterationRequested -= ActivateIteration;
+            vm.ActivateIterationRequested += ActivateIteration;
+
+            // Subscribe to view iteration details requests
+            vm.ViewIterationDetailsRequested -= OpenIterationDetailsWindow;
+            vm.ViewIterationDetailsRequested += OpenIterationDetailsWindow;
+
+            // Subscribe to phase change events
+            vm.PhaseChanged -= OnPhaseChanged;
+            vm.PhaseChanged += OnPhaseChanged;
+
             // Load existing iterations for the project
             _ = LoadIterationsForProjectAsync(vm);
             
@@ -56,7 +68,55 @@ public partial class ProjectView : UserControl
         }
     }
 
-    private async System.Threading.Tasks.Task LoadIterationsForProjectAsync(ProjectViewModel vm)
+    private async void OnPhaseChanged()
+    {
+        if (DataContext is ProjectViewModel vm)
+        {
+            await LoadIterationsForCurrentPhaseAsync(vm);
+            await LoadArtifactsForCurrentPhaseAsync(vm);
+        }
+    }
+
+    private async void ActivateIteration(int iterationId)
+    {
+        if (DataContext is not ProjectViewModel vm) return;
+
+        var iterationService = Program.ServiceProvider.GetService<IIterationService>();
+        if (iterationService == null) return;
+
+        try
+        {
+            var result = await iterationService.ActivateIterationAsync(iterationId);
+            if (result.Success)
+            {
+                // Reload iterations to reflect the change
+                await LoadIterationsForCurrentPhaseAsync(vm);
+            }
+        }
+        catch
+        {
+            // Handle error - could show a message to user
+        }
+    }
+
+    private void OpenIterationDetailsWindow(IterationItemViewModel iteration)
+    {
+        var window = new IterationDetailsWindow
+        {
+            DataContext = iteration
+        };
+
+        if (VisualRoot is Window parent)
+        {
+            window.ShowDialog(parent);
+        }
+        else
+        {
+            window.Show();
+        }
+    }
+
+    private async System.Threading.Tasks.Task LoadIterationsForCurrentPhaseAsync(ProjectViewModel vm)
     {
         var iterationService = Program.ServiceProvider.GetService<IIterationService>();
         var phaseRepo = Program.ServiceProvider.GetService<IPhaseRepository>();
@@ -68,72 +128,76 @@ public partial class ProjectView : UserControl
 
         try
         {
-            // Load phases to find iterations by phase
+            // Load phases to find the current phase
             var phases = (await phaseRepo.GetByProjectIdAsync(vm.ProjectId)).ToList();
+            var currentPhase = phases.FirstOrDefault(p => p.Name == vm.CurrentPhaseName);
+            
+            if (currentPhase == null) return;
+
             vm.Iterations.Clear();
             
-            foreach (var phase in phases)
+            var iterations = (await iterationService.GetIterationsByPhaseIdAsync(currentPhase.Id))
+                .OrderBy(i => i.Id); // Ordenar por ID (fecha de creación)
+            foreach (var it in iterations)
             {
-                var iterations = await iterationService.GetIterationsByPhaseIdAsync(phase.Id);
-                foreach (var it in iterations)
+                var iterationVm = new IterationItemViewModel
                 {
-                    // Check if iteration is active (current date is within start and end date)
-                    var isActive = it.StartDate.HasValue && it.EndDate.HasValue &&
-                                   DateTime.Now >= it.StartDate.Value && DateTime.Now <= it.EndDate.Value;
+                    Id = it.Id,
+                    PhaseId = it.PhaseId,
+                    Name = it.Name ?? "Sin nombre",
+                    Goal = it.Goal,
+                    StartDate = it.StartDate,
+                    EndDate = it.EndDate,
+                    CompletionPercentage = it.CompletionPercentage,
+                    IsActive = it.IsActive
+                };
 
-                    var iterationVm = new IterationItemViewModel
+                // Load microincrements for this iteration
+                var microincrements = await microincrementService.GetMicroincrementsByIterationIdAsync(it.Id);
+                foreach (var micro in microincrements)
+                {
+                    var authorName = "Desconocido";
+                    if (micro.AuthorId.HasValue && userRepo != null)
                     {
-                        Id = it.Id,
-                        PhaseId = it.PhaseId,
-                        Name = it.Name,
-                        Goal = it.Goal,
-                        StartDate = it.StartDate,
-                        EndDate = it.EndDate,
-                        CompletionPercentage = it.CompletionPercentage,
-                        IsActive = isActive
-                    };
-
-                    // Load microincrements for this iteration
-                    var microincrements = await microincrementService.GetMicroincrementsByIterationIdAsync(it.Id);
-                    foreach (var micro in microincrements)
-                    {
-                        var authorName = "Desconocido";
-                        if (micro.AuthorId.HasValue && userRepo != null)
-                        {
-                            var author = await userRepo.GetByIdAsync(micro.AuthorId.Value);
-                            authorName = author?.Username ?? "Desconocido";
-                        }
-
-                        string? artifactName = null;
-                        if (micro.ArtifactId.HasValue && artifactRepo != null)
-                        {
-                            var artifact = await artifactRepo.GetByIdAsync(micro.ArtifactId.Value);
-                            artifactName = artifact?.Name;
-                        }
-
-                        iterationVm.Microincrements.Add(new MicroincrementItemViewModel
-                        {
-                            Id = micro.Id,
-                            IterationId = micro.IterationId,
-                            Title = micro.Title,
-                            Description = micro.Description,
-                            Type = micro.Type,
-                            Date = micro.Date,
-                            AuthorName = authorName,
-                            ArtifactId = micro.ArtifactId,
-                            ArtifactName = artifactName,
-                            EvidenceUrl = micro.EvidenceUrl
-                        });
+                        var author = await userRepo.GetByIdAsync(micro.AuthorId.Value);
+                        authorName = author?.Username ?? "Desconocido";
                     }
 
-                    vm.Iterations.Add(iterationVm);
+                    string? artifactName = null;
+                    if (micro.ArtifactId.HasValue && artifactRepo != null)
+                    {
+                        var artifact = await artifactRepo.GetByIdAsync(micro.ArtifactId.Value);
+                        artifactName = artifact?.Name;
+                    }
+
+                    iterationVm.Microincrements.Add(new MicroincrementItemViewModel
+                    {
+                        Id = micro.Id,
+                        IterationId = micro.IterationId,
+                        Title = micro.Title,
+                        Description = micro.Description,
+                        Type = micro.Type,
+                        Date = micro.Date,
+                        AuthorName = authorName,
+                        ArtifactId = micro.ArtifactId,
+                        ArtifactName = artifactName,
+                        EvidenceUrl = micro.EvidenceUrl
+                    });
                 }
+
+                vm.Iterations.Add(iterationVm);
             }
         }
         catch
         {
             // ignore for now - visual only
         }
+    }
+
+    private async System.Threading.Tasks.Task LoadIterationsForProjectAsync(ProjectViewModel vm)
+    {
+        // This method loads all iterations for all phases (used on initial load)
+        await LoadIterationsForCurrentPhaseAsync(vm);
     }
 
     private async void OpenCreateIterationDialog()
@@ -167,7 +231,7 @@ public partial class ProjectView : UserControl
                     {
                         Id = sr.Iteration.Id,
                         PhaseId = sr.Iteration.PhaseId,
-                        Name = sr.Iteration.Name,
+                        Name = sr.Iteration.Name ?? "Sin nombre",
                         Goal = sr.Iteration.Goal,
                         StartDate = sr.Iteration.StartDate,
                         EndDate = sr.Iteration.EndDate,
@@ -261,7 +325,8 @@ public partial class ProjectView : UserControl
         
         if (currentPhase == null) return;
 
-        await vm.InitializeAsync(artifactId, artifactName, projectVm.ProjectId, currentPhase.Id, null);
+        // Pasar el ID del usuario actual
+        await vm.InitializeAsync(artifactId, artifactName, projectVm.ProjectId, currentPhase.Id, projectVm.CurrentUserId);
 
         var window = new RegisterArtifactChangeWindow
         {

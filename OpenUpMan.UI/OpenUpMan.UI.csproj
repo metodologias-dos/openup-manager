@@ -83,7 +83,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="Views\Project\ProjectView.axaml.cs">
-      <DependentUpon>ProjectView.axaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
