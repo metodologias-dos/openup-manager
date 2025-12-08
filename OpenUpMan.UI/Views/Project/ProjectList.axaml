@@ -254,7 +254,7 @@
               </DataGridTemplateColumn.Header>
               <DataGridTemplateColumn.CellTemplate>
                 <DataTemplate DataType="vm:ProjectListItemViewModel">
-                  <TextBlock Text="{Binding Status}" 
+                  <TextBlock Text="{Binding StatusDisplay}" 
                              FontSize="13"
                              FontWeight="SemiBold"
                              HorizontalAlignment="Center"

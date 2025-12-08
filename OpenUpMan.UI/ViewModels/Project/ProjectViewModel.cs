@@ -45,6 +45,33 @@ public partial class ProjectViewModel : ViewModelBase
     private string _currentPhaseName = "Inicio (Inception)";
 
     [ObservableProperty]
+    private string _currentPhaseStatus = "PENDING";
+
+    [ObservableProperty]
+    private string _currentPhaseStatusDisplay = "Pendiente";
+
+    [ObservableProperty]
+    private DateTime? _currentPhaseStartDate;
+
+    [ObservableProperty]
+    private string _currentPhaseStartDateDisplay = "No iniciada";
+
+    [ObservableProperty]
+    private DateTime? _currentPhaseEndDate;
+
+    [ObservableProperty]
+    private string _currentPhaseEndDateDisplay = "No finalizada";
+
+    [ObservableProperty]
+    private string _currentPhaseObjective = string.Empty;
+
+    [ObservableProperty]
+    private string _currentPhaseScope = string.Empty;
+
+    [ObservableProperty]
+    private string _currentPhaseObservations = string.Empty;
+
+    [ObservableProperty]
     private int _selectedPhaseIndex = 0;
 
     [ObservableProperty]
@@ -75,6 +102,8 @@ public partial class ProjectViewModel : ViewModelBase
     public IRelayCommand<ArtifactItemViewModel> RegisterArtifactChangeCommand { get; }
     public IRelayCommand<ArtifactItemViewModel> ViewArtifactHistoryCommand { get; }
     public IRelayCommand<int?> PreviewArtifactCommand { get; }
+    public IRelayCommand StartPhaseCommand { get; }
+    public IRelayCommand EndPhaseCommand { get; }
 
     #endregion
 
@@ -153,6 +182,19 @@ public partial class ProjectViewModel : ViewModelBase
     public event Action? MicroincrementsChanged;
 
     /// <summary>
+    /// Se dispara cuando el usuario solicita iniciar una fase.
+    /// </summary>
+    public event Action? StartPhaseRequested;
+
+    /// <summary>
+    /// Se dispara cuando el usuario solicita finalizar una fase.
+    /// </summary>
+    public event Action? EndPhaseRequested;
+
+    /// <summary>
+    /// Se dispara cuando el usuario solicita guardar los cambios del proyecto.
+    /// </summary>
+    public event Action? SaveRequested;
     /// Se dispara cuando se solicita gestionar los usuarios del proyecto.
     /// </summary>
     public event Action<ProjectUsersManagementViewModel>? ManageUsersRequested;
@@ -180,6 +222,8 @@ public partial class ProjectViewModel : ViewModelBase
         RegisterArtifactChangeCommand = new RelayCommand<ArtifactItemViewModel>(OnRegisterArtifactChange);
         ViewArtifactHistoryCommand = new RelayCommand<ArtifactItemViewModel>(OnViewArtifactHistory);
         PreviewArtifactCommand = new RelayCommand<int?>(OnPreviewArtifact);
+        StartPhaseCommand = new RelayCommand(OnStartPhase);
+        EndPhaseCommand = new RelayCommand(OnEndPhase);
 
         // Valores por defecto
         ProjectName = "Proyecto ejemplo";
@@ -205,7 +249,7 @@ public partial class ProjectViewModel : ViewModelBase
 
     private void OnSave()
     {
-        // TODO: Implementar guardado del proyecto
+        SaveRequested?.Invoke();
     }
 
     private void OnOpen()
@@ -302,6 +346,16 @@ public partial class ProjectViewModel : ViewModelBase
         }
     }
 
+    private void OnStartPhase()
+    {
+        StartPhaseRequested?.Invoke();
+    }
+
+    private void OnEndPhase()
+    {
+        EndPhaseRequested?.Invoke();
+    }
+
     #endregion
 
     #region Property Changed Handlers
@@ -346,6 +400,48 @@ public partial class ProjectViewModel : ViewModelBase
     public void NotifyMicroincrementsChanged()
     {
         MicroincrementsChanged?.Invoke();
+    }
+
+    /// <summary>
+    /// Actualiza el estado de la fase actual
+    /// </summary>
+    public void UpdatePhaseStatus(string status)
+    {
+        CurrentPhaseStatus = status;
+        CurrentPhaseStatusDisplay = status switch
+        {
+            "PENDING" => "Pendiente",
+            "IN_PROGRESS" => "En progreso",
+            "DONE" => "Terminado",
+            _ => "Pendiente"
+        };
+    }
+
+    /// <summary>
+    /// Actualiza las fechas de la fase actual
+    /// </summary>
+    public void UpdatePhaseDates(DateTime? startDate, DateTime? endDate)
+    {
+        CurrentPhaseStartDate = startDate;
+        CurrentPhaseEndDate = endDate;
+
+        CurrentPhaseStartDateDisplay = startDate.HasValue 
+            ? startDate.Value.ToString("dd/MM/yyyy HH:mm") 
+            : "No iniciada";
+
+        CurrentPhaseEndDateDisplay = endDate.HasValue 
+            ? endDate.Value.ToString("dd/MM/yyyy HH:mm") 
+            : "No finalizada";
+    }
+
+    /// <summary>
+    /// Actualiza los campos de texto de la fase actual (objetivo, alcance y observaciones)
+    /// </summary>
+    public void UpdatePhaseTextFields(string? objective, string? scope, string? observations)
+    {
+        CurrentPhaseObjective = objective ?? string.Empty;
+        CurrentPhaseScope = scope ?? string.Empty;
+        CurrentPhaseObservations = observations ?? string.Empty;
     }
 
     #endregion

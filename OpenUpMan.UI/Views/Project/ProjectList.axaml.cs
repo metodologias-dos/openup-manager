@@ -283,12 +283,22 @@ public partial class ProjectList : Window
         {
             wnd.Close();
             this.Show();
+            // Reload projects to get updated status
+            if (DataContext is ViewModels.ProjectList listVm)
+            {
+                _ = listVm.ReloadProjectsAsync();
+            }
         };
 
         // Handle window closing to show ProjectsPopup again
         wnd.Closing += (s, e) =>
         {
             this.Show();
+            // Reload projects to get updated status
+            if (DataContext is ViewModels.ProjectList listVm)
+            {
+                _ = listVm.ReloadProjectsAsync();
+            }
         };
 
         try

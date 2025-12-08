@@ -246,6 +246,14 @@ public partial class ProjectList : ViewModelBase
         LogoutRequested?.Invoke();
     }
 
+    /// <summary>
+    /// Recarga la lista de proyectos desde la base de datos
+    /// </summary>
+    public async Task ReloadProjectsAsync()
+    {
+        await LoadUserProjectsAsync();
+    }
+
     public async Task AddProjectAsync(ProjectDialogResult result)
     {
         // Reload the entire project list to get fresh data including creator info
@@ -389,6 +397,28 @@ public partial class ProjectListItemViewModel : ObservableObject
     [ObservableProperty]
     private bool _isOwner;
     
-    [ObservableProperty]
     private string _status = string.Empty;
+    
+    public string Status
+    {
+        get => _status;
+        set
+        {
+            if (SetProperty(ref _status, value))
+            {
+                OnPropertyChanged(nameof(StatusDisplay));
+            }
+        }
+    }
+
+    /// <summary>
+    /// Devuelve el estado del proyecto en español para mostrar en la UI
+    /// </summary>
+    public string StatusDisplay => _status switch
+    {
+        "CREATED" => "Creado",
+        "IN_PROGRESS" => "En proceso",
+        "DONE" => "Terminado",
+        _ => "Creado"
+    };
 }

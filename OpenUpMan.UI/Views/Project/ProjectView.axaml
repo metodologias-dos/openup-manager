@@ -28,43 +28,172 @@
                     <Grid RowDefinitions="Auto,Auto,*">
                         
                         <!-- Detalles de fase -->
-                        <StackPanel Grid.Row="0" Spacing="12">
+                        <StackPanel Grid.Row="0" Spacing="16">
+                            <!-- Título -->
                             <TextBlock Text="Detalles de Fase" 
                                        FontWeight="Bold" 
                                        FontSize="18" 
                                        Foreground="White"
-                                       Margin="0,0,0,8"/>
+                                       Margin="0,0,0,4"/>
                             
+                            <!-- Fila 1: Botones de acción -->
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <!-- Botón Iniciar Fase -->
+                                <Button Content="Iniciar fase" 
+                                        Command="{Binding StartPhaseCommand}"
+                                        Padding="16,10">
+                                    <Button.Styles>
+                                        <Style Selector="Button">
+                                            <Setter Property="Background" Value="#2ECC71"/>
+                                            <Setter Property="Foreground" Value="White"/>
+                                        </Style>
+                                        <Style Selector="Button:pointerover">
+                                            <Setter Property="Background" Value="#27AE60"/>
+                                        </Style>
+                                        <Style Selector="Button:pressed">
+                                            <Setter Property="Background" Value="#1E8449"/>
+                                        </Style>
+                                    </Button.Styles>
+                                </Button>
+
+                                <!-- Botón Terminar Fase -->
+                                <Button Content="Terminar fase" 
+                                        Command="{Binding EndPhaseCommand}"
+                                        Padding="16,10">
+                                    <Button.Styles>
+                                        <Style Selector="Button">
+                                            <Setter Property="Background" Value="#E74C3C"/>
+                                            <Setter Property="Foreground" Value="White"/>
+                                        </Style>
+                                        <Style Selector="Button:pointerover">
+                                            <Setter Property="Background" Value="#CB4335"/>
+                                        </Style>
+                                        <Style Selector="Button:pressed">
+                                            <Setter Property="Background" Value="#922B21"/>
+                                        </Style>
+                                    </Button.Styles>
+                                </Button>
+
+                                <!-- Botón Gestionar Artefactos -->
+                                <Button Content="Gestionar Artefactos" 
+                                        Command="{Binding ManageArtifactsCommand}"
+                                        Padding="16,10">
+                                    <Button.Styles>
+                                        <Style Selector="Button">
+                                            <Setter Property="Background" Value="#0078D4"/>
+                                            <Setter Property="Foreground" Value="White"/>
+                                        </Style>
+                                        <Style Selector="Button:pointerover">
+                                            <Setter Property="Background" Value="#106EBE"/>
+                                        </Style>
+                                        <Style Selector="Button:pressed">
+                                            <Setter Property="Background" Value="#005A9E"/>
+                                        </Style>
+                                    </Button.Styles>
+                                </Button>
+                            </StackPanel>
+                            
+                            <!-- Fila 2: Estado y Fechas en la misma línea -->
                             <WrapPanel>
-                                <StackPanel Width="280" Spacing="8" Margin="0,0,16,0">
-                                    <TextBlock Text="Fecha de Inicio:" FontSize="12" Foreground="White"/>
-                                    <TextBlock Text="Fecha de Fin:" FontSize="12" Foreground="White"/>
-                                    <TextBlock Text="Objetivo general:" FontSize="12" Foreground="White"/>
-                                    <TextBlock Text="Alcance:" FontSize="12" Foreground="White"/>
+                                <!-- Estado de la fase -->
+                                <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,24,0">
+                                    <TextBlock Text="Estado:" 
+                                               FontSize="13" 
+                                               Foreground="White"
+                                               VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding CurrentPhaseStatusDisplay}" 
+                                               FontSize="13" 
+                                               FontWeight="Bold"
+                                               Foreground="#00D9FF"
+                                               VerticalAlignment="Center"/>
                                 </StackPanel>
 
-                                <StackPanel Width="200" Spacing="8" Margin="0,0,16,0">
-                                    <TextBlock Text="Porcentaje de fase: 50%" FontSize="12" Foreground="White"/>
-                                    <TextBlock Text="Estado de la fase:" FontSize="12" Foreground="White"/>
-                                    <ComboBox Width="180" SelectedIndex="0">
-                                        <ComboBoxItem Content="No iniciada"/>
-                                        <ComboBoxItem Content="En progreso"/>
-                                        <ComboBoxItem Content="Finalizada"/>
-                                    </ComboBox>
-                                    <TextBlock Text="Acceso: Edición" FontSize="12" Foreground="White" Margin="0,8,0,0"/>
+                                <!-- Fecha de Inicio -->
+                                <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,24,0">
+                                    <TextBlock Text="Fecha de Inicio:" 
+                                               FontSize="13" 
+                                               Foreground="White"
+                                               VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding CurrentPhaseStartDateDisplay}" 
+                                               FontSize="13" 
+                                               FontWeight="SemiBold"
+                                               Foreground="#00D9FF"
+                                               VerticalAlignment="Center"/>
                                 </StackPanel>
 
-                                <StackPanel Width="280" Spacing="8">
-                                    <TextBlock Text="Observaciones de fase:" FontSize="12" Foreground="White"/>
-                                    <TextBox Height="80" 
-                                             AcceptsReturn="True"
-                                             TextWrapping="Wrap"
-                                             Watermark="Ingrese observaciones..."/>
-                                    <Button Content="Gestionar Artefactos" 
-                                            Command="{Binding ManageArtifactsCommand}"
-                                            HorizontalAlignment="Stretch"/>
+                                <!-- Fecha de Fin -->
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock Text="Fecha de Fin:" 
+                                               FontSize="13" 
+                                               Foreground="White"
+                                               VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding CurrentPhaseEndDateDisplay}" 
+                                               FontSize="13" 
+                                               FontWeight="SemiBold"
+                                               Foreground="#00D9FF"
+                                               VerticalAlignment="Center"/>
                                 </StackPanel>
                             </WrapPanel>
+                            
+                            <!-- Fila 3: UniformGrid responsive para los campos de texto -->
+                            <UniformGrid Columns="3" Rows="1" Margin="0,8,0,0">
+                                <!-- Objetivo General -->
+                                <StackPanel Spacing="6" Margin="0,0,8,0">
+                                    <TextBlock Text="Objetivo General" 
+                                               FontSize="13" 
+                                               FontWeight="SemiBold"
+                                               Foreground="White"/>
+                                    <ScrollViewer Height="120" 
+                                                  VerticalScrollBarVisibility="Auto"
+                                                  HorizontalScrollBarVisibility="Disabled">
+                                        <TextBox Text="{Binding CurrentPhaseObjective}"
+                                                 AcceptsReturn="True"
+                                                 TextWrapping="Wrap"
+                                                 MaxLength="3000"
+                                                 Watermark="Ingrese el objetivo general de la fase..."
+                                                 BorderThickness="1"
+                                                 MinHeight="100"/>
+                                    </ScrollViewer>
+                                </StackPanel>
+
+                                <!-- Alcance -->
+                                <StackPanel Spacing="6" Margin="0,0,8,0">
+                                    <TextBlock Text="Alcance" 
+                                               FontSize="13" 
+                                               FontWeight="SemiBold"
+                                               Foreground="White"/>
+                                    <ScrollViewer Height="120" 
+                                                  VerticalScrollBarVisibility="Auto"
+                                                  HorizontalScrollBarVisibility="Disabled">
+                                        <TextBox Text="{Binding CurrentPhaseScope}"
+                                                 AcceptsReturn="True"
+                                                 TextWrapping="Wrap"
+                                                 MaxLength="3000"
+                                                 Watermark="Defina el alcance de la fase..."
+                                                 BorderThickness="1"
+                                                 MinHeight="100"/>
+                                    </ScrollViewer>
+                                </StackPanel>
+
+                                <!-- Observaciones -->
+                                <StackPanel Spacing="6">
+                                    <TextBlock Text="Observaciones" 
+                                               FontSize="13" 
+                                               FontWeight="SemiBold"
+                                               Foreground="White"/>
+                                    <ScrollViewer Height="120" 
+                                                  VerticalScrollBarVisibility="Auto"
+                                                  HorizontalScrollBarVisibility="Disabled">
+                                        <TextBox Text="{Binding CurrentPhaseObservations}"
+                                                 AcceptsReturn="True"
+                                                 TextWrapping="Wrap"
+                                                 MaxLength="3000"
+                                                 Watermark="Agregue observaciones adicionales..."
+                                                 BorderThickness="1"
+                                                 MinHeight="100"/>
+                                    </ScrollViewer>
+                                </StackPanel>
+                            </UniformGrid>
                         </StackPanel>
 
                         <!-- Separador -->
@@ -468,10 +597,6 @@
                             CornerRadius="4"
                             Padding="12,6"
                             VerticalAlignment="Center">
-                        <TextBlock Text="{Binding ProjectPercentage, StringFormat='Progreso: {0}%'}"
-                                   FontSize="13"
-                                   Foreground="White"
-                                   FontWeight="SemiBold"/>
                     </Border>
                 </StackPanel>
 

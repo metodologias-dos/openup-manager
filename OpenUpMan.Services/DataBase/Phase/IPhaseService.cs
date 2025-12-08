@@ -1,4 +1,4 @@
-﻿using OpenUpMan.Domain;
+﻿﻿using OpenUpMan.Domain;
 
 namespace OpenUpMan.Services
 {
@@ -15,6 +15,8 @@ namespace OpenUpMan.Services
         Task<PhaseServiceResult> UpdatePhaseScopeAsync(int id, string? scope, CancellationToken ct = default);
         Task<PhaseServiceResult> UpdatePhaseObservationsAsync(int id, string? observations, CancellationToken ct = default);
         Task<PhaseServiceResult> DeletePhaseAsync(int id, CancellationToken ct = default);
+        Task<PhaseServiceResult> StartPhaseAsync(int phaseId, int projectId, CancellationToken ct = default);
+        Task<PhaseServiceResult> EndPhaseAsync(int phaseId, CancellationToken ct = default);
     }
 
     public record PhaseServiceResult(
