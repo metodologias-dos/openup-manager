@@ -282,6 +282,12 @@ public partial class ProjectList : Window
             WindowStartupLocation = WindowStartupLocation.CenterScreen
         };
 
+        // Actualizar el rol del usuario cuando la ventana recupera el foco
+        wnd.Activated += (s, e) =>
+        {
+            _ = projectVm.LoadUserRoleAsync();
+        };
+
         // Subscribe to BackRequested event to close project window and show ProjectsPopup again
         projectVm.BackRequested += () =>
         {
