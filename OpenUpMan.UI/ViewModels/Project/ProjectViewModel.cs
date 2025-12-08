@@ -1,7 +1,13 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using OpenUpMan.Domain;
+using OpenUpMan.Services;
 
 namespace OpenUpMan.UI.ViewModels;
 
@@ -11,6 +17,10 @@ namespace OpenUpMan.UI.ViewModels;
 /// </summary>
 public partial class ProjectViewModel : ViewModelBase
 {
+    private readonly IProjectUserService _projectUserService;
+    private readonly IUserService _userService;
+    private readonly IRoleService _roleService;
+
     #region Properties
 
     [ObservableProperty]
@@ -142,12 +152,18 @@ public partial class ProjectViewModel : ViewModelBase
     /// </summary>
     public event Action? MicroincrementsChanged;
 
+    /// <summary>
+    /// Se dispara cuando se solicita gestionar los usuarios del proyecto.
+    /// </summary>
+    public event Action<ProjectUsersManagementViewModel>? ManageUsersRequested;
+
     #endregion
 
     #region Constructor
 
     public ProjectViewModel()
     {
+        // Constructor de diseño / por defecto
         // Inicializar comandos
         SaveCommand = new RelayCommand(OnSave);
         OpenCommand = new RelayCommand(OnOpen);
@@ -170,6 +186,19 @@ public partial class ProjectViewModel : ViewModelBase
         ProjectPercentage = 12;
     }
 
+    public ProjectViewModel(
+        IProjectUserService projectUserService,
+        IUserService userService,
+        IRoleService roleService) : this()
+    {
+        _projectUserService = projectUserService;
+        _userService = userService;
+        _roleService = roleService;
+
+        // Cargar datos iniciales si es necesario
+        // LoadProjectData(); // Esto debería llamarse explícitamente o al setear ProjectId
+    }
+
     #endregion
 
     #region Command Handlers
@@ -186,7 +215,15 @@ public partial class ProjectViewModel : ViewModelBase
 
     private void OnAddUser()
     {
-        // TODO: Implementar agregar usuario al proyecto
+        if (_projectUserService == null || _userService == null || _roleService == null) return;
+
+        var vm = new ProjectUsersManagementViewModel(
+            ProjectId,
+            _projectUserService,
+            _userService,
+            _roleService);
+
+        ManageUsersRequested?.Invoke(vm);
     }
 
     private void OnSelectPhase(string? phaseName)
@@ -194,7 +231,7 @@ public partial class ProjectViewModel : ViewModelBase
         if (!string.IsNullOrEmpty(phaseName))
         {
             CurrentPhaseName = phaseName;
-            
+
             // Update phase index for consistency
             SelectedPhaseIndex = phaseName switch
             {
@@ -204,7 +241,7 @@ public partial class ProjectViewModel : ViewModelBase
                 "Transición (Transition)" => 3,
                 _ => 0
             };
-            
+
             PhaseChanged?.Invoke();
         }
     }
@@ -269,6 +306,14 @@ public partial class ProjectViewModel : ViewModelBase
 
     #region Property Changed Handlers
 
+    partial void OnProjectIdChanged(int value)
+    {
+        if (value > 0)
+        {
+            // Cargar datos del proyecto si es necesario
+        }
+    }
+
     /// <summary>
     /// Se ejecuta cuando cambia el índice de la fase seleccionada.
     /// Actualiza el nombre de la fase actual y notifica el cambio.
@@ -305,4 +350,3 @@ public partial class ProjectViewModel : ViewModelBase
 
     #endregion
 }
-

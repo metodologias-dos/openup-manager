@@ -143,7 +143,7 @@ public partial class ProjectList : Window
         // Obtener los servicios desde el ServiceProvider
         var projectService = Program.ServiceProvider.GetService(typeof(OpenUpMan.Services.IProjectService)) as OpenUpMan.Services.IProjectService;
         var projectUserService = Program.ServiceProvider.GetService(typeof(OpenUpMan.Services.IProjectUserService)) as OpenUpMan.Services.IProjectUserService;
- 
+
         if (projectService == null || projectUserService == null)
         {
             Console.WriteLine("Error: No se pudieron obtener los servicios necesarios");
@@ -249,7 +249,11 @@ public partial class ProjectList : Window
         }
 
         // Create ViewModel and View (visual only)
-        var projectVm = new OpenUpMan.UI.ViewModels.ProjectViewModel();
+        var projectUserService = Program.ServiceProvider.GetService(typeof(OpenUpMan.Services.IProjectUserService)) as OpenUpMan.Services.IProjectUserService;
+        var userService = Program.ServiceProvider.GetService(typeof(OpenUpMan.Services.IUserService)) as OpenUpMan.Services.IUserService;
+        var roleService = Program.ServiceProvider.GetService(typeof(OpenUpMan.Services.IRoleService)) as OpenUpMan.Services.IRoleService;
+
+        var projectVm = new OpenUpMan.UI.ViewModels.ProjectViewModel(projectUserService!, userService!, roleService!);
         projectVm.ProjectName = title;
         projectVm.ProjectId = projectId;
 
