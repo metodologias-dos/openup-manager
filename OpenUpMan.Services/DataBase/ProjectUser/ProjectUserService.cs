@@ -8,15 +8,18 @@ namespace OpenUpMan.Services
     {
         private readonly IProjectUserRepository _repo;
         private readonly IRoleRepository _roleRepo;
+        private readonly IUserRepository _userRepo;
         private readonly ILogger<ProjectUserService> _logger;
 
         public ProjectUserService(
             IProjectUserRepository repo,
             IRoleRepository roleRepo,
+            IUserRepository userRepo,
             ILogger<ProjectUserService> logger)
         {
             _repo = repo;
             _roleRepo = roleRepo;
+            _userRepo = userRepo;
             _logger = logger;
         }
 
@@ -161,6 +164,25 @@ namespace OpenUpMan.Services
         public async Task<IEnumerable<ProjectUser>> GetUserProjectsAsync(int userId, CancellationToken ct = default)
         {
             return await _repo.GetByUserIdAsync(userId, ct);
+        }
+
+        public async Task<IEnumerable<ProjectUserDetail>> GetProjectUsersDetailsAsync(int projectId, CancellationToken ct = default)
+        {
+            var projectUsers = await _repo.GetByProjectIdAsync(projectId, ct);
+            var result = new List<ProjectUserDetail>();
+
+            foreach (var pu in projectUsers)
+            {
+                var user = await _userRepo.GetByIdAsync(pu.UserId, ct);
+                var role = await _roleRepo.GetByIdAsync(pu.RoleId); // Assuming GetByIdAsync exists in IRoleRepository and doesn't take token or I should check
+
+                if (user != null && role != null)
+                {
+                    result.Add(new ProjectUserDetail(pu, user, role));
+                }
+            }
+
+            return result;
         }
     }
 }
