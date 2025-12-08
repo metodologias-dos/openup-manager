@@ -314,13 +314,13 @@
                       </StackPanel>
                     </Button>
 
-                    <!-- Botón Borrar (solo visible para el owner) -->
+                    <!-- Botón Borrar (solo visible para Admin o Autor) -->
                     <Button Command="{Binding $parent[Window].((vm:ProjectList)DataContext).DeleteProjectCommand}" 
                             CommandParameter="{Binding}"
                             Classes="action-button"
                             Background="#E81123"
                             Foreground="White"
-                            IsVisible="{Binding IsOwner}">
+                            IsVisible="{Binding CanDelete}">
                       <StackPanel Orientation="Horizontal" Spacing="6">
                         <Viewbox Width="14" Height="14" VerticalAlignment="Center">
                           <Canvas Width="24" Height="24">

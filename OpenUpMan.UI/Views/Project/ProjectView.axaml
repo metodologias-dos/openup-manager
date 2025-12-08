@@ -41,6 +41,7 @@
                                 <!-- Botón Iniciar Fase -->
                                 <Button Content="Iniciar fase" 
                                         Command="{Binding StartPhaseCommand}"
+                                        IsVisible="{Binding CanManageProject}"
                                         Padding="16,10">
                                     <Button.Styles>
                                         <Style Selector="Button">
@@ -59,6 +60,7 @@
                                 <!-- Botón Terminar Fase -->
                                 <Button Content="Terminar fase" 
                                         Command="{Binding EndPhaseCommand}"
+                                        IsVisible="{Binding CanManageProject}"
                                         Padding="16,10">
                                     <Button.Styles>
                                         <Style Selector="Button">
@@ -77,6 +79,7 @@
                                 <!-- Botón Gestionar Artefactos -->
                                 <Button Content="Gestionar Artefactos" 
                                         Command="{Binding ManageArtifactsCommand}"
+                                        IsVisible="{Binding CanManageProject}"
                                         Padding="16,10">
                                     <Button.Styles>
                                         <Style Selector="Button">
@@ -212,7 +215,8 @@
                                            Foreground="White"
                                            VerticalAlignment="Center"/>
                                 <Button Grid.Column="1"
-                                        Command="{Binding CreateIterationCommand}">
+                                        Command="{Binding CreateIterationCommand}"
+                                        IsVisible="{Binding CanManageProject}">
                                     <Button.Styles>
                                         <Style Selector="Button">
                                             <Setter Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}"/>
@@ -360,42 +364,47 @@
                                                             VerticalAlignment="Center">
                                                     
                                                     <!-- Botón activar -->
-                                                    <Button Command="{Binding $parent[UserControl].((vm:ProjectViewModel)DataContext).ActivateIterationCommand}"
-                                                            CommandParameter="{Binding}"
-                                                            IsVisible="{Binding !IsActive}"
-                                                            Padding="10,6"
-                                                            FontSize="11"
-                                                            ToolTip.Tip="Activar iteración">
-                                                        <StackPanel Orientation="Horizontal" Spacing="4">
-                                                            <labs:SymbolIcon Symbol="{x:Static ic:Symbol.Play}" FontSize="12" Foreground="White"/>
-                                                            <TextBlock Text="Activar" FontSize="11" Foreground="White"/>
-                                                        </StackPanel>
-                                                    </Button>
+                                                    <Panel IsVisible="{Binding $parent[UserControl].((vm:ProjectViewModel)DataContext).CanManageProject}">
+                                                        <Button Command="{Binding $parent[UserControl].((vm:ProjectViewModel)DataContext).ActivateIterationCommand}"
+                                                                CommandParameter="{Binding}"
+                                                                IsVisible="{Binding !IsActive}"
+                                                                Padding="10,6"
+                                                                FontSize="11"
+                                                                ToolTip.Tip="Activar iteración">
+                                                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                                                <labs:SymbolIcon Symbol="{x:Static ic:Symbol.Play}" FontSize="12" Foreground="White"/>
+                                                                <TextBlock Text="Activar" FontSize="11" Foreground="White"/>
+                                                            </StackPanel>
+                                                        </Button>
+                                                    </Panel>
                                                     
                                                     <!-- Botón Editar (solo icono) -->
                                                     <Button Command="{Binding $parent[UserControl].((vm:ProjectViewModel)DataContext).EditIterationCommand}"
                                                             CommandParameter="{Binding}"
+                                                            IsVisible="{Binding $parent[UserControl].((vm:ProjectViewModel)DataContext).CanManageProject}"
                                                             Padding="8,6"
                                                             ToolTip.Tip="Editar iteración">
                                                         <labs:SymbolIcon Symbol="{x:Static ic:Symbol.Edit}" FontSize="14" Foreground="White"/>
                                                     </Button>
                                                     
                                                     <!-- Botón Borrar (solo icono, visible si NO tiene microincrementos) -->
-                                                    <Button Command="{Binding $parent[UserControl].((vm:ProjectViewModel)DataContext).DeleteIterationCommand}"
-                                                            CommandParameter="{Binding}"
-                                                            IsVisible="{Binding CanDelete}"
-                                                            Padding="8,6"
-                                                            ToolTip.Tip="Eliminar iteración">
-                                                        <Button.Styles>
-                                                            <Style Selector="Button">
-                                                                <Setter Property="Background" Value="#D32F2F"/>
-                                                            </Style>
-                                                            <Style Selector="Button:pointerover">
-                                                                <Setter Property="Background" Value="#B71C1C"/>
-                                                            </Style>
-                                                        </Button.Styles>
-                                                        <labs:SymbolIcon Symbol="{x:Static ic:Symbol.Delete}" FontSize="14" Foreground="White"/>
-                                                    </Button>
+                                                    <Panel IsVisible="{Binding $parent[UserControl].((vm:ProjectViewModel)DataContext).CanManageProject}">
+                                                        <Button Command="{Binding $parent[UserControl].((vm:ProjectViewModel)DataContext).DeleteIterationCommand}"
+                                                                CommandParameter="{Binding}"
+                                                                IsVisible="{Binding CanDelete}"
+                                                                Padding="8,6"
+                                                                ToolTip.Tip="Eliminar iteración">
+                                                            <Button.Styles>
+                                                                <Style Selector="Button">
+                                                                    <Setter Property="Background" Value="#D32F2F"/>
+                                                                </Style>
+                                                                <Style Selector="Button:pointerover">
+                                                                    <Setter Property="Background" Value="#B71C1C"/>
+                                                                </Style>
+                                                            </Button.Styles>
+                                                            <labs:SymbolIcon Symbol="{x:Static ic:Symbol.Delete}" FontSize="14" Foreground="White"/>
+                                                        </Button>
+                                                    </Panel>
                                                     
                                                     <!-- Botón Ver Detalles (solo visible si TIENE microincrementos) -->
                                                     <Button Command="{Binding $parent[UserControl].((vm:ProjectViewModel)DataContext).ViewIterationDetailsCommand}"
@@ -531,6 +540,7 @@
                                             <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
                                                 <Button Command="{Binding $parent[UserControl].((vm:ProjectViewModel)DataContext).RegisterArtifactChangeCommand}"
                                                         CommandParameter="{Binding}"
+                                                        IsVisible="{Binding $parent[UserControl].((vm:ProjectViewModel)DataContext).CanEditArtifacts}"
                                                         Padding="8,6"
                                                         ToolTip.Tip="Registrar cambio">
                                                     <labs:SymbolIcon Symbol="{x:Static ic:Symbol.Edit}" FontSize="16" Foreground="White"/>
@@ -566,7 +576,7 @@
                              Watermark="Nombre del Proyecto" 
                              Text="{Binding ProjectName}"
                              VerticalAlignment="Center"/>
-                    <Button Content="Guardar" Command="{Binding SaveCommand}">
+                    <Button Content="Guardar" Command="{Binding SaveCommand}" IsVisible="{Binding CanManageProject}">
                         <Button.Styles>
                             <Style Selector="Button">
                                 <Setter Property="Background" Value="#0078D4"/>
@@ -581,7 +591,7 @@
                         </Button.Styles>
                     </Button>
                     <Button Content="Abrir" Command="{Binding OpenCommand}"/>
-                    <Button Content="Agregar Usuario" Command="{Binding AddUserCommand}"/>
+                    <Button Content="Agregar Usuario" Command="{Binding AddUserCommand}" IsVisible="{Binding CanManageProject}"/>
                     <Button Command="{Binding OpenDashboardCommand}">
                         <Button.Styles>
                             <Style Selector="Button">

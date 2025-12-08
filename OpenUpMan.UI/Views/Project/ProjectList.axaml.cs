@@ -263,6 +263,9 @@ public partial class ProjectList : Window
             projectVm.CurrentUserName = popupVm.CurrentUser.Username;
         }
 
+        // Cargar el rol del usuario en el proyecto
+        _ = projectVm.LoadUserRoleAsync();
+
         var view = new OpenUpMan.UI.Views.ProjectView
         {
             DataContext = projectVm
@@ -272,8 +275,9 @@ public partial class ProjectList : Window
         var wnd = new Window
         {
             Title = title,
-            Width = 1000,
-            Height = 700,
+            Width = 1200,
+            Height = 800,
+            WindowState = WindowState.Maximized,
             Content = view,
             WindowStartupLocation = WindowStartupLocation.CenterScreen
         };
