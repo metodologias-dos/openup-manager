@@ -1,0 +1,166 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:OpenUpMan.UI.ViewModels"
+        xmlns:labs="clr-namespace:FluentIcons.Avalonia;assembly=FluentIcons.Avalonia"
+        xmlns:ic="clr-namespace:FluentIcons.Common;assembly=FluentIcons.Common"
+        x:Class="OpenUpMan.UI.Views.Artifact.ArtifactAdministrationWindow"
+        x:DataType="vm:ArtifactAdministrationViewModel"
+        mc:Ignorable="d"
+        Width="1000" Height="700" 
+        MinWidth="800" MinHeight="600"
+        WindowStartupLocation="CenterOwner"
+        Title="Administración de Artefactos">
+  
+  <Grid RowDefinitions="Auto,*,Auto" Margin="16">
+    
+    <!-- Encabezado -->
+    <StackPanel Grid.Row="0" Spacing="4" Margin="0,0,0,16">
+      <TextBlock Text="Administración de Artefactos" 
+                 FontSize="20" 
+                 FontWeight="Bold" 
+                 Foreground="White"/>
+      <TextBlock Text="{Binding ProjectName}" 
+                 FontSize="14" 
+                 Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+    </StackPanel>
+
+    <!-- Contenido principal -->
+    <Grid Grid.Row="1" Margin="0,16,0,0">
+      
+      <!-- Lista de artefactos -->
+      <Border BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" 
+              BorderThickness="1" 
+              Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+              CornerRadius="8"
+              Padding="16">
+        <Grid RowDefinitions="Auto,*">
+
+          <!-- Encabezado con título y botón -->
+          <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,12">
+            <TextBlock Grid.Column="0"
+                       Text="{Binding SelectedPhaseName, StringFormat='Artefactos de {0}'}" 
+                       FontWeight="Bold" 
+                       FontSize="16" 
+                       Foreground="White"
+                       VerticalAlignment="Center"/>
+            <Button Grid.Column="1"
+                    Command="{Binding CreateArtifactCommand}"
+                    Classes="accent"
+                    Padding="12,8">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <labs:SymbolIcon Symbol="{x:Static ic:Symbol.Add}" FontSize="16" Foreground="White"/>
+                <TextBlock Text="Nuevo Artefacto" FontSize="13" Foreground="White"/>
+              </StackPanel>
+            </Button>
+          </Grid>
+
+          <!-- DataGrid de Artefactos -->
+          <DataGrid Grid.Row="1"
+                    ItemsSource="{Binding Artifacts}"
+                    SelectedItem="{Binding SelectedArtifact}"
+                    AutoGenerateColumns="False"
+                    CanUserReorderColumns="False"
+                    CanUserResizeColumns="True"
+                    CanUserSortColumns="True"
+                    GridLinesVisibility="None"
+                    HeadersVisibility="Column"
+                    SelectionMode="Single"
+                    IsReadOnly="True"
+                    BorderThickness="0"
+                    Background="Transparent">
+
+            <DataGrid.Styles>
+              <Style Selector="DataGridRow">
+                <Setter Property="MinHeight" Value="50"/>
+                <Setter Property="Background" Value="Transparent"/>
+              </Style>
+              <Style Selector="DataGridRow:nth-child(2n)">
+                <Setter Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}"/>
+              </Style>
+              <Style Selector="DataGridRow:pointerover /template/ Rectangle#BackgroundRectangle">
+                <Setter Property="Fill" Value="{DynamicResource SubtleFillColorTertiaryBrush}"/>
+              </Style>
+              <Style Selector="DataGridCell">
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="Padding" Value="12,8"/>
+              </Style>
+              <Style Selector="DataGridCell TextBlock">
+                <Setter Property="Foreground" Value="White"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+              </Style>
+              <Style Selector="DataGridColumnHeader">
+                <Setter Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}"/>
+                <Setter Property="Foreground" Value="White"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="FontSize" Value="11"/>
+                <Setter Property="Padding" Value="12,8"/>
+              </Style>
+            </DataGrid.Styles>
+
+            <DataGrid.Columns>
+              <!-- Nombre -->
+              <DataGridTextColumn Header="NOMBRE" 
+                                  Binding="{Binding Name}" 
+                                  Width="3*" 
+                                  MinWidth="200"/>
+              
+              <!-- Tipo -->
+              <DataGridTextColumn Header="TIPO" 
+                                  Binding="{Binding ArtifactType}" 
+                                  Width="2*" 
+                                  MinWidth="150"/>
+              
+              <!-- Obligatorio -->
+              <DataGridTextColumn Header="OBLIGATORIO" 
+                                  Binding="{Binding MandatoryIndicator}" 
+                                  Width="1.5*" 
+                                  MinWidth="130"/>
+              
+              <!-- Estado -->
+              <DataGridTextColumn Header="ESTADO" 
+                                  Binding="{Binding StateDisplay}" 
+                                  Width="1.5*" 
+                                  MinWidth="120"/>
+              
+              <!-- Acciones -->
+              <DataGridTemplateColumn Header="ACCIONES" Width="Auto" MinWidth="140">
+                <DataGridTemplateColumn.CellTemplate>
+                  <DataTemplate DataType="vm:ArtifactItemViewModel">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                      <Button Command="{Binding $parent[DataGrid].((vm:ArtifactAdministrationViewModel)DataContext).EditArtifactCommand}"
+                              CommandParameter="{Binding}"
+                              Padding="6"
+                              ToolTip.Tip="Editar">
+                        <labs:SymbolIcon Symbol="{x:Static ic:Symbol.Edit}" FontSize="16" Foreground="White"/>
+                      </Button>
+                      <Button Command="{Binding $parent[DataGrid].((vm:ArtifactAdministrationViewModel)DataContext).DeleteArtifactCommand}"
+                              CommandParameter="{Binding}"
+                              Padding="6"
+                              ToolTip.Tip="Eliminar">
+                        <labs:SymbolIcon Symbol="{x:Static ic:Symbol.Delete}" FontSize="16" Foreground="White"/>
+                      </Button>
+                    </StackPanel>
+                  </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+              </DataGridTemplateColumn>
+            </DataGrid.Columns>
+          </DataGrid>
+        </Grid>
+      </Border>
+    </Grid>
+
+    <!-- Botones inferiores -->
+    <StackPanel Grid.Row="2" 
+                Orientation="Horizontal" 
+                HorizontalAlignment="Right" 
+                Spacing="8" 
+                Margin="0,16,0,0">
+      <Button Content="Cerrar" 
+              Command="{Binding CloseCommand}" 
+              MinWidth="100"/>
+    </StackPanel>
+  </Grid>
+</Window>
+

@@ -59,7 +59,7 @@ public partial class UserAuthControl : UserControl
             }
 
             // Crear el ViewModel con servicios para cargar proyectos desde la BD
-            var popupVm = new ProjectsPopupViewModel(user, projectUserService, projectService, userService);
+            var popupVm = new ViewModels.ProjectList(user, projectUserService, projectService, userService);
 
             // Try to find a window to be the owner
             var owner = TopLevel.GetTopLevel(this) as Window;
@@ -67,11 +67,11 @@ public partial class UserAuthControl : UserControl
             // Try to get the classic desktop lifetime so we can swap MainWindow
             var lifetime = Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime;
 
-            ProjectsPopup? popup = null;
+            ProjectList? popup = null;
             try
             {
                 // Attempt to construct the popup (this can throw if XAML fails to load)
-                popup = new ProjectsPopup(popupVm)
+                popup = new ProjectList(popupVm)
                 {
                     WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 };

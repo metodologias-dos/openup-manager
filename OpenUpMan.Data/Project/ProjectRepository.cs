@@ -58,10 +58,10 @@ namespace OpenUpMan.Data
             await _ctx.Projects.AddAsync(project, ct);
         }
 
-        public Task UpdateAsync(Project project, CancellationToken ct = default)
+        public async Task UpdateAsync(Project project, CancellationToken ct = default)
         {
             _ctx.Projects.Update(project);
-            return Task.CompletedTask;
+            await _ctx.SaveChangesAsync(ct);
         }
 
         public async Task DeleteAsync(int id, CancellationToken ct = default)

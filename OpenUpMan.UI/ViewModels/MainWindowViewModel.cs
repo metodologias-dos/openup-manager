@@ -55,5 +55,15 @@ public partial class MainWindowViewModel : ViewModelBase
                 User: null
             ));
         }
+
+        public Task<ServiceResult<System.Collections.Generic.IEnumerable<OpenUpMan.Domain.User>>> SearchUsersAsync(string term, CancellationToken ct = default)
+        {
+            return Task.FromResult(new ServiceResult<System.Collections.Generic.IEnumerable<OpenUpMan.Domain.User>>(
+                Success: false,
+                ResultType: ServiceResultType.Error,
+                Message: "No backend configured.",
+                Data: System.Linq.Enumerable.Empty<OpenUpMan.Domain.User>()
+            ));
+        }
     }
 }

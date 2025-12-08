@@ -1,0 +1,128 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:OpenUpMan.UI.ViewModels"
+        xmlns:labs="clr-namespace:FluentIcons.Avalonia;assembly=FluentIcons.Avalonia"
+        xmlns:ic="clr-namespace:FluentIcons.Common;assembly=FluentIcons.Common"
+        x:Class="OpenUpMan.UI.Views.Artifact.ArtifactEditorWindow"
+        x:DataType="vm:ArtifactEditorViewModel"
+        Title="{Binding WindowTitle}"
+        Width="500"
+        Height="550"
+        MinWidth="450"
+        MinHeight="500"
+        WindowStartupLocation="CenterOwner"
+        CanResize="True">
+  
+  <Border Background="{DynamicResource SolidBackgroundFillColorBaseBrush}"
+          Padding="24">
+    <Grid RowDefinitions="Auto,*,Auto">
+      
+      <!-- Título -->
+      <TextBlock Grid.Row="0" 
+                 Text="{Binding WindowTitle}" 
+                 FontWeight="Bold" 
+                 FontSize="18" 
+                 Foreground="White"
+                 Margin="0,0,0,20"/>
+
+      <!-- Formulario -->
+      <ScrollViewer Grid.Row="1">
+        <StackPanel Spacing="16">
+          
+          <!-- Nombre -->
+          <StackPanel Spacing="8">
+            <TextBlock Text="Nombre *" 
+                       FontSize="13" 
+                       FontWeight="SemiBold"
+                       Foreground="White"/>
+            <TextBox Text="{Binding Name}" 
+                     Watermark="Nombre del artefacto"
+                     MinHeight="36"/>
+          </StackPanel>
+
+          <!-- Tipo -->
+          <StackPanel Spacing="8">
+            <TextBlock Text="Tipo" 
+                       FontSize="13" 
+                       FontWeight="SemiBold"
+                       Foreground="White"/>
+            <ComboBox SelectedItem="{Binding ArtifactType}" 
+                      HorizontalAlignment="Stretch"
+                      MinHeight="36">
+              <ComboBox.Items>
+                <x:String>Documento</x:String>
+                <x:String>Diagrama</x:String>
+                <x:String>Código</x:String>
+                <x:String>Modelo</x:String>
+                <x:String>Especificación</x:String>
+                <x:String>Otro</x:String>
+              </ComboBox.Items>
+            </ComboBox>
+          </StackPanel>
+
+          <!-- Obligatorio -->
+          <Border BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                  BorderThickness="1"
+                  CornerRadius="6"
+                  Padding="12"
+                  Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+            <CheckBox Content="Artefacto Obligatorio" 
+                      IsChecked="{Binding IsMandatory}"
+                      Foreground="White">
+              <CheckBox.ContentTemplate>
+                <DataTemplate>
+                  <StackPanel Spacing="4">
+                    <TextBlock Text="Artefacto Obligatorio" 
+                               FontWeight="SemiBold"
+                               FontSize="13"/>
+                    <TextBlock Text="Los artefactos obligatorios son requeridos para completar la fase"
+                               FontSize="11"
+                               Opacity="0.7"
+                               TextWrapping="Wrap"/>
+                  </StackPanel>
+                </DataTemplate>
+              </CheckBox.ContentTemplate>
+            </CheckBox>
+          </Border>
+
+          <!-- Descripción -->
+          <StackPanel Spacing="8">
+            <TextBlock Text="Descripción" 
+                       FontSize="13" 
+                       FontWeight="SemiBold"
+                       Foreground="White"/>
+            <TextBox Text="{Binding Description}" 
+                     AcceptsReturn="True"
+                     Height="140"
+                     TextWrapping="Wrap"
+                     Watermark="Descripción del artefacto (opcional)"/>
+          </StackPanel>
+
+        </StackPanel>
+      </ScrollViewer>
+
+      <!-- Botones -->
+      <StackPanel Grid.Row="2" 
+                  Orientation="Horizontal" 
+                  HorizontalAlignment="Right" 
+                  Spacing="8" 
+                  Margin="0,20,0,0">
+        <Button Content="Cancelar" 
+                Command="{Binding CancelCommand}" 
+                MinWidth="100"
+                MinHeight="36"/>
+        <Button Command="{Binding SaveCommand}" 
+                MinWidth="100"
+                MinHeight="36"
+                IsEnabled="{Binding CanSave}"
+                Classes="accent">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <labs:SymbolIcon Symbol="{x:Static ic:Symbol.Save}" FontSize="16" Foreground="White"/>
+            <TextBlock Text="Guardar" FontSize="13" Foreground="White"/>
+          </StackPanel>
+        </Button>
+      </StackPanel>
+    </Grid>
+  </Border>
+</Window>
+

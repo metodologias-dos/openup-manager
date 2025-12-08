@@ -1,0 +1,157 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:OpenUpMan.UI.ViewModels"
+        xmlns:labs="clr-namespace:FluentIcons.Avalonia;assembly=FluentIcons.Avalonia"
+        xmlns:ic="clr-namespace:FluentIcons.Common;assembly=FluentIcons.Common"
+        x:Class="OpenUpMan.UI.Views.Artifact.ArtifactHistoryWindow"
+        x:DataType="vm:ArtifactHistoryViewModel"
+        mc:Ignorable="d"
+        Width="900" Height="600" 
+        MinWidth="700" MinHeight="500"
+        WindowStartupLocation="CenterOwner"
+        Title="Historial de Artefacto">
+  
+  <Grid RowDefinitions="Auto,*,Auto" Margin="16">
+    
+    <!-- Encabezado -->
+    <StackPanel Grid.Row="0" Spacing="4" Margin="0,0,0,16">
+      <TextBlock Text="Historial de Versiones" 
+                 FontSize="20" 
+                 FontWeight="Bold" 
+                 Foreground="White"/>
+      <StackPanel Orientation="Horizontal" Spacing="8">
+        <TextBlock Text="{Binding ArtifactName}" 
+                   FontSize="14" 
+                   FontWeight="SemiBold"
+                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+        <TextBlock Text="-" 
+                   FontSize="14" 
+                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+        <TextBlock Text="{Binding CurrentVersion, StringFormat='Versión actual: v{0}'}" 
+                   FontSize="14" 
+                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+      </StackPanel>
+    </StackPanel>
+
+    <!-- Tabla de versiones -->
+    <Border Grid.Row="1" 
+            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" 
+            BorderThickness="1" 
+            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+            CornerRadius="8"
+            Padding="16">
+      <DataGrid ItemsSource="{Binding Versions}"
+                SelectedItem="{Binding SelectedVersion}"
+                AutoGenerateColumns="False"
+                CanUserReorderColumns="False"
+                CanUserResizeColumns="True"
+                CanUserSortColumns="True"
+                GridLinesVisibility="None"
+                HeadersVisibility="Column"
+                SelectionMode="Single"
+                IsReadOnly="True"
+                BorderThickness="0"
+                Background="Transparent">
+
+        <DataGrid.Styles>
+          <Style Selector="DataGridRow">
+            <Setter Property="MinHeight" Value="60"/>
+            <Setter Property="Background" Value="Transparent"/>
+          </Style>
+          <Style Selector="DataGridRow:nth-child(2n)">
+            <Setter Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}"/>
+          </Style>
+          <Style Selector="DataGridRow:pointerover /template/ Rectangle#BackgroundRectangle">
+            <Setter Property="Fill" Value="{DynamicResource SubtleFillColorTertiaryBrush}"/>
+          </Style>
+          <Style Selector="DataGridCell">
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="12,8"/>
+          </Style>
+          <Style Selector="DataGridCell TextBlock">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+          </Style>
+          <Style Selector="DataGridColumnHeader">
+            <Setter Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Padding" Value="12,8"/>
+          </Style>
+        </DataGrid.Styles>
+
+        <DataGrid.Columns>
+          <!-- Versión -->
+          <DataGridTextColumn Header="VERSIÓN" 
+                              Binding="{Binding VersionDisplay}" 
+                              Width="Auto" 
+                              MinWidth="80"/>
+          
+          <!-- Autor -->
+          <DataGridTextColumn Header="AUTOR" 
+                              Binding="{Binding AuthorName}" 
+                              Width="*" 
+                              MinWidth="120"/>
+          
+          <!-- Fecha -->
+          <DataGridTextColumn Header="FECHA" 
+                              Binding="{Binding CreatedAtFormatted}" 
+                              Width="*" 
+                              MinWidth="140"/>
+          
+          <!-- Tipo -->
+          <DataGridTextColumn Header="TIPO" 
+                              Binding="{Binding FileTypeDisplay}" 
+                              Width="*" 
+                              MinWidth="100"/>
+          
+          <!-- Notas -->
+          <DataGridTemplateColumn Header="NOTAS" Width="2*" MinWidth="200">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate DataType="vm:ArtifactVersionItemViewModel">
+                <TextBlock Text="{Binding Notes}" 
+                           TextWrapping="Wrap" 
+                           MaxHeight="40"
+                           TextTrimming="CharacterEllipsis"
+                           Foreground="White"
+                           ToolTip.Tip="{Binding Notes}"/>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          
+          <!-- Acciones -->
+          <DataGridTemplateColumn Header="ACCIONES" Width="Auto" MinWidth="100">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate DataType="vm:ArtifactVersionItemViewModel">
+                <Button Command="{Binding $parent[DataGrid].((vm:ArtifactHistoryViewModel)DataContext).PreviewVersionCommand}"
+                        CommandParameter="{Binding}"
+                        Padding="8,6"
+                        ToolTip.Tip="Previsualizar/Abrir">
+                  <StackPanel Orientation="Horizontal" Spacing="4">
+                    <labs:SymbolIcon Symbol="{x:Static ic:Symbol.Eye}" FontSize="16" Foreground="White"/>
+                    <TextBlock Text="Ver" FontSize="12" Foreground="White" VerticalAlignment="Center"/>
+                  </StackPanel>
+                </Button>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+        </DataGrid.Columns>
+      </DataGrid>
+    </Border>
+
+    <!-- Botones inferiores -->
+    <StackPanel Grid.Row="2" 
+                Orientation="Horizontal" 
+                HorizontalAlignment="Right" 
+                Spacing="8" 
+                Margin="0,16,0,0">
+      <Button Content="Cerrar" 
+              Command="{Binding CloseCommand}" 
+              MinWidth="100"/>
+    </StackPanel>
+  </Grid>
+</Window>
+

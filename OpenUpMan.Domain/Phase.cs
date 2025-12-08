@@ -9,6 +9,9 @@
         public DateTime? EndDate { get; private set; }
         public string Status { get; private set; } = "PENDING";
         public int? OrderIndex { get; private set; }
+        public string? Objective { get; private set; }
+        public string? Scope { get; private set; }
+        public string? Observations { get; private set; }
 
         // Parameterless constructor for EF
         protected Phase() { }
@@ -26,7 +29,8 @@
             Status = "PENDING";
         }
 
-        public void UpdateDetails(string name, DateTime? startDate, DateTime? endDate, int? orderIndex)
+        public void UpdateDetails(string name, DateTime? startDate, DateTime? endDate, int? orderIndex, 
+            string? objective = null, string? scope = null, string? observations = null)
         {
             if (string.IsNullOrWhiteSpace(name))
             {
@@ -37,6 +41,9 @@
             StartDate = startDate;
             EndDate = endDate;
             OrderIndex = orderIndex;
+            Objective = objective;
+            Scope = scope;
+            Observations = observations;
         }
 
         public void SetStatus(string status)
@@ -49,6 +56,20 @@
             StartDate = startDate;
             EndDate = endDate;
         }
+
+        public void SetObjective(string? objective)
+        {
+            Objective = objective;
+        }
+
+        public void SetScope(string? scope)
+        {
+            Scope = scope;
+        }
+
+        public void SetObservations(string? observations)
+        {
+            Observations = observations;
+        }
     }
 }
-

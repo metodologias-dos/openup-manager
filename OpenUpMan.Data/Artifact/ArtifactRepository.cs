@@ -122,6 +122,22 @@ namespace OpenUpMan.Data
             
             return nextVersionNumber;
         }
+
+        // Dashboard queries
+        public async Task<int> CountMandatoryByProjectIdAsync(int projectId, CancellationToken ct = default)
+        {
+            return await _context.Artifacts
+                .Where(a => a.ProjectId == projectId && a.Mandatory)
+                .CountAsync(ct);
+        }
+
+        public async Task<int> CountMandatoryWithVersionsByProjectIdAsync(int projectId, CancellationToken ct = default)
+        {
+            return await _context.Artifacts
+                .Where(a => a.ProjectId == projectId && a.Mandatory)
+                .Where(a => _context.ArtifactVersions.Any(av => av.ArtifactId == a.Id))
+                .CountAsync(ct);
+        }
     }
 }
 
