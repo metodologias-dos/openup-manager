@@ -310,14 +310,6 @@
                         </StackPanel>
                     </Border>
                     
-                    <!-- Active Iterations Count -->
-                    <Border Classes="card" Padding="16">
-                        <StackPanel Spacing="6">
-                            <TextBlock Text="Iteraciones Activas" FontSize="12" Opacity="0.7"/>
-                            <TextBlock Text="{Binding Statistics.ActiveIterationsCount}" FontSize="32" FontWeight="Bold"/>
-                        </StackPanel>
-                    </Border>
-                    
                     <!-- Project Progress Indicator -->
                     <Border Classes="card" Padding="16">
                         <StackPanel Spacing="8">
