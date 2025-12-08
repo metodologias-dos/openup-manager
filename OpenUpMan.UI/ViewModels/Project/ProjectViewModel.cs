@@ -41,6 +41,18 @@ public partial class ProjectViewModel : ViewModelBase
     private string _currentPhaseStatusDisplay = "Pendiente";
 
     [ObservableProperty]
+    private DateTime? _currentPhaseStartDate;
+
+    [ObservableProperty]
+    private string _currentPhaseStartDateDisplay = "No iniciada";
+
+    [ObservableProperty]
+    private DateTime? _currentPhaseEndDate;
+
+    [ObservableProperty]
+    private string _currentPhaseEndDateDisplay = "No finalizada";
+
+    [ObservableProperty]
     private int _selectedPhaseIndex = 0;
 
     [ObservableProperty]
@@ -314,6 +326,23 @@ public partial class ProjectViewModel : ViewModelBase
             "DONE" => "Terminado",
             _ => "Pendiente"
         };
+    }
+
+    /// <summary>
+    /// Actualiza las fechas de la fase actual
+    /// </summary>
+    public void UpdatePhaseDates(DateTime? startDate, DateTime? endDate)
+    {
+        CurrentPhaseStartDate = startDate;
+        CurrentPhaseEndDate = endDate;
+
+        CurrentPhaseStartDateDisplay = startDate.HasValue 
+            ? startDate.Value.ToString("dd/MM/yyyy HH:mm") 
+            : "No iniciada";
+
+        CurrentPhaseEndDateDisplay = endDate.HasValue 
+            ? endDate.Value.ToString("dd/MM/yyyy HH:mm") 
+            : "No finalizada";
     }
 
     #endregion

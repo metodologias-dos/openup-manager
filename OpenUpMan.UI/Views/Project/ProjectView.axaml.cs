@@ -509,8 +509,9 @@ public partial class ProjectView : UserControl
 
             if (result.Success)
             {
-                // Update ViewModel with new status
+                // Update ViewModel with new status and dates
                 vm.UpdatePhaseStatus(result.Phase?.Status ?? "IN_PROGRESS");
+                vm.UpdatePhaseDates(result.Phase?.StartDate, result.Phase?.EndDate);
                 
                 // Show success message
                 await ShowMessageBox("Éxito", result.Message, MessageBoxType.Success);
@@ -552,8 +553,9 @@ public partial class ProjectView : UserControl
 
             if (result.Success)
             {
-                // Update ViewModel with new status
+                // Update ViewModel with new status and dates
                 vm.UpdatePhaseStatus(result.Phase?.Status ?? "DONE");
+                vm.UpdatePhaseDates(result.Phase?.StartDate, result.Phase?.EndDate);
                 
                 // Show success message
                 await ShowMessageBox("Éxito", result.Message, MessageBoxType.Success);
@@ -595,6 +597,7 @@ public partial class ProjectView : UserControl
             {
                 vm.CurrentPhaseId = currentPhase.Id;
                 vm.UpdatePhaseStatus(currentPhase.Status);
+                vm.UpdatePhaseDates(currentPhase.StartDate, currentPhase.EndDate);
             }
         }
         catch

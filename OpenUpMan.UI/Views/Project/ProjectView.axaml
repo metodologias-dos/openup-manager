@@ -73,8 +73,20 @@
                                 </StackPanel>
 
                                 <StackPanel Width="280" Spacing="8" Margin="0,0,16,0">
-                                    <TextBlock Text="Fecha de Inicio:" FontSize="12" Foreground="White"/>
-                                    <TextBlock Text="Fecha de Fin:" FontSize="12" Foreground="White"/>
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <TextBlock Text="Fecha de Inicio:" FontSize="12" Foreground="White"/>
+                                        <TextBlock Text="{Binding CurrentPhaseStartDateDisplay}" 
+                                                   FontSize="12" 
+                                                   FontWeight="SemiBold"
+                                                   Foreground="#00D9FF"/>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <TextBlock Text="Fecha de Fin:" FontSize="12" Foreground="White"/>
+                                        <TextBlock Text="{Binding CurrentPhaseEndDateDisplay}" 
+                                                   FontSize="12" 
+                                                   FontWeight="SemiBold"
+                                                   Foreground="#00D9FF"/>
+                                    </StackPanel>
                                     <TextBlock Text="Objetivo general:" FontSize="12" Foreground="White"/>
                                     <TextBlock Text="Alcance:" FontSize="12" Foreground="White"/>
                                 </StackPanel>
