@@ -1,7 +1,13 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using OpenUpMan.Domain;
+using OpenUpMan.Services;
 
 namespace OpenUpMan.UI.ViewModels;
 
@@ -11,6 +17,10 @@ namespace OpenUpMan.UI.ViewModels;
 /// </summary>
 public partial class ProjectViewModel : ViewModelBase
 {
+    private readonly IProjectUserService _projectUserService;
+    private readonly IUserService _userService;
+    private readonly IRoleService _roleService;
+
     #region Properties
 
     [ObservableProperty]
@@ -85,6 +95,8 @@ public partial class ProjectViewModel : ViewModelBase
     public IRelayCommand ManageArtifactsCommand { get; }
     public IRelayCommand<string> SelectPhaseCommand { get; }
     public IRelayCommand CreateIterationCommand { get; }
+    public IRelayCommand<IterationItemViewModel> EditIterationCommand { get; }
+    public IRelayCommand<IterationItemViewModel> DeleteIterationCommand { get; }
     public IRelayCommand<IterationItemViewModel> ActivateIterationCommand { get; }
     public IRelayCommand<IterationItemViewModel> ViewIterationDetailsCommand { get; }
     public IRelayCommand<ArtifactItemViewModel> RegisterArtifactChangeCommand { get; }
@@ -111,6 +123,18 @@ public partial class ProjectViewModel : ViewModelBase
     /// Se dispara cuando el usuario solicita crear una nueva iteración.
     /// </summary>
     public event Action? CreateIterationRequested;
+
+    /// <summary>
+    /// Se dispara cuando el usuario solicita editar una iteración.
+    /// Parámetro: iteration
+    /// </summary>
+    public event Action<IterationItemViewModel>? EditIterationRequested;
+
+    /// <summary>
+    /// Se dispara cuando el usuario solicita eliminar una iteración.
+    /// Parámetro: iteration
+    /// </summary>
+    public event Action<IterationItemViewModel>? DeleteIterationRequested;
 
     /// <summary>
     /// Se dispara cuando el usuario solicita abrir el tablero del proyecto.
@@ -171,6 +195,9 @@ public partial class ProjectViewModel : ViewModelBase
     /// Se dispara cuando el usuario solicita guardar los cambios del proyecto.
     /// </summary>
     public event Action? SaveRequested;
+    /// Se dispara cuando se solicita gestionar los usuarios del proyecto.
+    /// </summary>
+    public event Action<ProjectUsersManagementViewModel>? ManageUsersRequested;
 
     #endregion
 
@@ -178,6 +205,7 @@ public partial class ProjectViewModel : ViewModelBase
 
     public ProjectViewModel()
     {
+        // Constructor de diseño / por defecto
         // Inicializar comandos
         SaveCommand = new RelayCommand(OnSave);
         OpenCommand = new RelayCommand(OnOpen);
@@ -187,6 +215,8 @@ public partial class ProjectViewModel : ViewModelBase
         ManageArtifactsCommand = new RelayCommand(() => ManageArtifactsRequested?.Invoke());
         SelectPhaseCommand = new RelayCommand<string>(OnSelectPhase);
         CreateIterationCommand = new RelayCommand(() => CreateIterationRequested?.Invoke());
+        EditIterationCommand = new RelayCommand<IterationItemViewModel>(OnEditIteration);
+        DeleteIterationCommand = new RelayCommand<IterationItemViewModel>(OnDeleteIteration);
         ActivateIterationCommand = new RelayCommand<IterationItemViewModel>(OnActivateIteration);
         ViewIterationDetailsCommand = new RelayCommand<IterationItemViewModel>(OnViewIterationDetails);
         RegisterArtifactChangeCommand = new RelayCommand<ArtifactItemViewModel>(OnRegisterArtifactChange);
@@ -198,6 +228,19 @@ public partial class ProjectViewModel : ViewModelBase
         // Valores por defecto
         ProjectName = "Proyecto ejemplo";
         ProjectPercentage = 12;
+    }
+
+    public ProjectViewModel(
+        IProjectUserService projectUserService,
+        IUserService userService,
+        IRoleService roleService) : this()
+    {
+        _projectUserService = projectUserService;
+        _userService = userService;
+        _roleService = roleService;
+
+        // Cargar datos iniciales si es necesario
+        // LoadProjectData(); // Esto debería llamarse explícitamente o al setear ProjectId
     }
 
     #endregion
@@ -216,7 +259,15 @@ public partial class ProjectViewModel : ViewModelBase
 
     private void OnAddUser()
     {
-        // TODO: Implementar agregar usuario al proyecto
+        if (_projectUserService == null || _userService == null || _roleService == null) return;
+
+        var vm = new ProjectUsersManagementViewModel(
+            ProjectId,
+            _projectUserService,
+            _userService,
+            _roleService);
+
+        ManageUsersRequested?.Invoke(vm);
     }
 
     private void OnSelectPhase(string? phaseName)
@@ -224,7 +275,7 @@ public partial class ProjectViewModel : ViewModelBase
         if (!string.IsNullOrEmpty(phaseName))
         {
             CurrentPhaseName = phaseName;
-            
+
             // Update phase index for consistency
             SelectedPhaseIndex = phaseName switch
             {
@@ -234,8 +285,24 @@ public partial class ProjectViewModel : ViewModelBase
                 "Transición (Transition)" => 3,
                 _ => 0
             };
-            
+
             PhaseChanged?.Invoke();
+        }
+    }
+
+    private void OnEditIteration(IterationItemViewModel? iteration)
+    {
+        if (iteration != null)
+        {
+            EditIterationRequested?.Invoke(iteration);
+        }
+    }
+
+    private void OnDeleteIteration(IterationItemViewModel? iteration)
+    {
+        if (iteration != null)
+        {
+            DeleteIterationRequested?.Invoke(iteration);
         }
     }
 
@@ -292,6 +359,14 @@ public partial class ProjectViewModel : ViewModelBase
     #endregion
 
     #region Property Changed Handlers
+
+    partial void OnProjectIdChanged(int value)
+    {
+        if (value > 0)
+        {
+            // Cargar datos del proyecto si es necesario
+        }
+    }
 
     /// <summary>
     /// Se ejecuta cuando cambia el índice de la fase seleccionada.
@@ -371,4 +446,3 @@ public partial class ProjectViewModel : ViewModelBase
 
     #endregion
 }
-

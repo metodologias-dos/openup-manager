@@ -8,7 +8,10 @@ namespace OpenUpMan.Services
         Task<ProjectUserServiceResult> RemoveUserFromProjectAsync(int projectId, int userId, CancellationToken ct = default);
         Task<ProjectUserServiceResult> ChangeUserRoleAsync(int projectId, int userId, int newRoleId, CancellationToken ct = default);
         Task<IEnumerable<ProjectUser>> GetProjectUsersAsync(int projectId, CancellationToken ct = default);
+        Task<IEnumerable<ProjectUserDetail>> GetProjectUsersDetailsAsync(int projectId, CancellationToken ct = default);
         Task<IEnumerable<ProjectUser>> GetUserProjectsAsync(int userId, CancellationToken ct = default);
     }
+
+    public record ProjectUserDetail(ProjectUser ProjectUser, User User, Role Role);
 }
 

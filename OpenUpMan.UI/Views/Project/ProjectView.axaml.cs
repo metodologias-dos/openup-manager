@@ -1,4 +1,5 @@
 using System;
+using System.Collections.ObjectModel;
 using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
@@ -24,6 +25,19 @@ public partial class ProjectView : UserControl
         AvaloniaXamlLoader.Load(this);
     }
 
+    private void OpenManageUsersDialog(ProjectUsersManagementViewModel vm)
+    {
+        var dialog = new ProjectUsersManagementDialog
+        {
+            DataContext = vm
+        };
+
+        if (VisualRoot is Window window)
+        {
+            dialog.ShowDialog(window);
+        }
+    }
+
     private void OnDataContextChanged(object? sender, EventArgs e)
     {
         if (DataContext is ProjectViewModel vm)
@@ -39,6 +53,14 @@ public partial class ProjectView : UserControl
             vm.CreateIterationRequested -= OpenCreateIterationDialog;
             vm.CreateIterationRequested += OpenCreateIterationDialog;
 
+            // Subscribe to edit iteration requests
+            vm.EditIterationRequested -= OpenEditIterationDialog;
+            vm.EditIterationRequested += OpenEditIterationDialog;
+
+            // Subscribe to delete iteration requests
+            vm.DeleteIterationRequested -= DeleteIteration;
+            vm.DeleteIterationRequested += DeleteIteration;
+
             vm.OpenDashboardRequested -= OpenDashboardWindow;
             vm.OpenDashboardRequested += OpenDashboardWindow;
 
@@ -51,6 +73,9 @@ public partial class ProjectView : UserControl
 
             vm.ArtifactPreviewRequested -= PreviewArtifact;
             vm.ArtifactPreviewRequested += PreviewArtifact;
+
+            vm.ManageUsersRequested -= OpenManageUsersDialog;
+            vm.ManageUsersRequested += OpenManageUsersDialog;
 
             // Subscribe to activate iteration requests
             vm.ActivateIterationRequested -= ActivateIteration;
@@ -73,7 +98,7 @@ public partial class ProjectView : UserControl
 
             // Load existing iterations for the project
             _ = LoadIterationsForProjectAsync(vm);
-            
+
             // Load artifacts for current phase
             _ = LoadArtifactsForCurrentPhaseAsync(vm);
             
@@ -138,7 +163,7 @@ public partial class ProjectView : UserControl
         var microincrementService = Program.ServiceProvider.GetService<IMicroincrementService>();
         var userRepo = Program.ServiceProvider.GetService<IUserRepository>();
         var artifactRepo = Program.ServiceProvider.GetService<IArtifactRepository>();
-        
+
         if (iterationService == null || phaseRepo == null || microincrementService == null) return;
 
         try
@@ -146,11 +171,11 @@ public partial class ProjectView : UserControl
             // Load phases to find the current phase
             var phases = (await phaseRepo.GetByProjectIdAsync(vm.ProjectId)).ToList();
             var currentPhase = phases.FirstOrDefault(p => p.Name == vm.CurrentPhaseName);
-            
+
             if (currentPhase == null) return;
 
             vm.Iterations.Clear();
-            
+
             var iterations = (await iterationService.GetIterationsByPhaseIdAsync(currentPhase.Id))
                 .OrderBy(i => i.Id); // Ordenar por ID (fecha de creaciï¿½n)
             foreach (var it in iterations)
@@ -163,8 +188,8 @@ public partial class ProjectView : UserControl
                     Goal = it.Goal,
                     StartDate = it.StartDate,
                     EndDate = it.EndDate,
-                    CompletionPercentage = it.CompletionPercentage,
-                    IsActive = it.IsActive
+                    IsActive = it.IsActive,
+                    Microincrements = new ObservableCollection<MicroincrementItemViewModel>()
                 };
 
                 // Load microincrements for this iteration
@@ -230,8 +255,15 @@ public partial class ProjectView : UserControl
             return;
         }
 
+        // Get current phase
+        var currentPhase = phases.FirstOrDefault(p => p.Name == projectVm.CurrentPhaseName);
+        if (currentPhase == null)
+        {
+            currentPhase = phases.First();
+        }
+
         var dialog = new IterationCreateWindow();
-        dialog.SetPhases(phases);
+        dialog.SetPhase(currentPhase.Id, currentPhase.Name);
 
         if (VisualRoot is Window parent)
         {
@@ -249,8 +281,7 @@ public partial class ProjectView : UserControl
                         Name = sr.Iteration.Name ?? "Sin nombre",
                         Goal = sr.Iteration.Goal,
                         StartDate = sr.Iteration.StartDate,
-                        EndDate = sr.Iteration.EndDate,
-                        CompletionPercentage = sr.Iteration.CompletionPercentage
+                        EndDate = sr.Iteration.EndDate
                     };
                     projectVm.Iterations.Add(newIterationVm);
                 }
@@ -258,9 +289,157 @@ public partial class ProjectView : UserControl
         }
     }
 
+    private async void OpenEditIterationDialog(IterationItemViewModel iteration)
+    {
+        if (DataContext is not ProjectViewModel projectVm) return;
+
+        var iterationService = Program.ServiceProvider.GetService<IIterationService>();
+        if (iterationService == null) return;
+
+        var dialog = new IterationEditWindow();
+        dialog.SetIteration(iteration, projectVm.CurrentPhaseName);
+
+        if (VisualRoot is Window parent)
+        {
+            var result = await dialog.ShowDialog<object?>(parent);
+            if (result != null)
+            {
+                // Extract data from result
+                var resultType = result.GetType();
+                var iterationId = (int)resultType.GetProperty("IterationId")?.GetValue(result)!;
+                var name = (string)resultType.GetProperty("Name")?.GetValue(result)!;
+                var goal = (string)resultType.GetProperty("Goal")?.GetValue(result)!;
+                var startDate = (DateTime?)resultType.GetProperty("StartDate")?.GetValue(result);
+                var endDate = (DateTime?)resultType.GetProperty("EndDate")?.GetValue(result);
+
+                // Update using service
+                var updateResult = await iterationService.UpdateIterationAsync(
+                    iterationId, 
+                    name, 
+                    goal, 
+                    startDate, 
+                    endDate
+                );
+
+                if (updateResult.Success && updateResult.Iteration != null)
+                {
+                    // Update the ViewModel
+                    iteration.Name = updateResult.Iteration.Name ?? "Sin nombre";
+                    iteration.Goal = updateResult.Iteration.Goal;
+                    iteration.StartDate = updateResult.Iteration.StartDate;
+                    iteration.EndDate = updateResult.Iteration.EndDate;
+                }
+            }
+        }
+    }
+
+    private async void DeleteIteration(IterationItemViewModel iteration)
+    {
+        if (DataContext is not ProjectViewModel projectVm) return;
+
+        var iterationService = Program.ServiceProvider.GetService<IIterationService>();
+        if (iterationService == null) return;
+
+        // Verificar que no tenga microincrementos
+        if (iteration.HasMicroincrements)
+        {
+            // No debería llegar aquí por la visibilidad del botón, pero por seguridad
+            return;
+        }
+
+        // Confirmar eliminación
+        if (VisualRoot is Window parent)
+        {
+            bool? result = null;
+            
+            var confirmWindow = new Window
+            {
+                Title = "Confirmar Eliminación",
+                Width = 400,
+                Height = 180,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                CanResize = false
+            };
+
+            var mainPanel = new StackPanel
+            {
+                Margin = new Avalonia.Thickness(20),
+                Spacing = 15
+            };
+
+            mainPanel.Children.Add(new TextBlock
+            {
+                Text = "¿Está seguro que desea eliminar esta iteración?",
+                FontSize = 14,
+                TextWrapping = Avalonia.Media.TextWrapping.Wrap
+            });
+
+            mainPanel.Children.Add(new TextBlock
+            {
+                Text = iteration.Name,
+                FontSize = 16,
+                FontWeight = Avalonia.Media.FontWeight.Bold,
+                Margin = new Avalonia.Thickness(0, 5, 0, 5)
+            });
+
+            var buttonPanel = new StackPanel
+            {
+                Orientation = Avalonia.Layout.Orientation.Horizontal,
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
+                Spacing = 10,
+                Margin = new Avalonia.Thickness(0, 20, 0, 0)
+            };
+
+            var cancelButton = new Button
+            {
+                Content = "Cancelar",
+                Width = 100,
+                Height = 32
+            };
+            cancelButton.Click += (s, e) => { result = false; confirmWindow.Close(); };
+
+            var confirmButton = new Button
+            {
+                Content = "Eliminar",
+                Width = 100,
+                Height = 32
+            };
+            confirmButton.Click += (s, e) => { result = true; confirmWindow.Close(); };
+
+            buttonPanel.Children.Add(cancelButton);
+            buttonPanel.Children.Add(confirmButton);
+            mainPanel.Children.Add(buttonPanel);
+
+            confirmWindow.Content = mainPanel;
+
+            await confirmWindow.ShowDialog(parent);
+
+            if (result != true)
+                return;
+        }
+
+        try
+        {
+            var deleteResult = await iterationService.DeleteIterationAsync(iteration.Id);
+            if (deleteResult.Success)
+            {
+                projectVm.Iterations.Remove(iteration);
+            }
+        }
+        catch
+        {
+            // Handle error
+        }
+    }
+
     private void OpenDashboardWindow()
     {
-        var dashboardWindow = new DashboardWindow();
+        if (DataContext is not ProjectViewModel vm) return;
+
+        var dashboardService = Program.ServiceProvider.GetService<IDashboardService>();
+        if (dashboardService == null) return;
+
+        var dashboardWindow = new DashboardWindow(dashboardService, vm.ProjectId);
         if (VisualRoot is Window parentWindow)
         {
             dashboardWindow.ShowDialog(parentWindow);
@@ -276,14 +455,14 @@ public partial class ProjectView : UserControl
         var artifactRepo = Program.ServiceProvider.GetService<IArtifactRepository>();
         var artifactVersionService = Program.ServiceProvider.GetService<IArtifactVersionService>();
         var phaseRepo = Program.ServiceProvider.GetService<IPhaseRepository>();
-        
+
         if (artifactRepo == null || phaseRepo == null) return;
 
         try
         {
             var phases = (await phaseRepo.GetByProjectIdAsync(vm.ProjectId)).ToList();
             var currentPhase = phases.FirstOrDefault(p => p.Name == vm.CurrentPhaseName);
-            
+
             if (currentPhase == null) return;
 
             var artifacts = await artifactRepo.GetByPhaseIdAsync(currentPhase.Id);
@@ -292,8 +471,8 @@ public partial class ProjectView : UserControl
             foreach (var artifact in artifacts)
             {
                 // Get latest version
-                var latestVersionResult = artifactVersionService != null 
-                    ? await artifactVersionService.GetLatestVersionAsync(artifact.Id) 
+                var latestVersionResult = artifactVersionService != null
+                    ? await artifactVersionService.GetLatestVersionAsync(artifact.Id)
                     : null;
 
                 vm.PhaseArtifacts.Add(new ArtifactItemViewModel
@@ -325,19 +504,19 @@ public partial class ProjectView : UserControl
         var microincrementService = Program.ServiceProvider.GetService<IMicroincrementService>();
         var iterationService = Program.ServiceProvider.GetService<IIterationService>();
         var phaseRepo = Program.ServiceProvider.GetService<IPhaseRepository>();
-        
-        if (artifactVersionService == null || microincrementService == null || 
+
+        if (artifactVersionService == null || microincrementService == null ||
             iterationService == null || phaseRepo == null) return;
 
         var vm = new RegisterArtifactViewModel(
-            artifactVersionService, 
-            microincrementService, 
+            artifactVersionService,
+            microincrementService,
             iterationService);
 
         // Get current phase ID
         var phases = (await phaseRepo.GetByProjectIdAsync(projectVm.ProjectId)).ToList();
         var currentPhase = phases.FirstOrDefault(p => p.Name == projectVm.CurrentPhaseName);
-        
+
         if (currentPhase == null) return;
 
         // Pasar el ID del usuario actual
@@ -349,7 +528,7 @@ public partial class ProjectView : UserControl
         if (VisualRoot is Window parent)
         {
             var result = await window.ShowDialog<bool?>(parent);
-            
+
             // If save was successful, reload data
             if (result == true)
             {
@@ -363,7 +542,7 @@ public partial class ProjectView : UserControl
     {
         var artifactVersionService = Program.ServiceProvider.GetService<IArtifactVersionService>();
         var previewService = Program.ServiceProvider.GetService<IArtifactPreviewService>();
-        
+
         if (artifactVersionService == null) return;
 
         var vm = new ArtifactHistoryViewModel();
@@ -458,7 +637,7 @@ public partial class ProjectView : UserControl
         var artifactService = Program.ServiceProvider.GetService<IArtifactService>();
         var artifactVersionService = Program.ServiceProvider.GetService<IArtifactVersionService>();
         var phaseRepo = Program.ServiceProvider.GetService<IPhaseRepository>();
-        
+
         if (artifactService == null || artifactVersionService == null || phaseRepo == null) return;
 
         // Get the phase ID for the current phase name
@@ -484,7 +663,7 @@ public partial class ProjectView : UserControl
         if (VisualRoot is Window parent)
         {
             await window.ShowDialog<bool?>(parent);
-            
+
             // Reload artifacts after closing (in case of any changes)
             await LoadArtifactsForCurrentPhaseAsync(projectVm);
         }

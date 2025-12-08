@@ -46,7 +46,7 @@ namespace OpenUpMan.Services
                 var user = new User(username, hash);
                 await _repo.AddAsync(user, ct);
                 await _repo.SaveChangesAsync(ct);
-                
+
                 return new ServiceResult(
                     Success: true,
                     ResultType: ServiceResultType.Success,
@@ -152,6 +152,20 @@ namespace OpenUpMan.Services
                     Message: "Error al obtener el usuario.",
                     User: null
                 );
+            }
+        }
+
+        public async Task<ServiceResult<IEnumerable<User>>> SearchUsersAsync(string term, CancellationToken ct = default)
+        {
+            try
+            {
+                var users = await _repo.SearchAsync(term, ct);
+                return new ServiceResult<IEnumerable<User>>(true, ServiceResultType.Success, "Búsqueda exitosa", users);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error searching users");
+                return new ServiceResult<IEnumerable<User>>(false, ServiceResultType.Error, "Error al buscar usuarios");
             }
         }
     }

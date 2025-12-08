@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿﻿using Microsoft.EntityFrameworkCore;
 using OpenUpMan.Domain;
 
 namespace OpenUpMan.Data
@@ -83,6 +83,15 @@ namespace OpenUpMan.Data
             return await _context.Iterations
                 .Where(i => _context.Phases.Any(p => p.Id == i.PhaseId && p.ProjectId == projectId) && i.IsActive)
                 .FirstOrDefaultAsync(ct);
+        }
+
+        // Dashboard queries
+        public async Task<IEnumerable<Iteration>> GetActiveIterationsByProjectIdAsync(int projectId, CancellationToken ct = default)
+        {
+            return await _context.Iterations
+                .Where(i => _context.Phases.Any(p => p.Id == i.PhaseId && p.ProjectId == projectId) && i.IsActive)
+                .OrderBy(i => i.StartDate)
+                .ToListAsync(ct);
         }
     }
 }
