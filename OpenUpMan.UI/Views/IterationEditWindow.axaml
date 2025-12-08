@@ -2,18 +2,18 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        x:Class="OpenUpMan.UI.Views.IterationCreateWindow"
+        x:Class="OpenUpMan.UI.Views.IterationEditWindow"
         mc:Ignorable="d"
         Width="500" Height="520" 
         CanResize="False" 
         WindowStartupLocation="CenterOwner"
-        Title="Nueva Iteración">
+        Title="Editar Iteración">
   
   <Grid RowDefinitions="Auto,*,Auto" Margin="20">
       
       <!-- Header -->
       <StackPanel Grid.Row="0" Spacing="4" Margin="0,0,0,16">
-        <TextBlock Text="Nueva Iteración" 
+        <TextBlock Text="Editar Iteración" 
                    FontSize="20" 
                    FontWeight="Bold"/>
         <TextBlock x:Name="PhaseNameText"
@@ -30,13 +30,11 @@
           <StackPanel Spacing="6">
             <TextBlock Text="Nombre de la Iteración" 
                        FontSize="13" 
-                       FontWeight="SemiBold"
-                       Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+                       FontWeight="SemiBold"/>
             <TextBox x:Name="NameBox" 
                      Watermark="Ej: Iteración 1 - Arquitectura Base"
-                     FontSize="14"
-                     Padding="12,10"
-                     CornerRadius="6"/>
+                     FontSize="13"
+                     Padding="10,8"/>
           </StackPanel>
 
           <!-- Goal Field -->
@@ -84,9 +82,9 @@
                 Click="OnCancel"
                 Width="90"
                 Height="32"/>
-        <Button Content="Crear Iteración" 
-                Click="OnCreate"
-                Width="130"
+        <Button Content="Guardar Cambios" 
+                Click="OnSave"
+                Width="140"
                 Height="32">
           <Button.Styles>
             <Style Selector="Button">
@@ -99,3 +97,4 @@
       
     </Grid>
 </Window>
+

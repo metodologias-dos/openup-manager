@@ -58,6 +58,7 @@ public partial class ProjectViewModel : ViewModelBase
     public IRelayCommand ManageArtifactsCommand { get; }
     public IRelayCommand<string> SelectPhaseCommand { get; }
     public IRelayCommand CreateIterationCommand { get; }
+    public IRelayCommand<IterationItemViewModel> EditIterationCommand { get; }
     public IRelayCommand<IterationItemViewModel> ActivateIterationCommand { get; }
     public IRelayCommand<IterationItemViewModel> ViewIterationDetailsCommand { get; }
     public IRelayCommand<ArtifactItemViewModel> RegisterArtifactChangeCommand { get; }
@@ -82,6 +83,12 @@ public partial class ProjectViewModel : ViewModelBase
     /// Se dispara cuando el usuario solicita crear una nueva iteración.
     /// </summary>
     public event Action? CreateIterationRequested;
+
+    /// <summary>
+    /// Se dispara cuando el usuario solicita editar una iteración.
+    /// Parámetro: iteration
+    /// </summary>
+    public event Action<IterationItemViewModel>? EditIterationRequested;
 
     /// <summary>
     /// Se dispara cuando el usuario solicita abrir el tablero del proyecto.
@@ -143,6 +150,7 @@ public partial class ProjectViewModel : ViewModelBase
         ManageArtifactsCommand = new RelayCommand(() => ManageArtifactsRequested?.Invoke());
         SelectPhaseCommand = new RelayCommand<string>(OnSelectPhase);
         CreateIterationCommand = new RelayCommand(() => CreateIterationRequested?.Invoke());
+        EditIterationCommand = new RelayCommand<IterationItemViewModel>(OnEditIteration);
         ActivateIterationCommand = new RelayCommand<IterationItemViewModel>(OnActivateIteration);
         ViewIterationDetailsCommand = new RelayCommand<IterationItemViewModel>(OnViewIterationDetails);
         RegisterArtifactChangeCommand = new RelayCommand<ArtifactItemViewModel>(OnRegisterArtifactChange);
@@ -190,6 +198,14 @@ public partial class ProjectViewModel : ViewModelBase
             };
             
             PhaseChanged?.Invoke();
+        }
+    }
+
+    private void OnEditIteration(IterationItemViewModel? iteration)
+    {
+        if (iteration != null)
+        {
+            EditIterationRequested?.Invoke(iteration);
         }
     }
 

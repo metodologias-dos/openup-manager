@@ -1,4 +1,5 @@
 using System;
+using System.Collections.ObjectModel;
 using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
@@ -35,6 +36,10 @@ public partial class ProjectView : UserControl
             // Subscribe to create iteration requests
             vm.CreateIterationRequested -= OpenCreateIterationDialog;
             vm.CreateIterationRequested += OpenCreateIterationDialog;
+
+            // Subscribe to edit iteration requests
+            vm.EditIterationRequested -= OpenEditIterationDialog;
+            vm.EditIterationRequested += OpenEditIterationDialog;
 
             vm.OpenDashboardRequested -= OpenDashboardWindow;
             vm.OpenDashboardRequested += OpenDashboardWindow;
@@ -149,8 +154,8 @@ public partial class ProjectView : UserControl
                     Goal = it.Goal,
                     StartDate = it.StartDate,
                     EndDate = it.EndDate,
-                    CompletionPercentage = it.CompletionPercentage,
-                    IsActive = it.IsActive
+                    IsActive = it.IsActive,
+                    Microincrements = new ObservableCollection<MicroincrementItemViewModel>()
                 };
 
                 // Load microincrements for this iteration
@@ -216,8 +221,15 @@ public partial class ProjectView : UserControl
             return;
         }
 
+        // Get current phase
+        var currentPhase = phases.FirstOrDefault(p => p.Name == projectVm.CurrentPhaseName);
+        if (currentPhase == null)
+        {
+            currentPhase = phases.First();
+        }
+
         var dialog = new IterationCreateWindow();
-        dialog.SetPhases(phases);
+        dialog.SetPhase(currentPhase.Id, currentPhase.Name);
 
         if (VisualRoot is Window parent)
         {
@@ -235,10 +247,53 @@ public partial class ProjectView : UserControl
                         Name = sr.Iteration.Name ?? "Sin nombre",
                         Goal = sr.Iteration.Goal,
                         StartDate = sr.Iteration.StartDate,
-                        EndDate = sr.Iteration.EndDate,
-                        CompletionPercentage = sr.Iteration.CompletionPercentage
+                        EndDate = sr.Iteration.EndDate
                     };
                     projectVm.Iterations.Add(newIterationVm);
+                }
+            }
+        }
+    }
+
+    private async void OpenEditIterationDialog(IterationItemViewModel iteration)
+    {
+        if (DataContext is not ProjectViewModel projectVm) return;
+
+        var iterationService = Program.ServiceProvider.GetService<IIterationService>();
+        if (iterationService == null) return;
+
+        var dialog = new IterationEditWindow();
+        dialog.SetIteration(iteration, projectVm.CurrentPhaseName);
+
+        if (VisualRoot is Window parent)
+        {
+            var result = await dialog.ShowDialog<object?>(parent);
+            if (result != null)
+            {
+                // Extract data from result
+                var resultType = result.GetType();
+                var iterationId = (int)resultType.GetProperty("IterationId")?.GetValue(result)!;
+                var name = (string)resultType.GetProperty("Name")?.GetValue(result)!;
+                var goal = (string)resultType.GetProperty("Goal")?.GetValue(result)!;
+                var startDate = (DateTime?)resultType.GetProperty("StartDate")?.GetValue(result);
+                var endDate = (DateTime?)resultType.GetProperty("EndDate")?.GetValue(result);
+
+                // Update using service
+                var updateResult = await iterationService.UpdateIterationAsync(
+                    iterationId, 
+                    name, 
+                    goal, 
+                    startDate, 
+                    endDate
+                );
+
+                if (updateResult.Success && updateResult.Iteration != null)
+                {
+                    // Update the ViewModel
+                    iteration.Name = updateResult.Iteration.Name ?? "Sin nombre";
+                    iteration.Goal = updateResult.Iteration.Goal;
+                    iteration.StartDate = updateResult.Iteration.StartDate;
+                    iteration.EndDate = updateResult.Iteration.EndDate;
                 }
             }
         }

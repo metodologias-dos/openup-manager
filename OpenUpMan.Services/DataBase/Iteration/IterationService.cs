@@ -83,7 +83,7 @@ namespace OpenUpMan.Services
             return await _repo.GetByPhaseIdAsync(phaseId, ct);
         }
 
-        public async Task<IterationServiceResult> UpdateIterationAsync(int id, string? name, string? goal, DateTime? startDate, DateTime? endDate, int completionPercentage, CancellationToken ct = default)
+        public async Task<IterationServiceResult> UpdateIterationAsync(int id, string? name, string? goal, DateTime? startDate, DateTime? endDate, CancellationToken ct = default)
         {
             try
             {
@@ -98,7 +98,6 @@ namespace OpenUpMan.Services
                 }
 
                 iteration.UpdateDetails(name, goal, startDate, endDate);
-                iteration.SetCompletionPercentage(completionPercentage);
                 await _repo.UpdateAsync(iteration, ct);
 
                 return new IterationServiceResult(
@@ -119,40 +118,6 @@ namespace OpenUpMan.Services
             }
         }
 
-        public async Task<IterationServiceResult> SetCompletionAsync(int id, int percentage, CancellationToken ct = default)
-        {
-            try
-            {
-                var iteration = await _repo.GetByIdAsync(id, ct);
-                if (iteration == null)
-                {
-                    return new IterationServiceResult(
-                        Success: false,
-                        ResultType: ServiceResultType.Error,
-                        Message: "Iteración no encontrada."
-                    );
-                }
-
-                iteration.SetCompletionPercentage(percentage);
-                await _repo.UpdateAsync(iteration, ct);
-
-                return new IterationServiceResult(
-                    Success: true,
-                    ResultType: ServiceResultType.Success,
-                    Message: "Porcentaje de completitud actualizado.",
-                    Iteration: iteration
-                );
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al actualizar completitud de iteración");
-                return new IterationServiceResult(
-                    Success: false,
-                    ResultType: ServiceResultType.Error,
-                    Message: "Error al actualizar el porcentaje de completitud."
-                );
-            }
-        }
 
         public async Task<IterationServiceResult> DeleteIterationAsync(int id, CancellationToken ct = default)
         {

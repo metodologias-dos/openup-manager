@@ -75,7 +75,6 @@ public class DashboardService : IDashboardService
                     StartDate: iteration.StartDate ?? DateTime.Now,
                     EndDate: iteration.EndDate ?? DateTime.Now,
                     MicroincrementsCount: microincrementsCount,
-                    CompletionPercentage: iteration.CompletionPercentage,
                     DurationDays: durationDays
                 ));
             }

@@ -220,27 +220,16 @@
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
 
-                                    <!-- Progreso -->
-                                    <DataGridTemplateColumn Header="PROGRESO" Width="*" MinWidth="80">
-                                        <DataGridTemplateColumn.CellTemplate>
-                                            <DataTemplate DataType="vm:IterationItemViewModel">
-                                                <TextBlock Text="{Binding CompletionPercentage, StringFormat={}{0}%}" 
-                                                           FontSize="12"
-                                                           Foreground="White"
-                                                           HorizontalAlignment="Center"
-                                                           VerticalAlignment="Center"/>
-                                            </DataTemplate>
-                                        </DataGridTemplateColumn.CellTemplate>
-                                    </DataGridTemplateColumn>
 
                                     <!-- Acciones -->
-                                    <DataGridTemplateColumn Header="ACCIONES" Width="Auto" MinWidth="180">
+                                    <DataGridTemplateColumn Header="ACCIONES" Width="Auto" MinWidth="200">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate DataType="vm:IterationItemViewModel">
                                                 <StackPanel Orientation="Horizontal" 
                                                             Spacing="6"
                                                             HorizontalAlignment="Center"
                                                             VerticalAlignment="Center">
+                                                    
                                                     <!-- Botón activar -->
                                                     <Button Command="{Binding $parent[UserControl].((vm:ProjectViewModel)DataContext).ActivateIterationCommand}"
                                                             CommandParameter="{Binding}"
@@ -252,6 +241,14 @@
                                                             <labs:SymbolIcon Symbol="{x:Static ic:Symbol.Play}" FontSize="12" Foreground="White"/>
                                                             <TextBlock Text="Activar" FontSize="11" Foreground="White"/>
                                                         </StackPanel>
+                                                    </Button>
+                                                    
+                                                    <!-- Botón Editar (solo icono) -->
+                                                    <Button Command="{Binding $parent[UserControl].((vm:ProjectViewModel)DataContext).EditIterationCommand}"
+                                                            CommandParameter="{Binding}"
+                                                            Padding="8,6"
+                                                            ToolTip.Tip="Editar iteración">
+                                                        <labs:SymbolIcon Symbol="{x:Static ic:Symbol.Edit}" FontSize="14" Foreground="White"/>
                                                     </Button>
                                                     
                                                     <!-- Botón Ver Detalles -->

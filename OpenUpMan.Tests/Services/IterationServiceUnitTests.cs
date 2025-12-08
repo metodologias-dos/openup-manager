@@ -79,12 +79,11 @@ public class IterationServiceUnitTests
         var iteration = new Iteration(1, "Old Name");
         var newName = "New Name";
         var newGoal = "New Goal";
-        var newPercentage = 50;
 
         _iterationRepositoryMock.Setup(repo => repo.GetByIdAsync(iterationId, It.IsAny<CancellationToken>())).ReturnsAsync(iteration);
 
         // Act
-        var result = await _iterationService.UpdateIterationAsync(iterationId, newName, newGoal, null, null, newPercentage);
+        var result = await _iterationService.UpdateIterationAsync(iterationId, newName, newGoal, null, null);
 
         // Assert
         Assert.True(result.Success);
@@ -92,7 +91,6 @@ public class IterationServiceUnitTests
         Assert.NotNull(result.Iteration);
         Assert.Equal(newName, result.Iteration.Name);
         Assert.Equal(newGoal, result.Iteration.Goal);
-        Assert.Equal(newPercentage, result.Iteration.CompletionPercentage);
         _iterationRepositoryMock.Verify(repo => repo.UpdateAsync(It.IsAny<Iteration>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 }

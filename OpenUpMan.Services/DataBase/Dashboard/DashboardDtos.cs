@@ -24,7 +24,6 @@ public record ActiveIterationDto(
     DateTime StartDate,
     DateTime EndDate,
     int MicroincrementsCount,
-    int CompletionPercentage,
     int DurationDays
 );
 
