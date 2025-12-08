@@ -343,18 +343,18 @@ public partial class ProjectView : UserControl
         // Verificar que no tenga microincrementos
         if (iteration.HasMicroincrements)
         {
-            // No debería llegar aquí por la visibilidad del botón, pero por seguridad
+            // No deberï¿½a llegar aquï¿½ por la visibilidad del botï¿½n, pero por seguridad
             return;
         }
 
-        // Confirmar eliminación
+        // Confirmar eliminaciï¿½n
         if (VisualRoot is Window parent)
         {
             bool? result = null;
             
             var confirmWindow = new Window
             {
-                Title = "Confirmar Eliminación",
+                Title = "Confirmar Eliminaciï¿½n",
                 Width = 400,
                 Height = 180,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
@@ -369,7 +369,7 @@ public partial class ProjectView : UserControl
 
             mainPanel.Children.Add(new TextBlock
             {
-                Text = "¿Está seguro que desea eliminar esta iteración?",
+                Text = "ï¿½Estï¿½ seguro que desea eliminar esta iteraciï¿½n?",
                 FontSize = 14,
                 TextWrapping = Avalonia.Media.TextWrapping.Wrap
             });
@@ -696,7 +696,7 @@ public partial class ProjectView : UserControl
                 vm.UpdatePhaseDates(result.Phase?.StartDate, result.Phase?.EndDate);
                 
                 // Show success message
-                await ShowMessageBox("Ã‰xito", result.Message, MessageBoxType.Success);
+                await ShowMessageBox("Exito", result.Message, MessageBoxType.Success);
             }
             else
             {
@@ -740,7 +740,7 @@ public partial class ProjectView : UserControl
                 vm.UpdatePhaseDates(result.Phase?.StartDate, result.Phase?.EndDate);
                 
                 // Show success message
-                await ShowMessageBox("Ã‰xito", result.Message, MessageBoxType.Success);
+                await ShowMessageBox("Exito", result.Message, MessageBoxType.Success);
             }
             else
             {
@@ -838,7 +838,7 @@ public partial class ProjectView : UserControl
                 // Recargar los datos desde la BD para confirmar que se guardaron correctamente
                 await LoadPhaseStatusAsync(vm);
 
-                await ShowMessageBox("Ã‰xito", 
+                await ShowMessageBox("Exito", 
                     "Los cambios se han guardado correctamente.", 
                     MessageBoxType.Success);
             }

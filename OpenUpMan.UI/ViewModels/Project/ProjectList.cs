@@ -24,13 +24,13 @@ public partial class ProjectList : ViewModelBase
 
     // Event to request opening the new project dialog
     public event Action? NewProjectDialogRequested;
-    
+
     // Event to request opening a specific project view/tab (passes project identifier)
     public event Action<string?>? OpenProjectRequested;
 
     // Current logged in user
     public User? CurrentUser { get; private set; }
-    
+
     // Display username
     public string UserDisplayName => CurrentUser != null ? $"Usuario: {CurrentUser.Username}" : string.Empty;
     public bool HasUser => CurrentUser != null;
@@ -136,7 +136,7 @@ public partial class ProjectList : ViewModelBase
                 // Convertir UTC a hora local para mostrar
                 var lastEditedDate = project!.UpdatedAt ?? project.CreatedAt;
                 var lastEditedLocal = DateTime.SpecifyKind(lastEditedDate, DateTimeKind.Utc).ToLocalTime();
-                
+
                 // Obtener el username del creador
                 string createdByUsername = "Desconocido";
                 if (project.CreatedBy.HasValue && _userService != null)
@@ -147,7 +147,11 @@ public partial class ProjectList : ViewModelBase
                         createdByUsername = userResult.User.Username;
                     }
                 }
-                
+
+                // Find the ProjectUser for this project to get the role
+                var projectUser = projectUsers.FirstOrDefault(pu => pu.ProjectId == project.Id);
+                int roleId = projectUser?.RoleId ?? 0;
+
                 var projectVm = new ProjectListItemViewModel
                 {
                     Id = project.Id,
@@ -157,15 +161,16 @@ public partial class ProjectList : ViewModelBase
                     CreatedByUserId = project.CreatedBy,
                     CreatedByUsername = createdByUsername,
                     IsOwner = CurrentUser != null && project.CreatedBy == CurrentUser.Id,
+                    RoleId = roleId,
                     Status = project.Status
                 };
                 Projects.Add(projectVm);
             }
 
-            LoadingMessage = Projects.Count > 0 
-                ? $"{Projects.Count} proyecto(s) cargado(s)" 
+            LoadingMessage = Projects.Count > 0
+                ? $"{Projects.Count} proyecto(s) cargado(s)"
                 : "No tienes proyectos asignados";
-            
+
             // Inicializar la lista original con los proyectos cargados
             _originalProjectsList = Projects.ToList();
         }
@@ -363,9 +368,9 @@ public partial class ProjectList : ViewModelBase
     private DateTime ParseDate(string dateString)
     {
         // Parsear la fecha en formato "dd/MM/yyyy HH:mm"
-        if (DateTime.TryParseExact(dateString, "dd/MM/yyyy HH:mm", 
-            System.Globalization.CultureInfo.InvariantCulture, 
-            System.Globalization.DateTimeStyles.None, 
+        if (DateTime.TryParseExact(dateString, "dd/MM/yyyy HH:mm",
+            System.Globalization.CultureInfo.InvariantCulture,
+            System.Globalization.DateTimeStyles.None,
             out var date))
         {
             return date;
@@ -378,7 +383,7 @@ public partial class ProjectListItemViewModel : ObservableObject
 {
     [ObservableProperty]
     private int _id;
-    
+
     [ObservableProperty]
     private string _code = string.Empty;
 
@@ -387,18 +392,23 @@ public partial class ProjectListItemViewModel : ObservableObject
 
     [ObservableProperty]
     private string _lastEdited = string.Empty;
-    
+
     [ObservableProperty]
     private int? _createdByUserId;
-    
+
     [ObservableProperty]
     private string _createdByUsername = string.Empty;
-    
+
     [ObservableProperty]
     private bool _isOwner;
-    
+
+    [ObservableProperty]
+    private int _roleId;
+
+    public bool CanDelete => RoleId == RoleIds.Admin || RoleId == RoleIds.Autor;
+
     private string _status = string.Empty;
-    
+
     public string Status
     {
         get => _status;
