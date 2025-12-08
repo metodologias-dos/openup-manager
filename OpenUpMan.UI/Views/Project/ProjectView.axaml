@@ -112,7 +112,6 @@
                                 </StackPanel>
 
                                 <StackPanel Width="200" Spacing="8" Margin="0,0,16,0">
-                                    <TextBlock Text="Porcentaje de fase: 50%" FontSize="12" Foreground="White"/>
                                     <TextBlock Text="Estado de la fase:" FontSize="12" Foreground="White"/>
                                     <TextBlock Text="{Binding CurrentPhaseStatusDisplay}" 
                                                FontSize="14" 

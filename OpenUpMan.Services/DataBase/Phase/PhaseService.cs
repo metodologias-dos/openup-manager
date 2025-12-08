@@ -1,4 +1,4 @@
-﻿﻿using Microsoft.Extensions.Logging;
+﻿﻿﻿using Microsoft.Extensions.Logging;
 using OpenUpMan.Data;
 using OpenUpMan.Domain;
 using System.Linq;
@@ -10,12 +10,14 @@ namespace OpenUpMan.Services
         private readonly IPhaseRepository _repo;
         private readonly ILogger<PhaseService> _logger;
         private readonly IArtifactRepository _artifactRepo;
+        private readonly IProjectRepository _projectRepo;
 
-        public PhaseService(IPhaseRepository repo, ILogger<PhaseService> logger, IArtifactRepository artifactRepo)
+        public PhaseService(IPhaseRepository repo, ILogger<PhaseService> logger, IArtifactRepository artifactRepo, IProjectRepository projectRepo)
         {
             _repo = repo;
             _logger = logger;
             _artifactRepo = artifactRepo;
+            _projectRepo = projectRepo;
         }
 
         public async Task<PhaseServiceResult> CreatePhaseAsync(int projectId, string name, int orderIndex, string status = "PENDING", 
@@ -392,6 +394,23 @@ namespace OpenUpMan.Services
                 phase.SetStatus("IN_PROGRESS");
                 await _repo.UpdateAsync(phase, ct);
 
+                // Si es la fase de Incepción, actualizar el estado del proyecto a IN_PROGRESS
+                // IMPORTANTE: SOLO al iniciar Incepción, NO otras fases
+                if (isInceptionPhase)
+                {
+                    var project = await _projectRepo.GetByIdAsync(projectId, ct);
+                    if (project != null && project.Status != "DONE")
+                    {
+                        project.SetStatus("IN_PROGRESS");
+                        await _projectRepo.UpdateAsync(project, ct);
+                        _logger.LogInformation("Proyecto {ProjectId} actualizado a IN_PROGRESS al iniciar la fase de Incepción", projectId);
+                    }
+                }
+                else
+                {
+                    _logger.LogInformation("Fase {PhaseName} iniciada (no es Incepción, no se actualiza el proyecto)", phase.Name);
+                }
+
                 _logger.LogInformation("Fase {PhaseId} iniciada exitosamente", phaseId);
 
                 return new PhaseServiceResult(
@@ -459,6 +478,22 @@ namespace OpenUpMan.Services
                 phase.SetDates(phase.StartDate, DateTime.Now);
                 phase.SetStatus("DONE");
                 await _repo.UpdateAsync(phase, ct);
+
+                // Si es la fase de Transición, actualizar el estado del proyecto a DONE
+                var isTransitionPhase = phase.Name.Contains("Transition", StringComparison.OrdinalIgnoreCase) || 
+                                        phase.Name.Contains("Transición", StringComparison.OrdinalIgnoreCase) ||
+                                        (phase.OrderIndex ?? 0) == 4; // Transición tiene order_index = 4
+
+                if (isTransitionPhase)
+                {
+                    var project = await _projectRepo.GetByIdAsync(phase.ProjectId, ct);
+                    if (project != null && project.Status == "IN_PROGRESS")
+                    {
+                        project.SetStatus("DONE");
+                        await _projectRepo.UpdateAsync(project, ct);
+                        _logger.LogInformation("Proyecto {ProjectId} actualizado a DONE al finalizar la fase de Transición", phase.ProjectId);
+                    }
+                }
 
                 _logger.LogInformation("Fase {PhaseId} finalizada exitosamente", phaseId);
 

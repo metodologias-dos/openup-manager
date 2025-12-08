@@ -10,6 +10,7 @@ public class PhaseServiceUnitTests
 {
     private readonly Mock<IPhaseRepository> _phaseRepositoryMock;
     private readonly Mock<IArtifactRepository> _artifactRepositoryMock;
+    private readonly Mock<IProjectRepository> _projectRepositoryMock;
     private readonly Mock<ILogger<PhaseService>> _loggerMock;
     private readonly PhaseService _phaseService;
 
@@ -17,8 +18,9 @@ public class PhaseServiceUnitTests
     {
         _phaseRepositoryMock = new Mock<IPhaseRepository>();
         _artifactRepositoryMock = new Mock<IArtifactRepository>();
+        _projectRepositoryMock = new Mock<IProjectRepository>();
         _loggerMock = new Mock<ILogger<PhaseService>>();
-        _phaseService = new PhaseService(_phaseRepositoryMock.Object, _loggerMock.Object, _artifactRepositoryMock.Object);
+        _phaseService = new PhaseService(_phaseRepositoryMock.Object, _loggerMock.Object, _artifactRepositoryMock.Object, _projectRepositoryMock.Object);
     }
 
     [Fact]
