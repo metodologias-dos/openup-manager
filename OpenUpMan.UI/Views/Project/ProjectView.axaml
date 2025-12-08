@@ -80,8 +80,14 @@
                                         Padding="16,10">
                                     <Button.Styles>
                                         <Style Selector="Button">
-                                            <Setter Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}"/>
+                                            <Setter Property="Background" Value="#0078D4"/>
                                             <Setter Property="Foreground" Value="White"/>
+                                        </Style>
+                                        <Style Selector="Button:pointerover">
+                                            <Setter Property="Background" Value="#106EBE"/>
+                                        </Style>
+                                        <Style Selector="Button:pressed">
+                                            <Setter Property="Background" Value="#005A9E"/>
                                         </Style>
                                     </Button.Styles>
                                 </Button>
@@ -576,10 +582,6 @@
                             CornerRadius="4"
                             Padding="12,6"
                             VerticalAlignment="Center">
-                        <TextBlock Text="{Binding ProjectPercentage, StringFormat='Progreso: {0}%'}"
-                                   FontSize="13"
-                                   Foreground="White"
-                                   FontWeight="SemiBold"/>
                     </Border>
                 </StackPanel>
 
