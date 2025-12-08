@@ -61,11 +61,21 @@ public partial class ProjectView : UserControl
             vm.PhaseChanged -= OnPhaseChanged;
             vm.PhaseChanged += OnPhaseChanged;
 
+            // Subscribe to start and end phase events
+            vm.StartPhaseRequested -= OnStartPhase;
+            vm.StartPhaseRequested += OnStartPhase;
+
+            vm.EndPhaseRequested -= OnEndPhase;
+            vm.EndPhaseRequested += OnEndPhase;
+
             // Load existing iterations for the project
             _ = LoadIterationsForProjectAsync(vm);
             
             // Load artifacts for current phase
             _ = LoadArtifactsForCurrentPhaseAsync(vm);
+            
+            // Load phase status
+            _ = LoadPhaseStatusAsync(vm);
         }
     }
 
@@ -75,6 +85,7 @@ public partial class ProjectView : UserControl
         {
             await LoadIterationsForCurrentPhaseAsync(vm);
             await LoadArtifactsForCurrentPhaseAsync(vm);
+            await LoadPhaseStatusAsync(vm);
         }
     }
 
@@ -138,7 +149,7 @@ public partial class ProjectView : UserControl
             vm.Iterations.Clear();
             
             var iterations = (await iterationService.GetIterationsByPhaseIdAsync(currentPhase.Id))
-                .OrderBy(i => i.Id); // Ordenar por ID (fecha de creaci�n)
+                .OrderBy(i => i.Id); // Ordenar por ID (fecha de creaci�n)
             foreach (var it in iterations)
             {
                 var iterationVm = new IterationItemViewModel
@@ -475,4 +486,122 @@ public partial class ProjectView : UserControl
             await LoadArtifactsForCurrentPhaseAsync(projectVm);
         }
     }
+
+    private async void OnStartPhase()
+    {
+        if (DataContext is not ProjectViewModel vm) return;
+
+        var phaseService = Program.ServiceProvider.GetService<IPhaseService>();
+        var phaseRepo = Program.ServiceProvider.GetService<IPhaseRepository>();
+        
+        if (phaseService == null || phaseRepo == null) return;
+
+        try
+        {
+            // Get current phase
+            var phases = (await phaseRepo.GetByProjectIdAsync(vm.ProjectId)).ToList();
+            var currentPhase = phases.FirstOrDefault(p => p.Name == vm.CurrentPhaseName);
+            
+            if (currentPhase == null) return;
+
+            // Call service to start phase
+            var result = await phaseService.StartPhaseAsync(currentPhase.Id, vm.ProjectId);
+
+            if (result.Success)
+            {
+                // Update ViewModel with new status
+                vm.UpdatePhaseStatus(result.Phase?.Status ?? "IN_PROGRESS");
+                
+                // Show success message
+                await ShowMessageBox("Éxito", result.Message, MessageBoxType.Success);
+            }
+            else
+            {
+                // Show warning or error message
+                var messageType = result.ResultType == ServiceResultType.Warning 
+                    ? MessageBoxType.Warning 
+                    : MessageBoxType.Error;
+                await ShowMessageBox("Advertencia", result.Message, messageType);
+            }
+        }
+        catch (Exception ex)
+        {
+            await ShowMessageBox("Error", $"Error al iniciar la fase: {ex.Message}", MessageBoxType.Error);
+        }
+    }
+
+    private async void OnEndPhase()
+    {
+        if (DataContext is not ProjectViewModel vm) return;
+
+        var phaseService = Program.ServiceProvider.GetService<IPhaseService>();
+        var phaseRepo = Program.ServiceProvider.GetService<IPhaseRepository>();
+        
+        if (phaseService == null || phaseRepo == null) return;
+
+        try
+        {
+            // Get current phase
+            var phases = (await phaseRepo.GetByProjectIdAsync(vm.ProjectId)).ToList();
+            var currentPhase = phases.FirstOrDefault(p => p.Name == vm.CurrentPhaseName);
+            
+            if (currentPhase == null) return;
+
+            // Call service to end phase
+            var result = await phaseService.EndPhaseAsync(currentPhase.Id);
+
+            if (result.Success)
+            {
+                // Update ViewModel with new status
+                vm.UpdatePhaseStatus(result.Phase?.Status ?? "DONE");
+                
+                // Show success message
+                await ShowMessageBox("Éxito", result.Message, MessageBoxType.Success);
+            }
+            else
+            {
+                // Show warning or error message
+                var messageType = result.ResultType == ServiceResultType.Warning 
+                    ? MessageBoxType.Warning 
+                    : MessageBoxType.Error;
+                await ShowMessageBox("Advertencia", result.Message, messageType);
+            }
+        }
+        catch (Exception ex)
+        {
+            await ShowMessageBox("Error", $"Error al finalizar la fase: {ex.Message}", MessageBoxType.Error);
+        }
+    }
+
+    private async System.Threading.Tasks.Task ShowMessageBox(string title, string message, MessageBoxType type)
+    {
+        if (VisualRoot is not Window parent) return;
+
+        var messageBoxWindow = new MessageBoxWindow(title, message, type);
+        await messageBoxWindow.ShowDialog(parent);
+    }
+
+    private async System.Threading.Tasks.Task LoadPhaseStatusAsync(ProjectViewModel vm)
+    {
+        var phaseRepo = Program.ServiceProvider.GetService<IPhaseRepository>();
+        if (phaseRepo == null) return;
+
+        try
+        {
+            var phases = (await phaseRepo.GetByProjectIdAsync(vm.ProjectId)).ToList();
+            var currentPhase = phases.FirstOrDefault(p => p.Name == vm.CurrentPhaseName);
+            
+            if (currentPhase != null)
+            {
+                vm.CurrentPhaseId = currentPhase.Id;
+                vm.UpdatePhaseStatus(currentPhase.Status);
+            }
+        }
+        catch
+        {
+            // Ignore errors for now
+        }
+    }
 }
+
+

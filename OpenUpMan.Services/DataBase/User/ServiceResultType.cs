@@ -1,10 +1,11 @@
-﻿﻿namespace OpenUpMan.Services
+﻿﻿﻿namespace OpenUpMan.Services
 {
     public enum ServiceResultType
     {
         Success,
         Error,
-        NotFound
+        NotFound,
+        Warning
     }
 }
 

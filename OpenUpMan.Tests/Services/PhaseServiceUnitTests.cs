@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+﻿﻿using Microsoft.Extensions.Logging;
 using Moq;
 using OpenUpMan.Data;
 using OpenUpMan.Domain;
@@ -9,14 +9,16 @@ namespace OpenUpMan.Tests.Services;
 public class PhaseServiceUnitTests
 {
     private readonly Mock<IPhaseRepository> _phaseRepositoryMock;
+    private readonly Mock<IArtifactRepository> _artifactRepositoryMock;
     private readonly Mock<ILogger<PhaseService>> _loggerMock;
     private readonly PhaseService _phaseService;
 
     public PhaseServiceUnitTests()
     {
         _phaseRepositoryMock = new Mock<IPhaseRepository>();
+        _artifactRepositoryMock = new Mock<IArtifactRepository>();
         _loggerMock = new Mock<ILogger<PhaseService>>();
-        _phaseService = new PhaseService(_phaseRepositoryMock.Object, _loggerMock.Object);
+        _phaseService = new PhaseService(_phaseRepositoryMock.Object, _loggerMock.Object, _artifactRepositoryMock.Object);
     }
 
     [Fact]

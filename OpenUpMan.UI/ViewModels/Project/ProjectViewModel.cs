@@ -35,6 +35,12 @@ public partial class ProjectViewModel : ViewModelBase
     private string _currentPhaseName = "Inicio (Inception)";
 
     [ObservableProperty]
+    private string _currentPhaseStatus = "PENDING";
+
+    [ObservableProperty]
+    private string _currentPhaseStatusDisplay = "Pendiente";
+
+    [ObservableProperty]
     private int _selectedPhaseIndex = 0;
 
     [ObservableProperty]
@@ -63,6 +69,8 @@ public partial class ProjectViewModel : ViewModelBase
     public IRelayCommand<ArtifactItemViewModel> RegisterArtifactChangeCommand { get; }
     public IRelayCommand<ArtifactItemViewModel> ViewArtifactHistoryCommand { get; }
     public IRelayCommand<int?> PreviewArtifactCommand { get; }
+    public IRelayCommand StartPhaseCommand { get; }
+    public IRelayCommand EndPhaseCommand { get; }
 
     #endregion
 
@@ -128,6 +136,16 @@ public partial class ProjectViewModel : ViewModelBase
     /// </summary>
     public event Action? MicroincrementsChanged;
 
+    /// <summary>
+    /// Se dispara cuando el usuario solicita iniciar una fase.
+    /// </summary>
+    public event Action? StartPhaseRequested;
+
+    /// <summary>
+    /// Se dispara cuando el usuario solicita finalizar una fase.
+    /// </summary>
+    public event Action? EndPhaseRequested;
+
     #endregion
 
     #region Constructor
@@ -148,6 +166,8 @@ public partial class ProjectViewModel : ViewModelBase
         RegisterArtifactChangeCommand = new RelayCommand<ArtifactItemViewModel>(OnRegisterArtifactChange);
         ViewArtifactHistoryCommand = new RelayCommand<ArtifactItemViewModel>(OnViewArtifactHistory);
         PreviewArtifactCommand = new RelayCommand<int?>(OnPreviewArtifact);
+        StartPhaseCommand = new RelayCommand(OnStartPhase);
+        EndPhaseCommand = new RelayCommand(OnEndPhase);
 
         // Valores por defecto
         ProjectName = "Proyecto ejemplo";
@@ -233,6 +253,16 @@ public partial class ProjectViewModel : ViewModelBase
         }
     }
 
+    private void OnStartPhase()
+    {
+        StartPhaseRequested?.Invoke();
+    }
+
+    private void OnEndPhase()
+    {
+        EndPhaseRequested?.Invoke();
+    }
+
     #endregion
 
     #region Property Changed Handlers
@@ -269,6 +299,21 @@ public partial class ProjectViewModel : ViewModelBase
     public void NotifyMicroincrementsChanged()
     {
         MicroincrementsChanged?.Invoke();
+    }
+
+    /// <summary>
+    /// Actualiza el estado de la fase actual
+    /// </summary>
+    public void UpdatePhaseStatus(string status)
+    {
+        CurrentPhaseStatus = status;
+        CurrentPhaseStatusDisplay = status switch
+        {
+            "PENDING" => "Pendiente",
+            "IN_PROGRESS" => "En progreso",
+            "DONE" => "Terminado",
+            _ => "Pendiente"
+        };
     }
 
     #endregion
