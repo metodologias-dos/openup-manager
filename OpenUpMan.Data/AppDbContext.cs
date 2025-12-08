@@ -1,4 +1,4 @@
-﻿﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using OpenUpMan.Domain;
 
 namespace OpenUpMan.Data
@@ -140,6 +140,9 @@ namespace OpenUpMan.Data
                 b.Property(p => p.EndDate).HasColumnName("end_date");
                 b.Property(p => p.Status).HasColumnName("status").IsRequired();
                 b.Property(p => p.OrderIndex).HasColumnName("order_index");
+                b.Property(p => p.Objective).HasColumnName("objective");
+                b.Property(p => p.Scope).HasColumnName("scope");
+                b.Property(p => p.Observations).HasColumnName("observations");
 
                 b.HasOne<Project>()
                     .WithMany()
@@ -158,7 +161,7 @@ namespace OpenUpMan.Data
                 b.Property(i => i.Goal).HasColumnName("goal");
                 b.Property(i => i.StartDate).HasColumnName("start_date");
                 b.Property(i => i.EndDate).HasColumnName("end_date");
-                b.Property(i => i.CompletionPercentage).HasColumnName("completion_percentage").IsRequired();
+                b.Property(i => i.IsActive).HasColumnName("is_active").IsRequired().HasDefaultValue(false);
 
                 b.HasOne<Phase>()
                     .WithMany()

@@ -1,0 +1,208 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:OpenUpMan.UI.ViewModels"
+        xmlns:labs="clr-namespace:FluentIcons.Avalonia;assembly=FluentIcons.Avalonia"
+        xmlns:ic="clr-namespace:FluentIcons.Common;assembly=FluentIcons.Common"
+        x:Class="OpenUpMan.UI.Views.IterationDetailsWindow"
+        x:DataType="vm:IterationItemViewModel"
+        Title="Detalles de Iteración"
+        Width="900" Height="600"
+        MinWidth="700" MinHeight="500"
+        WindowStartupLocation="CenterOwner"
+        mc:Ignorable="d">
+
+  <Border Padding="24" Background="{DynamicResource ApplicationPageBackgroundThemeBrush}">
+    <Grid RowDefinitions="Auto,Auto,*,Auto">
+      <!-- Header -->
+      <StackPanel Grid.Row="0" Spacing="8" Margin="0,0,0,16">
+        <TextBlock Text="Detalles de Iteración" 
+                   FontSize="24" 
+                   FontWeight="Bold"
+                   Foreground="White"/>
+        <Grid ColumnDefinitions="Auto,*">
+          <StackPanel Grid.Column="0" Spacing="4">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <labs:SymbolIcon Symbol="{x:Static ic:Symbol.Calendar}" 
+                               FontSize="20" 
+                               Foreground="White"
+                               VerticalAlignment="Center"/>
+              <TextBlock Text="{Binding Name}" 
+                         FontSize="18" 
+                         FontWeight="SemiBold"
+                         Foreground="White"
+                         VerticalAlignment="Center"/>
+              <Border Background="#FFD700"
+                      CornerRadius="3"
+                      Padding="8,4"
+                      IsVisible="{Binding IsActive}"
+                      VerticalAlignment="Center">
+                <TextBlock Text="ACTIVA" 
+                           FontWeight="Bold"
+                           FontSize="10"
+                           Foreground="Black"/>
+              </Border>
+            </StackPanel>
+            <TextBlock Text="{Binding Goal}" 
+                       FontSize="13" 
+                       Foreground="White"
+                       Opacity="0.8"/>
+          </StackPanel>
+        </Grid>
+      </StackPanel>
+
+      <!-- Info de la iteración -->
+      <Border Grid.Row="1"
+              Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"
+              CornerRadius="8"
+              Padding="16"
+              Margin="0,0,0,16">
+        <Grid ColumnDefinitions="*,*,*">
+          <StackPanel Grid.Column="0" Spacing="4">
+            <TextBlock Text="Fecha de Inicio" 
+                       FontSize="11" 
+                       Foreground="White"
+                       Opacity="0.7"/>
+            <TextBlock Text="{Binding StartDate, StringFormat='dd/MM/yyyy'}" 
+                       FontSize="14" 
+                       FontWeight="SemiBold"
+                       Foreground="White"/>
+          </StackPanel>
+          <StackPanel Grid.Column="1" Spacing="4">
+            <TextBlock Text="Fecha de Fin" 
+                       FontSize="11" 
+                       Foreground="White"
+                       Opacity="0.7"/>
+            <TextBlock Text="{Binding EndDate, StringFormat='dd/MM/yyyy'}" 
+                       FontSize="14" 
+                       FontWeight="SemiBold"
+                       Foreground="White"/>
+          </StackPanel>
+          <StackPanel Grid.Column="2" Spacing="4">
+            <TextBlock Text="Progreso" 
+                       FontSize="11" 
+                       Foreground="White"
+                       Opacity="0.7"/>
+            <TextBlock Text="{Binding CompletionPercentage, StringFormat={}{0}%}" 
+                       FontSize="14" 
+                       FontWeight="SemiBold"
+                       Foreground="White"/>
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <!-- Lista de Microincrementos -->
+      <Border Grid.Row="2"
+              Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+              BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+              BorderThickness="1"
+              CornerRadius="8"
+              Padding="16">
+        <Grid RowDefinitions="Auto,*">
+          <TextBlock Grid.Row="0"
+                     Text="Microincrementos" 
+                     FontSize="16" 
+                     FontWeight="SemiBold"
+                     Foreground="White"
+                     Margin="0,0,0,12"/>
+          
+          <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding Microincrements}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="vm:MicroincrementItemViewModel">
+                  <Border Background="{DynamicResource SubtleFillColorSecondaryBrush}"
+                          CornerRadius="6"
+                          Padding="16"
+                          Margin="0,0,0,8">
+                    <Grid RowDefinitions="Auto,Auto,Auto">
+                      <!-- Título y tipo -->
+                      <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,8">
+                        <TextBlock Grid.Column="0"
+                                   Text="{Binding Title}" 
+                                   FontSize="14" 
+                                   FontWeight="SemiBold"
+                                   Foreground="White"
+                                   TextWrapping="Wrap"/>
+                        <Border Grid.Column="1"
+                                Background="{DynamicResource AccentFillColorDefaultBrush}"
+                                CornerRadius="4"
+                                Padding="8,4"
+                                VerticalAlignment="Top">
+                          <TextBlock Text="{Binding Type}" 
+                                     FontSize="11"
+                                     FontWeight="SemiBold"
+                                     Foreground="White"/>
+                        </Border>
+                      </Grid>
+
+                      <!-- Descripción -->
+                      <TextBlock Grid.Row="1"
+                                 Text="{Binding Description}" 
+                                 FontSize="12" 
+                                 Foreground="White"
+                                 TextWrapping="Wrap"
+                                 Opacity="0.8"
+                                 Margin="0,0,0,8"
+                                 IsVisible="{Binding Description, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+                      <!-- Info del autor y fecha -->
+                      <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto">
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+                          <labs:SymbolIcon Symbol="{x:Static ic:Symbol.Person}" 
+                                           FontSize="14" 
+                                           Foreground="White"
+                                           Opacity="0.7"
+                                           VerticalAlignment="Center"/>
+                          <TextBlock Text="{Binding AuthorName}" 
+                                     FontSize="12" 
+                                     Foreground="White"
+                                     Opacity="0.7"
+                                     VerticalAlignment="Center"/>
+                        </StackPanel>
+                        
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="12">
+                          <StackPanel Orientation="Horizontal" Spacing="8">
+                            <labs:SymbolIcon Symbol="{x:Static ic:Symbol.Clock}" 
+                                             FontSize="14" 
+                                             Foreground="White"
+                                             Opacity="0.7"
+                                             VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding DateFormatted}" 
+                                       FontSize="12" 
+                                       Foreground="White"
+                                       Opacity="0.7"
+                                       VerticalAlignment="Center"/>
+                          </StackPanel>
+                          
+                          <!-- Botón Previsualizar -->
+                          <Button Content="Previsualizar"
+                                  IsVisible="{Binding HasArtifact}"
+                                  Padding="8,4"
+                                  FontSize="11"
+                                  Click="PreviewArtifact_Click"
+                                  Tag="{Binding}"
+                                  Classes="accent"
+                                  ToolTip.Tip="Ver archivo o URL del artefacto asociado"/>
+                        </StackPanel>
+                      </Grid>
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+        </Grid>
+      </Border>
+
+      <!-- Botón cerrar -->
+      <Button Grid.Row="3"
+              Content="Cerrar"
+              HorizontalAlignment="Right"
+              Padding="24,10"
+              Margin="0,16,0,0"
+              Click="Close_Click"/>
+    </Grid>
+  </Border>
+</Window>
+

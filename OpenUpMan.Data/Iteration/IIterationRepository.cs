@@ -1,4 +1,4 @@
-﻿using OpenUpMan.Domain;
+﻿﻿using OpenUpMan.Domain;
 
 namespace OpenUpMan.Data
 {
@@ -12,6 +12,11 @@ namespace OpenUpMan.Data
         Task UpdateAsync(Iteration iteration, CancellationToken ct = default);
         Task DeleteAsync(int id, CancellationToken ct = default);
         Task<bool> ExistsAsync(int id, CancellationToken ct = default);
+        Task<Iteration?> GetActiveIterationByPhaseIdAsync(int phaseId, CancellationToken ct = default);
+        Task<Iteration?> GetActiveIterationByProjectIdAsync(int projectId, CancellationToken ct = default);
+        
+        // Dashboard queries
+        Task<IEnumerable<Iteration>> GetActiveIterationsByProjectIdAsync(int projectId, CancellationToken ct = default);
     }
 }
 

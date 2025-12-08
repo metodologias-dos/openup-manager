@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿﻿using Microsoft.EntityFrameworkCore;
 using OpenUpMan.Domain;
 
 namespace OpenUpMan.Data
@@ -69,6 +69,29 @@ namespace OpenUpMan.Data
         public async Task<bool> ExistsAsync(int id, CancellationToken ct = default)
         {
             return await _context.Iterations.AnyAsync(i => i.Id == id, ct);
+        }
+
+        public async Task<Iteration?> GetActiveIterationByPhaseIdAsync(int phaseId, CancellationToken ct = default)
+        {
+            return await _context.Iterations
+                .Where(i => i.PhaseId == phaseId && i.IsActive)
+                .FirstOrDefaultAsync(ct);
+        }
+
+        public async Task<Iteration?> GetActiveIterationByProjectIdAsync(int projectId, CancellationToken ct = default)
+        {
+            return await _context.Iterations
+                .Where(i => _context.Phases.Any(p => p.Id == i.PhaseId && p.ProjectId == projectId) && i.IsActive)
+                .FirstOrDefaultAsync(ct);
+        }
+
+        // Dashboard queries
+        public async Task<IEnumerable<Iteration>> GetActiveIterationsByProjectIdAsync(int projectId, CancellationToken ct = default)
+        {
+            return await _context.Iterations
+                .Where(i => _context.Phases.Any(p => p.Id == i.PhaseId && p.ProjectId == projectId) && i.IsActive)
+                .OrderBy(i => i.StartDate)
+                .ToListAsync(ct);
         }
     }
 }

@@ -38,9 +38,11 @@
       <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
     </PackageReference>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />
+    <PackageReference Include="FluentIcons.Avalonia" Version="2.0.316.1" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.0" />
+    <PackageReference Include="Mime" Version="3.8.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -56,8 +58,32 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Views\ArtifactsWindow.axaml.cs">
+    <Compile Update="Views\Artifacts\ArtifactEditWindow.axaml.cs">
+      <DependentUpon>ArtifactEditWindow.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\Artifacts\ArtifactsWindow.axaml.cs">
       <DependentUpon>ArtifactsWindow.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\Dashboard\DashboardView.axaml.cs">
+      <DependentUpon>DashboardView.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\Dashboard\DashboardWindow.axaml.cs">
+      <DependentUpon>DashboardWindow.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\Project\ProjectCreationDialog.axaml.cs">
+      <DependentUpon>ProjectCreationDialog.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\Project\ProjectList.axaml.cs">
+      <DependentUpon>ProjectList.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\Project\ProjectView.axaml.cs">
+      <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
 </Project>

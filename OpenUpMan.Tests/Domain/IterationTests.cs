@@ -19,7 +19,7 @@ public class IterationTests
         Assert.Equal(phaseId, iteration.PhaseId);
         Assert.Equal(name, iteration.Name);
         Assert.Equal(goal, iteration.Goal);
-        Assert.Equal(0, iteration.CompletionPercentage);
+        Assert.False(iteration.IsActive);
         Assert.Null(iteration.StartDate);
         Assert.Null(iteration.EndDate);
     }
@@ -42,31 +42,5 @@ public class IterationTests
         Assert.Equal(newGoal, iteration.Goal);
         Assert.Equal(newStartDate, iteration.StartDate);
         Assert.Equal(newEndDate, iteration.EndDate);
-    }
-
-    [Fact]
-    public void SetCompletionPercentage_WithValidPercentage_ShouldUpdateCompletionPercentage()
-    {
-        // Arrange
-        var iteration = new Iteration(1);
-        var percentage = 50;
-
-        // Act
-        iteration.SetCompletionPercentage(percentage);
-
-        // Assert
-        Assert.Equal(percentage, iteration.CompletionPercentage);
-    }
-
-    [Theory]
-    [InlineData(-1)]
-    [InlineData(101)]
-    public void SetCompletionPercentage_WithInvalidPercentage_ShouldThrowArgumentException(int percentage)
-    {
-        // Arrange
-        var iteration = new Iteration(1);
-
-        // Act & Assert
-        Assert.Throws<ArgumentException>(() => iteration.SetCompletionPercentage(percentage));
     }
 }

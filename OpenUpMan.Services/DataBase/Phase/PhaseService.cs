@@ -1,6 +1,7 @@
-﻿using Microsoft.Extensions.Logging;
+﻿﻿﻿using Microsoft.Extensions.Logging;
 using OpenUpMan.Data;
 using OpenUpMan.Domain;
+using System.Linq;
 
 namespace OpenUpMan.Services
 {
@@ -8,14 +9,19 @@ namespace OpenUpMan.Services
     {
         private readonly IPhaseRepository _repo;
         private readonly ILogger<PhaseService> _logger;
+        private readonly IArtifactRepository _artifactRepo;
+        private readonly IProjectRepository _projectRepo;
 
-        public PhaseService(IPhaseRepository repo, ILogger<PhaseService> logger)
+        public PhaseService(IPhaseRepository repo, ILogger<PhaseService> logger, IArtifactRepository artifactRepo, IProjectRepository projectRepo)
         {
             _repo = repo;
             _logger = logger;
+            _artifactRepo = artifactRepo;
+            _projectRepo = projectRepo;
         }
 
-        public async Task<PhaseServiceResult> CreatePhaseAsync(int projectId, string name, int orderIndex, string status = "PENDING", CancellationToken ct = default)
+        public async Task<PhaseServiceResult> CreatePhaseAsync(int projectId, string name, int orderIndex, string status = "PENDING", 
+            string? objective = null, string? scope = null, string? observations = null, CancellationToken ct = default)
         {
             try
             {
@@ -33,6 +39,17 @@ namespace OpenUpMan.Services
                 {
                     phase.SetStatus(status);
                 }
+                
+                // Establecer los campos opcionales
+                if (!string.IsNullOrWhiteSpace(objective))
+                    phase.SetObjective(objective);
+                
+                if (!string.IsNullOrWhiteSpace(scope))
+                    phase.SetScope(scope);
+                
+                if (!string.IsNullOrWhiteSpace(observations))
+                    phase.SetObservations(observations);
+                
                 await _repo.AddAsync(phase, ct);
 
                 _logger.LogInformation("Fase creada: {PhaseId} - {Name} para proyecto {ProjectId}", phase.Id, name, projectId);
@@ -92,7 +109,8 @@ namespace OpenUpMan.Services
             return await _repo.GetByProjectIdAsync(projectId, ct);
         }
 
-        public async Task<PhaseServiceResult> UpdatePhaseAsync(int id, string name, DateTime? startDate, DateTime? endDate, string status, CancellationToken ct = default)
+        public async Task<PhaseServiceResult> UpdatePhaseAsync(int id, string name, DateTime? startDate, DateTime? endDate, string status, 
+            int? orderIndex = null, string? objective = null, string? scope = null, string? observations = null, CancellationToken ct = default)
         {
             try
             {
@@ -106,7 +124,9 @@ namespace OpenUpMan.Services
                     );
                 }
 
-                phase.UpdateDetails(name, startDate, endDate, phase.OrderIndex);
+                // Usar orderIndex proporcionado o mantener el existente
+                var finalOrderIndex = orderIndex ?? phase.OrderIndex;
+                phase.UpdateDetails(name, startDate, endDate, finalOrderIndex, objective, scope, observations);
                 phase.SetStatus(status);
                 await _repo.UpdateAsync(phase, ct);
 
@@ -163,6 +183,117 @@ namespace OpenUpMan.Services
             }
         }
 
+        public async Task<PhaseServiceResult> UpdatePhaseObjectiveAsync(int id, string? objective, CancellationToken ct = default)
+        {
+            try
+            {
+                var phase = await _repo.GetByIdAsync(id, ct);
+                if (phase == null)
+                {
+                    return new PhaseServiceResult(
+                        Success: false,
+                        ResultType: ServiceResultType.Error,
+                        Message: "Fase no encontrada."
+                    );
+                }
+
+                phase.SetObjective(objective);
+                await _repo.UpdateAsync(phase, ct);
+
+                _logger.LogInformation("Objetivo de fase {PhaseId} actualizado", id);
+
+                return new PhaseServiceResult(
+                    Success: true,
+                    ResultType: ServiceResultType.Success,
+                    Message: "Objetivo de la fase actualizado exitosamente.",
+                    Phase: phase
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al actualizar objetivo de fase {PhaseId}", id);
+                return new PhaseServiceResult(
+                    Success: false,
+                    ResultType: ServiceResultType.Error,
+                    Message: "Error al actualizar el objetivo de la fase."
+                );
+            }
+        }
+
+        public async Task<PhaseServiceResult> UpdatePhaseScopeAsync(int id, string? scope, CancellationToken ct = default)
+        {
+            try
+            {
+                var phase = await _repo.GetByIdAsync(id, ct);
+                if (phase == null)
+                {
+                    return new PhaseServiceResult(
+                        Success: false,
+                        ResultType: ServiceResultType.Error,
+                        Message: "Fase no encontrada."
+                    );
+                }
+
+                phase.SetScope(scope);
+                await _repo.UpdateAsync(phase, ct);
+
+                _logger.LogInformation("Alcance de fase {PhaseId} actualizado", id);
+
+                return new PhaseServiceResult(
+                    Success: true,
+                    ResultType: ServiceResultType.Success,
+                    Message: "Alcance de la fase actualizado exitosamente.",
+                    Phase: phase
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al actualizar alcance de fase {PhaseId}", id);
+                return new PhaseServiceResult(
+                    Success: false,
+                    ResultType: ServiceResultType.Error,
+                    Message: "Error al actualizar el alcance de la fase."
+                );
+            }
+        }
+
+        public async Task<PhaseServiceResult> UpdatePhaseObservationsAsync(int id, string? observations, CancellationToken ct = default)
+        {
+            try
+            {
+                var phase = await _repo.GetByIdAsync(id, ct);
+                if (phase == null)
+                {
+                    return new PhaseServiceResult(
+                        Success: false,
+                        ResultType: ServiceResultType.Error,
+                        Message: "Fase no encontrada."
+                    );
+                }
+
+                phase.SetObservations(observations);
+                await _repo.UpdateAsync(phase, ct);
+
+                _logger.LogInformation("Observaciones de fase {PhaseId} actualizadas", id);
+
+                return new PhaseServiceResult(
+                    Success: true,
+                    ResultType: ServiceResultType.Success,
+                    Message: "Observaciones de la fase actualizadas exitosamente.",
+                    Phase: phase
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al actualizar observaciones de fase {PhaseId}", id);
+                return new PhaseServiceResult(
+                    Success: false,
+                    ResultType: ServiceResultType.Error,
+                    Message: "Error al actualizar las observaciones de la fase."
+                );
+            }
+        }
+
         public async Task<PhaseServiceResult> DeletePhaseAsync(int id, CancellationToken ct = default)
         {
             try
@@ -197,6 +328,191 @@ namespace OpenUpMan.Services
                 );
             }
         }
+
+        public async Task<PhaseServiceResult> StartPhaseAsync(int phaseId, int projectId, CancellationToken ct = default)
+        {
+            try
+            {
+                var phase = await _repo.GetByIdAsync(phaseId, ct);
+                if (phase == null)
+                {
+                    return new PhaseServiceResult(
+                        Success: false,
+                        ResultType: ServiceResultType.Error,
+                        Message: "Fase no encontrada."
+                    );
+                }
+
+                // Si la fase ya está iniciada o terminada, no permitir iniciarla de nuevo
+                if (phase.Status == "IN_PROGRESS")
+                {
+                    return new PhaseServiceResult(
+                        Success: false,
+                        ResultType: ServiceResultType.Warning,
+                        Message: "La fase ya está en progreso."
+                    );
+                }
+
+                if (phase.Status == "DONE")
+                {
+                    return new PhaseServiceResult(
+                        Success: false,
+                        ResultType: ServiceResultType.Warning,
+                        Message: "La fase ya está terminada."
+                    );
+                }
+
+                // Obtener todas las fases del proyecto ordenadas
+                var allPhases = (await _repo.GetByProjectIdAsync(projectId, ct))
+                    .OrderBy(p => p.OrderIndex ?? 0)
+                    .ToList();
+
+                // La fase de Incepción NO requiere validación de fase anterior
+                // Validar por nombre o por orderIndex
+                var isInceptionPhase = phase.Name.Contains("Inception", StringComparison.OrdinalIgnoreCase) || 
+                                       phase.Name.Contains("Inicio", StringComparison.OrdinalIgnoreCase) ||
+                                       (phase.OrderIndex ?? 0) == 0;
+                
+                // Si NO es la fase de Incepción, validar que la fase anterior esté terminada
+                if (!isInceptionPhase)
+                {
+                    var currentOrderIndex = phase.OrderIndex ?? 0;
+                    var previousPhase = allPhases.FirstOrDefault(p => (p.OrderIndex ?? 0) == currentOrderIndex - 1);
+                    
+                    if (previousPhase != null && previousPhase.Status != "DONE")
+                    {
+                        return new PhaseServiceResult(
+                            Success: false,
+                            ResultType: ServiceResultType.Warning,
+                            Message: "No es posible iniciar esta fase sin terminar la fase anterior. Por favor, termine la fase anterior para poder iniciar esta fase."
+                        );
+                    }
+                }
+
+                // Actualizar la fase: establecer fecha de inicio y cambiar estado
+                phase.SetDates(DateTime.Now, phase.EndDate);
+                phase.SetStatus("IN_PROGRESS");
+                await _repo.UpdateAsync(phase, ct);
+
+                // Si es la fase de Incepción, actualizar el estado del proyecto a IN_PROGRESS
+                // IMPORTANTE: SOLO al iniciar Incepción, NO otras fases
+                if (isInceptionPhase)
+                {
+                    var project = await _projectRepo.GetByIdAsync(projectId, ct);
+                    if (project != null && project.Status != "DONE")
+                    {
+                        project.SetStatus("IN_PROGRESS");
+                        await _projectRepo.UpdateAsync(project, ct);
+                        _logger.LogInformation("Proyecto {ProjectId} actualizado a IN_PROGRESS al iniciar la fase de Incepción", projectId);
+                    }
+                }
+                else
+                {
+                    _logger.LogInformation("Fase {PhaseName} iniciada (no es Incepción, no se actualiza el proyecto)", phase.Name);
+                }
+
+                _logger.LogInformation("Fase {PhaseId} iniciada exitosamente", phaseId);
+
+                return new PhaseServiceResult(
+                    Success: true,
+                    ResultType: ServiceResultType.Success,
+                    Message: "Fase iniciada exitosamente.",
+                    Phase: phase
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al iniciar fase {PhaseId}", phaseId);
+                return new PhaseServiceResult(
+                    Success: false,
+                    ResultType: ServiceResultType.Error,
+                    Message: "Error al iniciar la fase."
+                );
+            }
+        }
+
+        public async Task<PhaseServiceResult> EndPhaseAsync(int phaseId, CancellationToken ct = default)
+        {
+            try
+            {
+                var phase = await _repo.GetByIdAsync(phaseId, ct);
+                if (phase == null)
+                {
+                    return new PhaseServiceResult(
+                        Success: false,
+                        ResultType: ServiceResultType.Error,
+                        Message: "Fase no encontrada."
+                    );
+                }
+
+                // Validar que la fase esté en progreso
+                if (phase.Status != "IN_PROGRESS")
+                {
+                    return new PhaseServiceResult(
+                        Success: false,
+                        ResultType: ServiceResultType.Warning,
+                        Message: "Solo se pueden finalizar fases que estén en progreso."
+                    );
+                }
+
+                // Validar que todos los artefactos obligatorios tengan al menos una versión con file_blob
+                var mandatoryArtifacts = await _artifactRepo.GetByPhaseIdAsync(phaseId, ct);
+                var mandatoryOnly = mandatoryArtifacts.Where(a => a.Mandatory).ToList();
+
+                foreach (var artifact in mandatoryOnly)
+                {
+                    var versions = await _artifactRepo.GetVersionHistoryAsync(artifact.Id, ct);
+                    var hasFileUploaded = versions.Any(v => v.FileBlob != null && v.FileBlob.Length > 0);
+                    
+                    if (!hasFileUploaded)
+                    {
+                        return new PhaseServiceResult(
+                            Success: false,
+                            ResultType: ServiceResultType.Warning,
+                            Message: $"No se puede finalizar la fase. El artefacto obligatorio '{artifact.Name}' no tiene ninguna versión cargada."
+                        );
+                    }
+                }
+                
+                // Actualizar la fase: establecer fecha de fin y cambiar estado
+                phase.SetDates(phase.StartDate, DateTime.Now);
+                phase.SetStatus("DONE");
+                await _repo.UpdateAsync(phase, ct);
+
+                // Si es la fase de Transición, actualizar el estado del proyecto a DONE
+                var isTransitionPhase = phase.Name.Contains("Transition", StringComparison.OrdinalIgnoreCase) || 
+                                        phase.Name.Contains("Transición", StringComparison.OrdinalIgnoreCase) ||
+                                        (phase.OrderIndex ?? 0) == 4; // Transición tiene order_index = 4
+
+                if (isTransitionPhase)
+                {
+                    var project = await _projectRepo.GetByIdAsync(phase.ProjectId, ct);
+                    if (project != null && project.Status == "IN_PROGRESS")
+                    {
+                        project.SetStatus("DONE");
+                        await _projectRepo.UpdateAsync(project, ct);
+                        _logger.LogInformation("Proyecto {ProjectId} actualizado a DONE al finalizar la fase de Transición", phase.ProjectId);
+                    }
+                }
+
+                _logger.LogInformation("Fase {PhaseId} finalizada exitosamente", phaseId);
+
+                return new PhaseServiceResult(
+                    Success: true,
+                    ResultType: ServiceResultType.Success,
+                    Message: "Fase finalizada exitosamente.",
+                    Phase: phase
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al finalizar fase {PhaseId}", phaseId);
+                return new PhaseServiceResult(
+                    Success: false,
+                    ResultType: ServiceResultType.Error,
+                    Message: "Error al finalizar la fase."
+                );
+            }
+        }
     }
 }
-

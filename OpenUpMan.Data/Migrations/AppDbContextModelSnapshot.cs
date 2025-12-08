@@ -119,10 +119,6 @@ namespace OpenUpMan.Data.Migrations
                         .HasColumnType("INTEGER")
                         .HasColumnName("id");
 
-                    b.Property<int>("CompletionPercentage")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("completion_percentage");
-
                     b.Property<DateTime?>("EndDate")
                         .HasColumnType("TEXT")
                         .HasColumnName("end_date");
@@ -130,6 +126,12 @@ namespace OpenUpMan.Data.Migrations
                     b.Property<string>("Goal")
                         .HasColumnType("TEXT")
                         .HasColumnName("goal");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_active");
 
                     b.Property<string>("Name")
                         .HasColumnType("TEXT")
@@ -460,6 +462,14 @@ namespace OpenUpMan.Data.Migrations
                         .HasColumnType("TEXT")
                         .HasColumnName("name");
 
+                    b.Property<string>("Objective")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("objective");
+
+                    b.Property<string>("Observations")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("observations");
+
                     b.Property<int?>("OrderIndex")
                         .HasColumnType("INTEGER")
                         .HasColumnName("order_index");
@@ -467,6 +477,10 @@ namespace OpenUpMan.Data.Migrations
                     b.Property<int>("ProjectId")
                         .HasColumnType("INTEGER")
                         .HasColumnName("project_id");
+
+                    b.Property<string>("Scope")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("scope");
 
                     b.Property<DateTime?>("StartDate")
                         .HasColumnType("TEXT")
@@ -1681,7 +1695,7 @@ namespace OpenUpMan.Data.Migrations
 
             modelBuilder.Entity("OpenUpMan.Domain.RolePermission", b =>
                 {
-                    b.HasOne("OpenUpMan.Domain.Permission", null)
+                    b.HasOne("OpenUpMan.Domain.Permission", "Permission")
                         .WithMany()
                         .HasForeignKey("PermissionId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1692,6 +1706,8 @@ namespace OpenUpMan.Data.Migrations
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Permission");
                 });
 #pragma warning restore 612, 618
         }

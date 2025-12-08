@@ -83,7 +83,7 @@ namespace OpenUpMan.Services
             return await _repo.GetByPhaseIdAsync(phaseId, ct);
         }
 
-        public async Task<IterationServiceResult> UpdateIterationAsync(int id, string? name, string? goal, DateTime? startDate, DateTime? endDate, int completionPercentage, CancellationToken ct = default)
+        public async Task<IterationServiceResult> UpdateIterationAsync(int id, string? name, string? goal, DateTime? startDate, DateTime? endDate, CancellationToken ct = default)
         {
             try
             {
@@ -98,7 +98,6 @@ namespace OpenUpMan.Services
                 }
 
                 iteration.UpdateDetails(name, goal, startDate, endDate);
-                iteration.SetCompletionPercentage(completionPercentage);
                 await _repo.UpdateAsync(iteration, ct);
 
                 return new IterationServiceResult(
@@ -119,40 +118,6 @@ namespace OpenUpMan.Services
             }
         }
 
-        public async Task<IterationServiceResult> SetCompletionAsync(int id, int percentage, CancellationToken ct = default)
-        {
-            try
-            {
-                var iteration = await _repo.GetByIdAsync(id, ct);
-                if (iteration == null)
-                {
-                    return new IterationServiceResult(
-                        Success: false,
-                        ResultType: ServiceResultType.Error,
-                        Message: "Iteración no encontrada."
-                    );
-                }
-
-                iteration.SetCompletionPercentage(percentage);
-                await _repo.UpdateAsync(iteration, ct);
-
-                return new IterationServiceResult(
-                    Success: true,
-                    ResultType: ServiceResultType.Success,
-                    Message: "Porcentaje de completitud actualizado.",
-                    Iteration: iteration
-                );
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al actualizar completitud de iteración");
-                return new IterationServiceResult(
-                    Success: false,
-                    ResultType: ServiceResultType.Error,
-                    Message: "Error al actualizar el porcentaje de completitud."
-                );
-            }
-        }
 
         public async Task<IterationServiceResult> DeleteIterationAsync(int id, CancellationToken ct = default)
         {
@@ -187,6 +152,61 @@ namespace OpenUpMan.Services
                     Message: $"Error al eliminar la iteración: {ex.Message}"
                 );
             }
+        }
+
+        public async Task<IterationServiceResult> ActivateIterationAsync(int id, CancellationToken ct = default)
+        {
+            try
+            {
+                var iteration = await _repo.GetByIdAsync(id, ct);
+                if (iteration == null)
+                {
+                    return new IterationServiceResult(
+                        Success: false,
+                        ResultType: ServiceResultType.Error,
+                        Message: "Iteración no encontrada."
+                    );
+                }
+
+                // Deactivate any other active iteration in the same phase
+                var allIterations = await _repo.GetByPhaseIdAsync(iteration.PhaseId, ct);
+                foreach (var iter in allIterations)
+                {
+                    if (iter.IsActive && iter.Id != id)
+                    {
+                        iter.Deactivate();
+                        await _repo.UpdateAsync(iter, ct);
+                    }
+                }
+
+                // Activate the requested iteration
+                iteration.Activate();
+                await _repo.UpdateAsync(iteration, ct);
+
+                _logger.LogInformation("Iteración {IterationId} activada exitosamente", id);
+
+                return new IterationServiceResult(
+                    Success: true,
+                    ResultType: ServiceResultType.Success,
+                    Message: "Iteración activada exitosamente.",
+                    Iteration: iteration
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al activar iteración {IterationId}", id);
+                return new IterationServiceResult(
+                    Success: false,
+                    ResultType: ServiceResultType.Error,
+                    Message: $"Error al activar la iteración: {ex.Message}"
+                );
+            }
+        }
+
+        public async Task<Iteration?> GetActiveIterationByPhaseIdAsync(int phaseId, CancellationToken ct = default)
+        {
+            var iterations = await _repo.GetByPhaseIdAsync(phaseId, ct);
+            return iterations.FirstOrDefault(i => i.IsActive);
         }
     }
 }

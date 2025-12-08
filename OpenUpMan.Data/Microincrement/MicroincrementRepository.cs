@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿﻿using Microsoft.EntityFrameworkCore;
 using OpenUpMan.Domain;
 
 namespace OpenUpMan.Data
@@ -88,6 +88,14 @@ namespace OpenUpMan.Data
         public async Task<bool> ExistsAsync(int id, CancellationToken ct = default)
         {
             return await _context.Microincrements.AnyAsync(m => m.Id == id, ct);
+        }
+
+        // Dashboard queries
+        public async Task<int> CountByIterationIdAsync(int iterationId, CancellationToken ct = default)
+        {
+            return await _context.Microincrements
+                .Where(m => m.IterationId == iterationId)
+                .CountAsync(ct);
         }
     }
 }

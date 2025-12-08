@@ -27,6 +27,17 @@ namespace OpenUpMan.Data
             return await _ctx.Users.FirstOrDefaultAsync(u => u.Username == username, ct);
         }
 
+        public async Task<IEnumerable<User>> SearchAsync(string term, CancellationToken ct = default)
+        {
+            if (string.IsNullOrWhiteSpace(term))
+                return Enumerable.Empty<User>();
+
+            return await _ctx.Users
+                .Where(u => u.Username.Contains(term))
+                .Take(20)
+                .ToListAsync(ct);
+        }
+
         public async Task SaveChangesAsync(CancellationToken ct = default)
         {
             await _ctx.SaveChangesAsync(ct);

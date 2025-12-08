@@ -1,0 +1,100 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        x:Class="OpenUpMan.UI.Views.IterationEditWindow"
+        mc:Ignorable="d"
+        Width="500" Height="520" 
+        CanResize="False" 
+        WindowStartupLocation="CenterOwner"
+        Title="Editar Iteración">
+  
+  <Grid RowDefinitions="Auto,*,Auto" Margin="20">
+      
+      <!-- Header -->
+      <StackPanel Grid.Row="0" Spacing="4" Margin="0,0,0,16">
+        <TextBlock Text="Editar Iteración" 
+                   FontSize="20" 
+                   FontWeight="Bold"/>
+        <TextBlock x:Name="PhaseNameText"
+                   Text="Fase Actual" 
+                   FontSize="13" 
+                   Opacity="0.7"/>
+      </StackPanel>
+
+      <!-- Content -->
+      <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+        <StackPanel Spacing="16">
+          
+          <!-- Name Field -->
+          <StackPanel Spacing="6">
+            <TextBlock Text="Nombre de la Iteración" 
+                       FontSize="13" 
+                       FontWeight="SemiBold"/>
+            <TextBox x:Name="NameBox" 
+                     Watermark="Ej: Iteración 1 - Arquitectura Base"
+                     FontSize="13"
+                     Padding="10,8"/>
+          </StackPanel>
+
+          <!-- Goal Field -->
+          <StackPanel Spacing="6">
+            <TextBlock Text="Objetivo" 
+                       FontSize="13" 
+                       FontWeight="SemiBold"/>
+            <TextBox x:Name="GoalBox" 
+                     AcceptsReturn="True" 
+                     Height="80" 
+                     TextWrapping="Wrap" 
+                     Watermark="Describe el objetivo principal de esta iteración..."
+                     FontSize="13"
+                     Padding="10,8"/>
+          </StackPanel>
+
+          <!-- Start Date -->
+          <StackPanel Spacing="6">
+            <TextBlock Text="Fecha de Inicio" 
+                       FontSize="13" 
+                       FontWeight="SemiBold"/>
+            <DatePicker x:Name="StartDatePicker"
+                        HorizontalAlignment="Stretch"/>
+          </StackPanel>
+
+          <!-- End Date -->
+          <StackPanel Spacing="6">
+            <TextBlock Text="Fecha de Fin" 
+                       FontSize="13" 
+                       FontWeight="SemiBold"/>
+            <DatePicker x:Name="EndDatePicker"
+                        HorizontalAlignment="Stretch"/>
+          </StackPanel>
+
+        </StackPanel>
+      </ScrollViewer>
+
+      <!-- Footer Actions -->
+      <StackPanel Grid.Row="2" 
+                  Orientation="Horizontal" 
+                  HorizontalAlignment="Right" 
+                  Spacing="10"
+                  Margin="0,16,0,0">
+        <Button Content="Cancelar" 
+                Click="OnCancel"
+                Width="90"
+                Height="32"/>
+        <Button Content="Guardar Cambios" 
+                Click="OnSave"
+                Width="140"
+                Height="32">
+          <Button.Styles>
+            <Style Selector="Button">
+              <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundAccentBrush}"/>
+              <Setter Property="Foreground" Value="White"/>
+            </Style>
+          </Button.Styles>
+        </Button>
+      </StackPanel>
+      
+    </Grid>
+</Window>
+

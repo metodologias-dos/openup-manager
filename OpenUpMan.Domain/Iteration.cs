@@ -8,7 +8,7 @@
         public string? Goal { get; private set; }
         public DateTime? StartDate { get; private set; }
         public DateTime? EndDate { get; private set; }
-        public int CompletionPercentage { get; private set; }
+        public bool IsActive { get; private set; }
 
         // Parameterless constructor for EF
         protected Iteration() { }
@@ -18,7 +18,7 @@
             PhaseId = phaseId;
             Name = name;
             Goal = goal;
-            CompletionPercentage = 0;
+            IsActive = false;
         }
 
         public void UpdateDetails(string? name, string? goal, DateTime? startDate, DateTime? endDate)
@@ -29,14 +29,19 @@
             EndDate = endDate;
         }
 
-        public void SetCompletionPercentage(int percentage)
-        {
-            if (percentage < 0 || percentage > 100)
-            {
-                throw new ArgumentException("Completion percentage must be between 0 and 100.", nameof(percentage));
-            }
 
-            CompletionPercentage = percentage;
+        public void Activate()
+        {
+            IsActive = true;
+            if (!StartDate.HasValue)
+            {
+                StartDate = DateTime.Now;
+            }
+        }
+
+        public void Deactivate()
+        {
+            IsActive = false;
         }
     }
 }

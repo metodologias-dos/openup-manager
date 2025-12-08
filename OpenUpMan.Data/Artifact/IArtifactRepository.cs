@@ -19,6 +19,10 @@ namespace OpenUpMan.Data
         Task<ArtifactVersion?> GetLatestVersionAsync(int artifactId, CancellationToken ct = default);
         Task<ArtifactVersion?> GetVersionAsync(int artifactId, int versionNumber, CancellationToken ct = default);
         Task<int> AddVersionAsync(ArtifactVersion version, CancellationToken ct = default);
+        
+        // Dashboard queries
+        Task<int> CountMandatoryByProjectIdAsync(int projectId, CancellationToken ct = default);
+        Task<int> CountMandatoryWithVersionsByProjectIdAsync(int projectId, CancellationToken ct = default);
     }
 }
 

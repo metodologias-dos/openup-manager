@@ -1,0 +1,145 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:OpenUpMan.UI.ViewModels"
+        xmlns:labs="clr-namespace:FluentIcons.Avalonia;assembly=FluentIcons.Avalonia"
+        xmlns:ic="clr-namespace:FluentIcons.Common;assembly=FluentIcons.Common"
+        x:Class="OpenUpMan.UI.Views.Artifact.RegisterArtifactWindow"
+        x:DataType="vm:RegisterArtifactViewModel"
+        mc:Ignorable="d"
+        Width="600" Height="550" 
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Title="Registrar Artefacto">
+  
+  <Border Padding="20">
+    <Grid RowDefinitions="Auto,*,Auto">
+      
+      <!-- Encabezado -->
+      <StackPanel Grid.Row="0" Spacing="4" Margin="0,0,0,20">
+        <TextBlock Text="Registrar Nueva Versión" 
+                   FontSize="20" 
+                   FontWeight="Bold" 
+                   Foreground="White"/>
+        <TextBlock Text="{Binding ArtifactName}" 
+                   FontSize="14" 
+                   FontWeight="SemiBold"
+                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+        <TextBlock Text="{Binding CurrentUserName, StringFormat='Usuario: {0}'}" 
+                   FontSize="12" 
+                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+      </StackPanel>
+
+      <!-- Formulario -->
+      <Border Grid.Row="1" 
+              BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" 
+              BorderThickness="1" 
+              Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+              CornerRadius="8"
+              Padding="20">
+        <ScrollViewer>
+          <StackPanel Spacing="20">
+            
+            <!-- Información de Iteración -->
+            <Border BorderBrush="{DynamicResource DividerStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="4"
+                    Padding="12"
+                    Background="{DynamicResource SubtleFillColorSecondaryBrush}">
+              <StackPanel Spacing="4">
+                <TextBlock Text="Iteración Activa" 
+                           FontWeight="SemiBold" 
+                           FontSize="12" 
+                           Foreground="White"/>
+                <TextBlock Text="{Binding ActiveIterationName, FallbackValue='No hay iteración activa', TargetNullValue='No hay iteración activa'}" 
+                           FontSize="13" 
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                <TextBlock Text="⚠️ Se requiere una iteración activa para registrar el artefacto" 
+                           FontSize="11" 
+                           Foreground="Orange"
+                           IsVisible="{Binding !HasActiveIteration}"/>
+              </StackPanel>
+            </Border>
+
+            <!-- Tipo de carga -->
+            <StackPanel Spacing="8">
+              <TextBlock Text="Tipo de Contenido *" 
+                         FontWeight="SemiBold" 
+                         FontSize="12" 
+                         Foreground="White"/>
+              <StackPanel Orientation="Horizontal" Spacing="12">
+                <RadioButton Content="Subir Archivo" 
+                             IsChecked="{Binding IsUploadingFile}"
+                             Foreground="White"
+                             GroupName="UploadType"/>
+                <RadioButton Content="URL / Enlace" 
+                             IsChecked="{Binding !IsUploadingFile}"
+                             Foreground="White"
+                             GroupName="UploadType"/>
+              </StackPanel>
+            </StackPanel>
+
+            <!-- Panel para subir archivo -->
+            <StackPanel Spacing="8" IsVisible="{Binding IsUploadingFile}">
+              <TextBlock Text="Archivo *" FontSize="12" Foreground="White"/>
+              <Grid ColumnDefinitions="*,Auto">
+                <TextBox Grid.Column="0" 
+                         Text="{Binding FileName, Mode=OneWay}" 
+                         IsReadOnly="True"
+                         Watermark="Seleccione un archivo..."
+                         Margin="0,0,8,0"/>
+                <Button Grid.Column="1" 
+                        Command="{Binding SelectFileCommand}"
+                        MinWidth="100">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <labs:SymbolIcon Symbol="{x:Static ic:Symbol.FolderOpen}" FontSize="16" Foreground="White"/>
+                    <TextBlock Text="Buscar" FontSize="12" Foreground="White"/>
+                  </StackPanel>
+                </Button>
+              </Grid>
+            </StackPanel>
+
+            <!-- Panel para URL -->
+            <StackPanel Spacing="8" IsVisible="{Binding !IsUploadingFile}">
+              <TextBlock Text="URL / Enlace *" FontSize="12" Foreground="White"/>
+              <TextBox Text="{Binding Url}" 
+                       Watermark="https://ejemplo.com/documento"/>
+            </StackPanel>
+
+            <!-- Notas -->
+            <StackPanel Spacing="8">
+              <TextBlock Text="Notas / Comentarios" FontSize="12" Foreground="White"/>
+              <TextBox Text="{Binding Notes}" 
+                       AcceptsReturn="True"
+                       Height="100"
+                       TextWrapping="Wrap"
+                       Watermark="Agregue comentarios sobre esta versión (opcional)..."/>
+            </StackPanel>
+          </StackPanel>
+        </ScrollViewer>
+      </Border>
+
+      <!-- Botones -->
+      <StackPanel Grid.Row="2" 
+                  Orientation="Horizontal" 
+                  HorizontalAlignment="Right" 
+                  Spacing="8" 
+                  Margin="0,16,0,0">
+        <Button Content="Cancelar" 
+                Command="{Binding CancelCommand}" 
+                MinWidth="100"/>
+        <Button Command="{Binding SaveCommand}" 
+                MinWidth="100"
+                IsEnabled="{Binding CanSave}"
+                Classes="accent">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <labs:SymbolIcon Symbol="{x:Static ic:Symbol.Save}" FontSize="16" Foreground="White"/>
+            <TextBlock Text="Registrar" FontSize="13" Foreground="White"/>
+          </StackPanel>
+        </Button>
+      </StackPanel>
+    </Grid>
+  </Border>
+</Window>
+
