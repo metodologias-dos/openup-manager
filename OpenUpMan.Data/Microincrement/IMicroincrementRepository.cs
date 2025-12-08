@@ -1,4 +1,4 @@
-﻿using OpenUpMan.Domain;
+﻿﻿using OpenUpMan.Domain;
 
 namespace OpenUpMan.Data
 {
@@ -14,6 +14,9 @@ namespace OpenUpMan.Data
         Task UpdateAsync(Microincrement microincrement, CancellationToken ct = default);
         Task DeleteAsync(int id, CancellationToken ct = default);
         Task<bool> ExistsAsync(int id, CancellationToken ct = default);
+        
+        // Dashboard queries
+        Task<int> CountByIterationIdAsync(int iterationId, CancellationToken ct = default);
     }
 }
 

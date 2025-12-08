@@ -246,7 +246,12 @@ public partial class ProjectView : UserControl
 
     private void OpenDashboardWindow()
     {
-        var dashboardWindow = new DashboardWindow();
+        if (DataContext is not ProjectViewModel vm) return;
+
+        var dashboardService = Program.ServiceProvider.GetService<IDashboardService>();
+        if (dashboardService == null) return;
+
+        var dashboardWindow = new DashboardWindow(dashboardService, vm.ProjectId);
         if (VisualRoot is Window parentWindow)
         {
             dashboardWindow.ShowDialog(parentWindow);
