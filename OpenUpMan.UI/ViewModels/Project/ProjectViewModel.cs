@@ -53,6 +53,15 @@ public partial class ProjectViewModel : ViewModelBase
     private string _currentPhaseEndDateDisplay = "No finalizada";
 
     [ObservableProperty]
+    private string _currentPhaseObjective = string.Empty;
+
+    [ObservableProperty]
+    private string _currentPhaseScope = string.Empty;
+
+    [ObservableProperty]
+    private string _currentPhaseObservations = string.Empty;
+
+    [ObservableProperty]
     private int _selectedPhaseIndex = 0;
 
     [ObservableProperty]
@@ -158,6 +167,11 @@ public partial class ProjectViewModel : ViewModelBase
     /// </summary>
     public event Action? EndPhaseRequested;
 
+    /// <summary>
+    /// Se dispara cuando el usuario solicita guardar los cambios del proyecto.
+    /// </summary>
+    public event Action? SaveRequested;
+
     #endregion
 
     #region Constructor
@@ -192,7 +206,7 @@ public partial class ProjectViewModel : ViewModelBase
 
     private void OnSave()
     {
-        // TODO: Implementar guardado del proyecto
+        SaveRequested?.Invoke();
     }
 
     private void OnOpen()
@@ -343,6 +357,16 @@ public partial class ProjectViewModel : ViewModelBase
         CurrentPhaseEndDateDisplay = endDate.HasValue 
             ? endDate.Value.ToString("dd/MM/yyyy HH:mm") 
             : "No finalizada";
+    }
+
+    /// <summary>
+    /// Actualiza los campos de texto de la fase actual (objetivo, alcance y observaciones)
+    /// </summary>
+    public void UpdatePhaseTextFields(string? objective, string? scope, string? observations)
+    {
+        CurrentPhaseObjective = objective ?? string.Empty;
+        CurrentPhaseScope = scope ?? string.Empty;
+        CurrentPhaseObservations = observations ?? string.Empty;
     }
 
     #endregion

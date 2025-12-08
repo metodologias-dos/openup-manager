@@ -87,8 +87,28 @@
                                                    FontWeight="SemiBold"
                                                    Foreground="#00D9FF"/>
                                     </StackPanel>
-                                    <TextBlock Text="Objetivo general:" FontSize="12" Foreground="White"/>
-                                    <TextBlock Text="Alcance:" FontSize="12" Foreground="White"/>
+                                    <TextBlock Text="Objetivo general:" FontSize="12" Foreground="White" Margin="0,8,0,4"/>
+                                    <ScrollViewer Height="100" 
+                                                  VerticalScrollBarVisibility="Auto"
+                                                  HorizontalScrollBarVisibility="Disabled">
+                                        <TextBox Text="{Binding CurrentPhaseObjective}"
+                                                 AcceptsReturn="True"
+                                                 TextWrapping="Wrap"
+                                                 MaxLength="3000"
+                                                 Watermark="Ingrese el objetivo general..."
+                                                 BorderThickness="1"/>
+                                    </ScrollViewer>
+                                    <TextBlock Text="Alcance:" FontSize="12" Foreground="White" Margin="0,8,0,4"/>
+                                    <ScrollViewer Height="100" 
+                                                  VerticalScrollBarVisibility="Auto"
+                                                  HorizontalScrollBarVisibility="Disabled">
+                                        <TextBox Text="{Binding CurrentPhaseScope}"
+                                                 AcceptsReturn="True"
+                                                 TextWrapping="Wrap"
+                                                 MaxLength="3000"
+                                                 Watermark="Ingrese el alcance..."
+                                                 BorderThickness="1"/>
+                                    </ScrollViewer>
                                 </StackPanel>
 
                                 <StackPanel Width="200" Spacing="8" Margin="0,0,16,0">
@@ -98,15 +118,20 @@
                                                FontSize="14" 
                                                FontWeight="Bold"
                                                Foreground="#00D9FF"/>
-                                    <TextBlock Text="Acceso: Edición" FontSize="12" Foreground="White" Margin="0,8,0,0"/>
                                 </StackPanel>
 
                                 <StackPanel Width="280" Spacing="8">
                                     <TextBlock Text="Observaciones de fase:" FontSize="12" Foreground="White"/>
-                                    <TextBox Height="80" 
-                                             AcceptsReturn="True"
-                                             TextWrapping="Wrap"
-                                             Watermark="Ingrese observaciones..."/>
+                                    <ScrollViewer Height="120" 
+                                                  VerticalScrollBarVisibility="Auto"
+                                                  HorizontalScrollBarVisibility="Disabled">
+                                        <TextBox Text="{Binding CurrentPhaseObservations}"
+                                                 AcceptsReturn="True"
+                                                 TextWrapping="Wrap"
+                                                 MaxLength="3000"
+                                                 Watermark="Ingrese observaciones..."
+                                                 BorderThickness="1"/>
+                                    </ScrollViewer>
                                     <Button Content="Gestionar Artefactos" 
                                             Command="{Binding ManageArtifactsCommand}"
                                             HorizontalAlignment="Stretch"/>

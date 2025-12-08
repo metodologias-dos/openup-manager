@@ -29,6 +29,9 @@ public partial class ProjectView : UserControl
         if (DataContext is ProjectViewModel vm)
         {
             // Avoid double subscription if DataContext is set multiple times
+            vm.SaveRequested -= OnSaveProject;
+            vm.SaveRequested += OnSaveProject;
+            
             vm.ManageArtifactsRequested -= OpenArtifactsWindow;
             vm.ManageArtifactsRequested += OpenArtifactsWindow;
 
@@ -598,6 +601,7 @@ public partial class ProjectView : UserControl
                 vm.CurrentPhaseId = currentPhase.Id;
                 vm.UpdatePhaseStatus(currentPhase.Status);
                 vm.UpdatePhaseDates(currentPhase.StartDate, currentPhase.EndDate);
+                vm.UpdatePhaseTextFields(currentPhase.Objective, currentPhase.Scope, currentPhase.Observations);
             }
         }
         catch
@@ -605,6 +609,66 @@ public partial class ProjectView : UserControl
             // Ignore errors for now
         }
     }
+
+    private async void OnSaveProject()
+    {
+        if (DataContext is not ProjectViewModel vm) return;
+
+        var phaseService = Program.ServiceProvider.GetService<IPhaseService>();
+        var projectRepo = Program.ServiceProvider.GetService<IProjectRepository>();
+        
+        if (phaseService == null || projectRepo == null) return;
+
+        try
+        {
+            // Guardar nombre del proyecto
+            var project = await projectRepo.GetByIdAsync(vm.ProjectId);
+            if (project != null && project.Name != vm.ProjectName)
+            {
+                project.UpdateDetails(vm.ProjectName, project.Description, project.StartDate, project.Code);
+                await projectRepo.UpdateAsync(project);
+            }
+
+            // Guardar campos de texto de la fase actual (Objetivo, Alcance, Observaciones)
+            if (vm.CurrentPhaseId > 0)
+            {
+                // Actualizar objetivo
+                var objectiveResult = await phaseService.UpdatePhaseObjectiveAsync(
+                    vm.CurrentPhaseId, 
+                    vm.CurrentPhaseObjective);
+
+                // Actualizar alcance
+                var scopeResult = await phaseService.UpdatePhaseScopeAsync(
+                    vm.CurrentPhaseId, 
+                    vm.CurrentPhaseScope);
+
+                // Actualizar observaciones
+                var observationsResult = await phaseService.UpdatePhaseObservationsAsync(
+                    vm.CurrentPhaseId, 
+                    vm.CurrentPhaseObservations);
+
+                // Verificar si hubo algún error
+                if (!objectiveResult.Success || !scopeResult.Success || !observationsResult.Success)
+                {
+                    await ShowMessageBox("Advertencia", 
+                        "Algunos campos no se pudieron guardar correctamente.", 
+                        MessageBoxType.Warning);
+                    return;
+                }
+
+                // Recargar los datos desde la BD para confirmar que se guardaron correctamente
+                await LoadPhaseStatusAsync(vm);
+
+                await ShowMessageBox("Éxito", 
+                    "Los cambios se han guardado correctamente.", 
+                    MessageBoxType.Success);
+            }
+        }
+        catch (Exception ex)
+        {
+            await ShowMessageBox("Error", 
+                $"Error al guardar los cambios: {ex.Message}", 
+                MessageBoxType.Error);
+        }
+    }
 }
-
-
