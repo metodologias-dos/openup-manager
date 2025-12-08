@@ -83,6 +83,15 @@ public partial class ProjectViewModel : ViewModelBase
     [ObservableProperty]
     private ObservableCollection<ArtifactItemViewModel> _phaseArtifacts = new();
 
+    [ObservableProperty]
+    private int _currentUserRoleId;
+
+    [ObservableProperty]
+    private bool _canManageProject;
+
+    [ObservableProperty]
+    private bool _canEditArtifacts;
+
     #endregion
 
     #region Commands
@@ -425,12 +434,12 @@ public partial class ProjectViewModel : ViewModelBase
         CurrentPhaseStartDate = startDate;
         CurrentPhaseEndDate = endDate;
 
-        CurrentPhaseStartDateDisplay = startDate.HasValue 
-            ? startDate.Value.ToString("dd/MM/yyyy HH:mm") 
+        CurrentPhaseStartDateDisplay = startDate.HasValue
+            ? startDate.Value.ToString("dd/MM/yyyy HH:mm")
             : "No iniciada";
 
-        CurrentPhaseEndDateDisplay = endDate.HasValue 
-            ? endDate.Value.ToString("dd/MM/yyyy HH:mm") 
+        CurrentPhaseEndDateDisplay = endDate.HasValue
+            ? endDate.Value.ToString("dd/MM/yyyy HH:mm")
             : "No finalizada";
     }
 
@@ -442,6 +451,37 @@ public partial class ProjectViewModel : ViewModelBase
         CurrentPhaseObjective = objective ?? string.Empty;
         CurrentPhaseScope = scope ?? string.Empty;
         CurrentPhaseObservations = observations ?? string.Empty;
+    }
+
+    public async Task LoadUserRoleAsync()
+    {
+        if (ProjectId <= 0 || CurrentUserId <= 0) return;
+
+        try
+        {
+            var projectUsers = await _projectUserService.GetUserProjectsAsync(CurrentUserId);
+            var projectUser = projectUsers.FirstOrDefault(pu => pu.ProjectId == ProjectId);
+
+            if (projectUser != null)
+            {
+                CurrentUserRoleId = projectUser.RoleId;
+
+                // CanManageProject: Admin, Autor, ProductOwner, ScrumMaster
+                CanManageProject = CurrentUserRoleId == RoleIds.Admin ||
+                                   CurrentUserRoleId == RoleIds.Autor ||
+                                   CurrentUserRoleId == RoleIds.ProductOwner ||
+                                   CurrentUserRoleId == RoleIds.ScrumMaster;
+
+                // CanEditArtifacts: CanManageProject + Developer, Tester
+                CanEditArtifacts = CanManageProject ||
+                                   CurrentUserRoleId == RoleIds.Desarrollador ||
+                                   CurrentUserRoleId == RoleIds.Tester;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading user role: {ex.Message}");
+        }
     }
 
     #endregion
