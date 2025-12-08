@@ -100,6 +100,9 @@ sealed class Program
         
         services.AddScoped<IArtifactVersionService, ArtifactVersionService>();
         
+        // Dashboard service
+        services.AddScoped<IDashboardService, DashboardService>();
+        
         // Role repositories and services
         services.AddScoped<IRoleRepository, RoleRepository>();
         services.AddScoped<IRoleService, RoleService>();

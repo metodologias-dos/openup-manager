@@ -34,5 +34,25 @@ public partial class IterationItemViewModel : ViewModelBase
     private ObservableCollection<MicroincrementItemViewModel> _microincrements = new();
 
     public string ActiveIndicator => IsActive ? "⭐" : "";
+    
+    public bool HasMicroincrements => Microincrements != null && Microincrements.Count > 0;
+    
+    public bool CanDelete => !HasMicroincrements;
+
+    partial void OnMicroincrementsChanged(ObservableCollection<MicroincrementItemViewModel> value)
+    {
+        OnPropertyChanged(nameof(HasMicroincrements));
+        OnPropertyChanged(nameof(CanDelete));
+        
+        // Subscribe to collection changes
+        if (value != null)
+        {
+            value.CollectionChanged += (s, e) =>
+            {
+                OnPropertyChanged(nameof(HasMicroincrements));
+                OnPropertyChanged(nameof(CanDelete));
+            };
+        }
+    }
 }
 

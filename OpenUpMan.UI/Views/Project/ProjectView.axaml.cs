@@ -1,4 +1,5 @@
 using System;
+using System.Collections.ObjectModel;
 using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
@@ -35,6 +36,14 @@ public partial class ProjectView : UserControl
             // Subscribe to create iteration requests
             vm.CreateIterationRequested -= OpenCreateIterationDialog;
             vm.CreateIterationRequested += OpenCreateIterationDialog;
+
+            // Subscribe to edit iteration requests
+            vm.EditIterationRequested -= OpenEditIterationDialog;
+            vm.EditIterationRequested += OpenEditIterationDialog;
+
+            // Subscribe to delete iteration requests
+            vm.DeleteIterationRequested -= DeleteIteration;
+            vm.DeleteIterationRequested += DeleteIteration;
 
             vm.OpenDashboardRequested -= OpenDashboardWindow;
             vm.OpenDashboardRequested += OpenDashboardWindow;
@@ -149,8 +158,8 @@ public partial class ProjectView : UserControl
                     Goal = it.Goal,
                     StartDate = it.StartDate,
                     EndDate = it.EndDate,
-                    CompletionPercentage = it.CompletionPercentage,
-                    IsActive = it.IsActive
+                    IsActive = it.IsActive,
+                    Microincrements = new ObservableCollection<MicroincrementItemViewModel>()
                 };
 
                 // Load microincrements for this iteration
@@ -216,8 +225,15 @@ public partial class ProjectView : UserControl
             return;
         }
 
+        // Get current phase
+        var currentPhase = phases.FirstOrDefault(p => p.Name == projectVm.CurrentPhaseName);
+        if (currentPhase == null)
+        {
+            currentPhase = phases.First();
+        }
+
         var dialog = new IterationCreateWindow();
-        dialog.SetPhases(phases);
+        dialog.SetPhase(currentPhase.Id, currentPhase.Name);
 
         if (VisualRoot is Window parent)
         {
@@ -235,8 +251,7 @@ public partial class ProjectView : UserControl
                         Name = sr.Iteration.Name ?? "Sin nombre",
                         Goal = sr.Iteration.Goal,
                         StartDate = sr.Iteration.StartDate,
-                        EndDate = sr.Iteration.EndDate,
-                        CompletionPercentage = sr.Iteration.CompletionPercentage
+                        EndDate = sr.Iteration.EndDate
                     };
                     projectVm.Iterations.Add(newIterationVm);
                 }
@@ -244,9 +259,157 @@ public partial class ProjectView : UserControl
         }
     }
 
+    private async void OpenEditIterationDialog(IterationItemViewModel iteration)
+    {
+        if (DataContext is not ProjectViewModel projectVm) return;
+
+        var iterationService = Program.ServiceProvider.GetService<IIterationService>();
+        if (iterationService == null) return;
+
+        var dialog = new IterationEditWindow();
+        dialog.SetIteration(iteration, projectVm.CurrentPhaseName);
+
+        if (VisualRoot is Window parent)
+        {
+            var result = await dialog.ShowDialog<object?>(parent);
+            if (result != null)
+            {
+                // Extract data from result
+                var resultType = result.GetType();
+                var iterationId = (int)resultType.GetProperty("IterationId")?.GetValue(result)!;
+                var name = (string)resultType.GetProperty("Name")?.GetValue(result)!;
+                var goal = (string)resultType.GetProperty("Goal")?.GetValue(result)!;
+                var startDate = (DateTime?)resultType.GetProperty("StartDate")?.GetValue(result);
+                var endDate = (DateTime?)resultType.GetProperty("EndDate")?.GetValue(result);
+
+                // Update using service
+                var updateResult = await iterationService.UpdateIterationAsync(
+                    iterationId, 
+                    name, 
+                    goal, 
+                    startDate, 
+                    endDate
+                );
+
+                if (updateResult.Success && updateResult.Iteration != null)
+                {
+                    // Update the ViewModel
+                    iteration.Name = updateResult.Iteration.Name ?? "Sin nombre";
+                    iteration.Goal = updateResult.Iteration.Goal;
+                    iteration.StartDate = updateResult.Iteration.StartDate;
+                    iteration.EndDate = updateResult.Iteration.EndDate;
+                }
+            }
+        }
+    }
+
+    private async void DeleteIteration(IterationItemViewModel iteration)
+    {
+        if (DataContext is not ProjectViewModel projectVm) return;
+
+        var iterationService = Program.ServiceProvider.GetService<IIterationService>();
+        if (iterationService == null) return;
+
+        // Verificar que no tenga microincrementos
+        if (iteration.HasMicroincrements)
+        {
+            // No debería llegar aquí por la visibilidad del botón, pero por seguridad
+            return;
+        }
+
+        // Confirmar eliminación
+        if (VisualRoot is Window parent)
+        {
+            bool? result = null;
+            
+            var confirmWindow = new Window
+            {
+                Title = "Confirmar Eliminación",
+                Width = 400,
+                Height = 180,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                CanResize = false
+            };
+
+            var mainPanel = new StackPanel
+            {
+                Margin = new Avalonia.Thickness(20),
+                Spacing = 15
+            };
+
+            mainPanel.Children.Add(new TextBlock
+            {
+                Text = "¿Está seguro que desea eliminar esta iteración?",
+                FontSize = 14,
+                TextWrapping = Avalonia.Media.TextWrapping.Wrap
+            });
+
+            mainPanel.Children.Add(new TextBlock
+            {
+                Text = iteration.Name,
+                FontSize = 16,
+                FontWeight = Avalonia.Media.FontWeight.Bold,
+                Margin = new Avalonia.Thickness(0, 5, 0, 5)
+            });
+
+            var buttonPanel = new StackPanel
+            {
+                Orientation = Avalonia.Layout.Orientation.Horizontal,
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
+                Spacing = 10,
+                Margin = new Avalonia.Thickness(0, 20, 0, 0)
+            };
+
+            var cancelButton = new Button
+            {
+                Content = "Cancelar",
+                Width = 100,
+                Height = 32
+            };
+            cancelButton.Click += (s, e) => { result = false; confirmWindow.Close(); };
+
+            var confirmButton = new Button
+            {
+                Content = "Eliminar",
+                Width = 100,
+                Height = 32
+            };
+            confirmButton.Click += (s, e) => { result = true; confirmWindow.Close(); };
+
+            buttonPanel.Children.Add(cancelButton);
+            buttonPanel.Children.Add(confirmButton);
+            mainPanel.Children.Add(buttonPanel);
+
+            confirmWindow.Content = mainPanel;
+
+            await confirmWindow.ShowDialog(parent);
+
+            if (result != true)
+                return;
+        }
+
+        try
+        {
+            var deleteResult = await iterationService.DeleteIterationAsync(iteration.Id);
+            if (deleteResult.Success)
+            {
+                projectVm.Iterations.Remove(iteration);
+            }
+        }
+        catch
+        {
+            // Handle error
+        }
+    }
+
     private void OpenDashboardWindow()
     {
-        var dashboardWindow = new DashboardWindow();
+        if (DataContext is not ProjectViewModel vm) return;
+
+        var dashboardService = Program.ServiceProvider.GetService<IDashboardService>();
+        if (dashboardService == null) return;
+
+        var dashboardWindow = new DashboardWindow(dashboardService, vm.ProjectId);
         if (VisualRoot is Window parentWindow)
         {
             dashboardWindow.ShowDialog(parentWindow);

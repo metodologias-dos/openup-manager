@@ -2,14 +2,14 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
-using Microsoft.Extensions.DependencyInjection;
-using OpenUpMan.Data;
 using OpenUpMan.Domain;
 
 namespace OpenUpMan.UI.Views;
 
 public partial class IterationCreateWindow : Window
 {
+    private int _phaseId;
+    
     public IterationCreateWindow()
     {
         InitializeComponent();
@@ -20,13 +20,13 @@ public partial class IterationCreateWindow : Window
         AvaloniaXamlLoader.Load(this);
     }
 
-    public void SetPhases(System.Collections.Generic.IEnumerable<Phase> phases)
+    public void SetPhase(int phaseId, string phaseName)
     {
-        var combo = this.FindControl<ComboBox>("PhaseCombo");
-        if (combo != null)
+        _phaseId = phaseId;
+        var phaseText = this.FindControl<TextBlock>("PhaseNameText");
+        if (phaseText != null)
         {
-            combo.ItemsSource = phases;
-            combo.SelectedIndex = 0;
+            phaseText.Text = phaseName;
         }
     }
 
@@ -37,21 +37,20 @@ public partial class IterationCreateWindow : Window
 
     private async void OnCreate(object? sender, RoutedEventArgs e)
     {
-        var combo = this.FindControl<ComboBox>("PhaseCombo");
         var nameBox = this.FindControl<TextBox>("NameBox");
         var goalBox = this.FindControl<TextBox>("GoalBox");
         var startPicker = this.FindControl<DatePicker>("StartDatePicker");
         var endPicker = this.FindControl<DatePicker>("EndDatePicker");
 
-        if (combo == null || nameBox == null || goalBox == null || startPicker == null || endPicker == null)
+        if (nameBox == null || goalBox == null || startPicker == null || endPicker == null)
         {
             await MessageBox.Show(this, "Error interno al crear iteración.", "Error");
             return;
         }
 
-        if (combo.SelectedItem is not Phase phase)
+        if (string.IsNullOrWhiteSpace(nameBox.Text))
         {
-            await MessageBox.Show(this, "Seleccione una fase.", "Validación");
+            await MessageBox.Show(this, "El nombre de la iteración es requerido.", "Validación");
             return;
         }
 
@@ -60,7 +59,7 @@ public partial class IterationCreateWindow : Window
         DateTime? start = startPicker.SelectedDate?.DateTime;
         DateTime? end = endPicker.SelectedDate?.DateTime;
 
-        var iteration = new Iteration(phase.Id, name, goal);
+        var iteration = new Iteration(_phaseId, name, goal);
         if (start.HasValue || end.HasValue)
             iteration.UpdateDetails(name, goal, start, end);
 
