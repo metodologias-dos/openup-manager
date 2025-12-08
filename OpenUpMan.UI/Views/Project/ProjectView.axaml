@@ -222,7 +222,7 @@
 
 
                                     <!-- Acciones -->
-                                    <DataGridTemplateColumn Header="ACCIONES" Width="Auto" MinWidth="200">
+                                    <DataGridTemplateColumn Header="ACCIONES" Width="Auto" MinWidth="220">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate DataType="vm:IterationItemViewModel">
                                                 <StackPanel Orientation="Horizontal" 
@@ -251,9 +251,27 @@
                                                         <labs:SymbolIcon Symbol="{x:Static ic:Symbol.Edit}" FontSize="14" Foreground="White"/>
                                                     </Button>
                                                     
-                                                    <!-- Botón Ver Detalles -->
+                                                    <!-- Botón Borrar (solo icono, visible si NO tiene microincrementos) -->
+                                                    <Button Command="{Binding $parent[UserControl].((vm:ProjectViewModel)DataContext).DeleteIterationCommand}"
+                                                            CommandParameter="{Binding}"
+                                                            IsVisible="{Binding CanDelete}"
+                                                            Padding="8,6"
+                                                            ToolTip.Tip="Eliminar iteración">
+                                                        <Button.Styles>
+                                                            <Style Selector="Button">
+                                                                <Setter Property="Background" Value="#D32F2F"/>
+                                                            </Style>
+                                                            <Style Selector="Button:pointerover">
+                                                                <Setter Property="Background" Value="#B71C1C"/>
+                                                            </Style>
+                                                        </Button.Styles>
+                                                        <labs:SymbolIcon Symbol="{x:Static ic:Symbol.Delete}" FontSize="14" Foreground="White"/>
+                                                    </Button>
+                                                    
+                                                    <!-- Botón Ver Detalles (solo visible si TIENE microincrementos) -->
                                                     <Button Command="{Binding $parent[UserControl].((vm:ProjectViewModel)DataContext).ViewIterationDetailsCommand}"
                                                             CommandParameter="{Binding}"
+                                                            IsVisible="{Binding HasMicroincrements}"
                                                             Padding="10,6"
                                                             FontSize="11"
                                                             ToolTip.Tip="Ver microincrementos">

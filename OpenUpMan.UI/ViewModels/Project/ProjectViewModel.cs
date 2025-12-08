@@ -59,6 +59,7 @@ public partial class ProjectViewModel : ViewModelBase
     public IRelayCommand<string> SelectPhaseCommand { get; }
     public IRelayCommand CreateIterationCommand { get; }
     public IRelayCommand<IterationItemViewModel> EditIterationCommand { get; }
+    public IRelayCommand<IterationItemViewModel> DeleteIterationCommand { get; }
     public IRelayCommand<IterationItemViewModel> ActivateIterationCommand { get; }
     public IRelayCommand<IterationItemViewModel> ViewIterationDetailsCommand { get; }
     public IRelayCommand<ArtifactItemViewModel> RegisterArtifactChangeCommand { get; }
@@ -89,6 +90,12 @@ public partial class ProjectViewModel : ViewModelBase
     /// Parámetro: iteration
     /// </summary>
     public event Action<IterationItemViewModel>? EditIterationRequested;
+
+    /// <summary>
+    /// Se dispara cuando el usuario solicita eliminar una iteración.
+    /// Parámetro: iteration
+    /// </summary>
+    public event Action<IterationItemViewModel>? DeleteIterationRequested;
 
     /// <summary>
     /// Se dispara cuando el usuario solicita abrir el tablero del proyecto.
@@ -151,6 +158,7 @@ public partial class ProjectViewModel : ViewModelBase
         SelectPhaseCommand = new RelayCommand<string>(OnSelectPhase);
         CreateIterationCommand = new RelayCommand(() => CreateIterationRequested?.Invoke());
         EditIterationCommand = new RelayCommand<IterationItemViewModel>(OnEditIteration);
+        DeleteIterationCommand = new RelayCommand<IterationItemViewModel>(OnDeleteIteration);
         ActivateIterationCommand = new RelayCommand<IterationItemViewModel>(OnActivateIteration);
         ViewIterationDetailsCommand = new RelayCommand<IterationItemViewModel>(OnViewIterationDetails);
         RegisterArtifactChangeCommand = new RelayCommand<ArtifactItemViewModel>(OnRegisterArtifactChange);
@@ -206,6 +214,14 @@ public partial class ProjectViewModel : ViewModelBase
         if (iteration != null)
         {
             EditIterationRequested?.Invoke(iteration);
+        }
+    }
+
+    private void OnDeleteIteration(IterationItemViewModel? iteration)
+    {
+        if (iteration != null)
+        {
+            DeleteIterationRequested?.Invoke(iteration);
         }
     }
 
